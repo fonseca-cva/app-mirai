@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+/* DECISIÓN: Tailwind v4 usa @theme (CSS-first) en vez de tailwind.config.js.
+   Los valores replican lib/config/tokens.ts (sección 4 de la spec). */
+@theme {
+  --color-papel: #f7f2e9;
+  --color-papel-sombra: #e8e0d0;
+  --color-tinta: #2b2b33;
+  --color-coral: #e86a4f;
+  --color-salvia: #7fa08c;
+  --color-dorado: #d9a441;
+  --color-blanco-papel: #fffdf8;
+
+  --font-display: var(--font-fraunces);
+  --font-cuerpo: var(--font-inter);
+
+  --radius-estandar: 14px;
+}
+
+/* Fase 1 no incluye modo oscuro (fuera de alcance, sección 10). */
+
+body {
+  background: var(--color-papel);
+  color: var(--color-tinta);
+  font-family: var(--font-cuerpo);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-coral);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
