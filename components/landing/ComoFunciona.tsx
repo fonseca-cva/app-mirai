@@ -2,7 +2,8 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import { PaperLayer } from "@/components/origami/PaperLayer";
-import { comoFunciona } from "@/lib/config/textos";
+import { GruaOrigami } from "@/components/origami/GruaOrigami";
+import { comoFunciona, nombreSignificado } from "@/lib/config/textos";
 
 const ICONOS = [
   // Juega
@@ -18,6 +19,10 @@ export function ComoFunciona() {
 
   return (
     <section id="como-funciona" className="px-4 py-24 sm:px-8">
+      <div className="mb-8 flex items-center justify-center gap-2 text-sm text-tinta/70">
+        <GruaOrigami className="h-6 w-6" />
+        <p className="font-display">{nombreSignificado.texto}</p>
+      </div>
       <h2 className="mb-12 text-center text-3xl font-semibold">{comoFunciona.titulo}</h2>
       <div className="mx-auto grid max-w-4xl gap-6 sm:grid-cols-3">
         {comoFunciona.tarjetas.map((tarjeta, i) => (

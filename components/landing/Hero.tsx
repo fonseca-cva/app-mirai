@@ -1,9 +1,15 @@
-import Link from "next/link";
-import { FondoCapas } from "@/components/origami/FondoCapas";
-import { GruaOrigami } from "@/components/origami/GruaOrigami";
-import { hero, nav } from "@/lib/config/textos";
+'use client'
+
+import Link from "next/link"
+import { useReducedMotion } from "motion/react"
+import { FondoCapas } from "@/components/origami/FondoCapas"
+import { GruaOrigami } from "@/components/origami/GruaOrigami"
+import { AvionPapel } from "@/components/origami/AvionPapel"
+import NubesDeriva from "@/components/origami/NubesDeriva"
+import { hero, nav } from "@/lib/config/textos"
 
 export function Hero() {
+  const reducedMotion = !!useReducedMotion()
   return (
     <>
       <header className="fixed top-0 z-50 flex w-full items-center justify-between gap-4 bg-papel/90 px-4 py-3 backdrop-blur-sm sm:px-8">
@@ -26,8 +32,13 @@ export function Hero() {
         </Link>
       </header>
 
+      <NubesDeriva prefersReducedMotion={reducedMotion} />
+
       <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 pt-20 text-center sm:px-8">
         <FondoCapas />
+
+        {/* Avión detrás de capas medias */}
+        <AvionPapel animar prefersReducedMotion={reducedMotion} />
         <div className="relative z-10 flex flex-col items-center gap-6">
           <GruaOrigami className="h-24 w-24" animarEntrada />
           <h1 className="max-w-2xl text-4xl font-semibold sm:text-6xl">{hero.titular}</h1>

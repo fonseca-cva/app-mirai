@@ -13,9 +13,15 @@ export function TeaserExperiencia() {
           El cliente pide &ldquo;algo más wow&rdquo; sin decir qué significa eso.
         </p>
         <div className="mt-4 flex gap-2 text-xs">
-          <span className="rounded-[14px] border border-tinta/20 px-3 py-1">No es para mí</span>
-          <span className="rounded-[14px] border border-tinta/20 px-3 py-1">Podría ser</span>
-          <span className="rounded-[14px] bg-coral px-3 py-1 text-blanco-papel">Me atrae</span>
+          <Link href="/experiencia" className="rounded-[14px] border border-tinta/20 px-3 py-1 transition hover:bg-tinta/10">
+            No es para mí
+          </Link>
+          <Link href="/experiencia" className="rounded-[14px] border border-tinta/20 px-3 py-1 transition hover:bg-tinta/10">
+            Podría ser
+          </Link>
+          <Link href="/experiencia" className="rounded-[14px] bg-coral px-3 py-1 text-blanco-papel transition hover:opacity-90">
+            Me atrae
+          </Link>
         </div>
       </PaperLayer>
       <p className="max-w-md text-xl font-display">{teaserExperiencia.frase}</p>
