@@ -12,6 +12,7 @@ export const colores = {
   salvia: "#7FA08C",
   dorado: "#D9A441",
   blancoPapel: "#FFFDF8",
+  teal: "#74C2CE",
 } as const;
 
 export const tipografia = {
