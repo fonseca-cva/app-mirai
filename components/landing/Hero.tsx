@@ -1,7 +1,7 @@
 'use client'
 
 import Link from "next/link"
-import { useReducedMotion } from "motion/react"
+import { useReducedMotion } from "framer-motion"
 import { FondoCapas } from "@/components/origami/FondoCapas"
 import { GruaOrigami } from "@/components/origami/GruaOrigami"
 import { AvionPapel } from "@/components/origami/AvionPapel"
