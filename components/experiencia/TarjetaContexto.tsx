@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PaperLayer } from "@/components/origami/PaperLayer";
 import { IconoContexto } from "@/components/origami/IconoContexto";
 import { EscenaContexto, tieneEscena } from "@/components/origami/EscenaContexto";
@@ -20,6 +20,15 @@ export function TarjetaContexto({ contexto, onResponder }: TarjetaContextoProps)
     setExpandido(true);
     setAyudaAbierta(true); // señal de calidad del estímulo (D.10) — no afecta puntaje
   }
+
+  useEffect(() => {
+    if (!expandido) return;
+    const previo = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previo;
+    };
+  }, [expandido]);
 
   return (
     <PaperLayer className="relative flex w-full max-w-sm flex-col items-center gap-4 p-8 text-center">
@@ -77,7 +86,7 @@ export function TarjetaContexto({ contexto, onResponder }: TarjetaContextoProps)
           <div
             role="dialog"
             aria-label={contexto.nombre}
-            className="fixed inset-x-0 bottom-0 z-50 max-h-[70vh] overflow-y-auto rounded-t-[20px] bg-blanco-papel p-6 text-left shadow-[0_-12px_32px_-12px_rgba(43,43,51,0.25)] sm:absolute sm:inset-x-6 sm:bottom-auto sm:top-24 sm:max-h-none sm:rounded-[14px]"
+            className="fixed inset-x-0 bottom-0 z-50 max-h-[70vh] overflow-y-auto overscroll-contain rounded-t-[20px] bg-blanco-papel p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-left shadow-[0_-12px_32px_-12px_rgba(43,43,51,0.25)] sm:absolute sm:inset-x-6 sm:bottom-auto sm:top-24 sm:max-h-none sm:rounded-[14px] sm:pb-6"
           >
             <div className="flex items-start justify-between gap-4">
               <h3 className="text-lg font-semibold">{contexto.nombre}</h3>
