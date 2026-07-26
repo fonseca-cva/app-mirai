@@ -70,6 +70,7 @@ export const contextos: Contexto[] = [
       "Devuelve autos funcionando cuando el diagnóstico de otro taller falló.",
     ],
     icono: "tec",
+    escenaId: "taller-mecanico",
   },
   {
     id: "tec-03",
@@ -83,6 +84,7 @@ export const contextos: Contexto[] = [
       "Mantiene la planta funcionando: cada corte no planificado cuesta caro.",
     ],
     icono: "tec",
+    escenaId: "electricista-industrial",
   },
 
   // cie — Científico-Analítico
@@ -98,6 +100,7 @@ export const contextos: Contexto[] = [
       "Entrega el dato que confirma o descarta un diagnóstico.",
     ],
     icono: "cie",
+    escenaId: "laboratorio-clinico",
   },
   {
     id: "cie-02",
@@ -111,6 +114,7 @@ export const contextos: Contexto[] = [
       "Produce conocimiento nuevo, aunque tome años ver un resultado publicable.",
     ],
     icono: "cie",
+    escenaId: "investigacion-postgrado",
   },
   {
     id: "cie-03",
@@ -124,6 +128,7 @@ export const contextos: Contexto[] = [
       "Evita que un producto en mal estado llegue a un supermercado.",
     ],
     icono: "cie",
+    escenaId: "control-calidad-alimentos",
   },
 
   // cre — Creativo
@@ -139,6 +144,7 @@ export const contextos: Contexto[] = [
       "Produce la imagen con la que una marca se presenta al mundo.",
     ],
     icono: "cre",
+    escenaId: "estudio-branding",
   },
   {
     id: "cre-02",
@@ -152,6 +158,7 @@ export const contextos: Contexto[] = [
       "Ayuda a producir la escena que el espectador verá terminada, sin ver el caos detrás.",
     ],
     icono: "cre",
+    escenaId: "rodaje-audiovisual",
   },
   {
     id: "cre-03",
@@ -165,6 +172,7 @@ export const contextos: Contexto[] = [
       "Convierte una idea en un plano que se puede construir de verdad.",
     ],
     icono: "cre",
+    escenaId: "estudio-arquitectura",
   },
 
   // soc — Social-Humano
@@ -180,6 +188,7 @@ export const contextos: Contexto[] = [
       "Forma a la próxima generación, un curso ruidoso a la vez.",
     ],
     icono: "soc",
+    escenaId: "sala-clases",
   },
   {
     id: "soc-02",
@@ -193,6 +202,7 @@ export const contextos: Contexto[] = [
       "Conecta a personas con la ayuda concreta que necesitan, no solo con papeleo.",
     ],
     icono: "soc",
+    escenaId: "oficina-municipal",
   },
   {
     id: "soc-03",
@@ -206,6 +216,7 @@ export const contextos: Contexto[] = [
       "Sostiene que la empresa funcione como equipo, no solo como organigrama.",
     ],
     icono: "soc",
+    escenaId: "oficina-rrhh",
   },
 
   // sal — Salud y Cuidado
@@ -221,6 +232,7 @@ export const contextos: Contexto[] = [
       "Sostiene la salud de base de un barrio entero, consulta por consulta.",
     ],
     icono: "sal",
+    escenaId: "consultorio-medico",
   },
   {
     id: "sal-02",
@@ -234,6 +246,7 @@ export const contextos: Contexto[] = [
       "Devuelve movilidad a alguien que antes no podía moverse igual.",
     ],
     icono: "sal",
+    escenaId: "clinica-kinesiologia",
   },
   {
     id: "sal-03",
@@ -247,6 +260,7 @@ export const contextos: Contexto[] = [
       "Sostiene la calidad de vida diaria de personas que ya no pueden hacerlo solas.",
     ],
     icono: "sal",
+    escenaId: "residencia-adultos-mayores",
   },
 
   // ges — Gestión y Emprendimiento
@@ -262,6 +276,7 @@ export const contextos: Contexto[] = [
       "Construye algo desde cero sin garantía de que vaya a funcionar.",
     ],
     icono: "ges",
+    escenaId: "startup-oficina",
   },
   {
     id: "ges-02",
@@ -275,6 +290,7 @@ export const contextos: Contexto[] = [
       "Entrega el informe que otros usan para decidir si confiar en una empresa.",
     ],
     icono: "ges",
+    escenaId: "oficina-auditoria",
   },
   {
     id: "ges-03",
@@ -288,6 +304,7 @@ export const contextos: Contexto[] = [
       "Pone comida en la mesa de otros, con márgenes que dejan poco espacio al error.",
     ],
     icono: "ges",
+    escenaId: "local-gastronomico",
   },
 
   // dat — Datos y Organización
@@ -303,6 +320,7 @@ export const contextos: Contexto[] = [
       "Convierte números sueltos en una decisión que alguien más va a tomar.",
     ],
     icono: "dat",
+    escenaId: "analista-datos-retail",
   },
   {
     id: "dat-02",
@@ -316,6 +334,7 @@ export const contextos: Contexto[] = [
       "Sostiene que el producto llegue donde tiene que llegar, a tiempo.",
     ],
     icono: "dat",
+    escenaId: "bodega-logistica",
   },
   {
     id: "dat-03",
@@ -329,6 +348,7 @@ export const contextos: Contexto[] = [
       "Mantiene funcionando el papeleo que sostiene a una empresa chica.",
     ],
     icono: "dat",
+    escenaId: "administracion-pyme",
   },
 
   // nat — Naturaleza y Terreno
@@ -358,6 +378,7 @@ export const contextos: Contexto[] = [
       "Cuida un ecosistema que no se recupera fácil si se daña.",
     ],
     icono: "nat",
+    escenaId: "guardaparque-sendero",
   },
   {
     id: "nat-03",
@@ -371,5 +392,6 @@ export const contextos: Contexto[] = [
       "Define cómo se explota un bosque sin agotarlo.",
     ],
     icono: "nat",
+    escenaId: "ingeniero-forestal",
   },
 ];
