@@ -123,17 +123,183 @@ export const experienciaTarjeta = {
   ] as const,
   pausa: "Pausar", // PENDIENTE PASADA DE COPY
   reanudar: "Seguir", // PENDIENTE PASADA DE COPY
+  // ITERACIÓN 2 (Bloque A): expandible "¿Qué se hace acá?"
+  queSeHaceAqui: "¿Qué se hace acá?", // PENDIENTE PASADA DE COPY
+  queSeHaceAquiAria: "Ver más detalles de este lugar de trabajo",
+  cerrarExpandible: "Cerrar", // PENDIENTE PASADA DE COPY
 };
 
 export const resultadoParcial = {
-  titulo: "Este es tu primer pliegue", // PENDIENTE PASADA DE COPY
-  subtitulo: "Tus tres dimensiones más marcadas:", // PENDIENTE PASADA DE COPY
-  cierre: "Esto es solo tu primer pliegue. Los mini-juegos de capacidades y tu informe completo: muy pronto.", // PENDIENTE PASADA DE COPY
+  titulo: "Primer pliegue listo", // PENDIENTE PASADA DE COPY
+  subtitulo: "Tus tres dimensiones más marcadas hasta ahora:", // PENDIENTE PASADA DE COPY
+  cierre: "Esto es solo tu primer pliegue. Sigue con los mini-juegos de capacidades.", // PENDIENTE PASADA DE COPY
+  continuarCta: "Ahora, a jugar", // PENDIENTE PASADA DE COPY
   cta: "Avísame cuando esté listo", // PENDIENTE PASADA DE COPY
   mailto: "mailto:hola@somosmirai.cl?subject=Avísenme%20cuando%20esté%20listo",
 };
 
-// Banco de lecturas amables por dimensión — sección 7.4. Se usa la de la dimensión top 1.
+// Placeholder temporal para bloques aún no construidos (Fases 2-4). Se elimina cuando
+// Bloque B, Bloque C e Informe tengan su propia pantalla real.
+export const bloqueEnConstruccion = {
+  titulo: "Este bloque está en construcción", // PENDIENTE PASADA DE COPY
+  texto: "Estamos armando esta parte de la experiencia. Vuelve pronto.", // PENDIENTE PASADA DE COPY
+};
+
+// Bloque B — mini-juegos cognitivos (sección 3 de la spec Fase 2).
+export const bloqueMatrices = {
+  titulo: "Figuras y patrones", // PENDIENTE PASADA DE COPY
+  fraseFuerza: "Este juego mira cómo encuentras patrones.", // ITERACIÓN 2: frase de fortaleza
+  instrucciones: "Mira el tablero. Cada fila sigue una regla. Toca la figura que completa el patrón.", // ITERACIÓN 2: reescrito
+  practicaTitulo: "Un ejemplo primero", // PENDIENTE PASADA DE COPY
+  practicaEtiqueta: "Práctica (no puntúa)", // PENDIENTE PASADA DE COPY
+  comenzarCta: "Empezar", // PENDIENTE PASADA DE COPY
+  celdaVaciaAria: "Espacio vacío a completar", // PENDIENTE PASADA DE COPY
+  // ITERACIÓN 2 — tutorial
+  tutorial: {
+    demoEtiqueta: "Así se juega",
+    demoTitulo: "Mira cómo cambian las figuras en cada fila",
+    demoSaltar: "Ya lo conozco",
+    practicaAcierto: "Eso es. Así funciona.",
+    practicaErrorPista: (texto: string) => `Fíjate en la regla: ${texto}`,
+    practicaFalloMensaje: "No importa, es práctica. Mira por qué.",
+    practicaFeedback: "Cada fila sigue el mismo patrón de transformación. La figura que falta debe seguir la regla.",
+    transicion: "Listo. Ahora van los de verdad: 12 desafíos, sin apuro.",
+    ayudaResumen: [
+      "Mira el tablero de 3x3.",
+      "Cada fila sigue una regla (rotación, forma, color, pliegues).",
+      "Toca la alternativa que completa la celda vacía.",
+    ],
+  },
+};
+
+export const bloqueRotacion = {
+  titulo: "Pliegues en el espacio", // PENDIENTE PASADA DE COPY
+  fraseFuerza: "Este juego mira cómo giras figuras en tu cabeza.", // ITERACIÓN 2: frase de fortaleza
+  instrucciones: "Mira la pieza de referencia. Luego toca la alternativa que muestra cómo queda al girarla o desplegarla.", // ITERACIÓN 2: reescrito
+  practicaEtiqueta: "Práctica (no puntúa)", // PENDIENTE PASADA DE COPY
+  comenzarCta: "Empezar", // PENDIENTE PASADA DE COPY
+  // ITERACIÓN 2 — tutorial
+  tutorial: {
+    demoEtiqueta: "Así se juega",
+    demoTitulo: "Mira cómo la pieza gira sin cambiar de forma",
+    demoSaltar: "Ya lo conozco",
+    practicaAcierto: "Eso es. Así funciona.",
+    practicaErrorPista: (angulo: number) => `La pieza gira ${angulo}° manteniendo su forma.`,
+    practicaFalloMensaje: "No importa, es práctica. Mira por qué.",
+    practicaFeedback: "La pieza rota pero no se deforma. Compara la orientación de cada alternativa con la referencia.",
+    transicion: "Listo. Ahora van los de verdad: 10 desafíos, sin apuro.",
+    ayudaResumen: [
+      "Mira la pieza de referencia (arriba).",
+      "Imáginala girando en tu cabeza.",
+      "Toca la alternativa que coincide con la pieza ya girada o desplegada.",
+    ],
+  },
+};
+
+export const bloqueSecuencias = {
+  titulo: "Secuencias", // PENDIENTE PASADA DE COPY
+  fraseFuerza: "Este juego mira cuánto retienes en la memoria de corto plazo.", // ITERACIÓN 2: frase de fortaleza
+  instrucciones: "Mira la secuencia de figuras. Cuando termine, repítela tocándolas en el mismo orden.", // ITERACIÓN 2: reescrito
+  practicaEtiqueta: "Práctica (no puntúa)", // PENDIENTE PASADA DE COPY
+  comenzarCta: "Empezar", // PENDIENTE PASADA DE COPY
+  continuarCta: "Ahora en serio", // PENDIENTE PASADA DE COPY
+  // ITERACIÓN 2 — tutorial
+  tutorial: {
+    demoEtiqueta: "Así se juega",
+    demoTitulo: "Mira la secuencia, luego repítela",
+    demoSaltar: "Ya lo conozco",
+    practicaAcierto: "Eso es. Así funciona.",
+    practicaErrorPista: "La secuencia era: ",
+    practicaFalloMensaje: "No importa, es práctica. Mira por qué.",
+    practicaFeedback: "Los símbolos aparecen uno tras otro en un orden fijo. Tienes que recordar el orden exacto.",
+    transicion: "Listo. Ahora van los de verdad: secuencias cada vez más largas, sin apuro.",
+    ayudaResumen: [
+      "Aparecen figuras una por una.",
+      "Espera a que terminen de mostrar todas.",
+      "Tócalas en el MISMO orden en que aparecieron.",
+    ],
+  },
+};
+
+export const juegosCognitivos = {
+  pausa: "Pausar", // PENDIENTE PASADA DE COPY
+  reanudar: "Seguir", // PENDIENTE PASADA DE COPY
+  ayuda: "Ayuda", // ITERACIÓN 2: botón help
+  ayudaAria: "Reabrir instrucciones",
+  cerrarAyuda: "Cerrar",
+};
+
+// ── Bloque C — Verbal con IA (sección 4 de la spec) ──────────────────
+export const bloqueVerbal = {
+  // ITERACIÓN 2: mini-ejemplo de informalidad + desactivar ansiedad ortográfica
+  miniEjemplo: "Puedes escribir como hablas. Ejemplo: 'yo cacho que el texto dice que…'",
+  disclaimer: "No evaluamos tu opinión ni tu ortografía: nos interesa cómo entiendes y cómo argumentas.",
+  comprension: {
+    titulo: "Comprensión lectora", // PENDIENTE PASADA DE COPY
+    instrucciones: "Lee el texto y explícalo con tus palabras, como se lo contarías a un amigo.", // PENDIENTE PASADA DE COPY
+    etiqueta: "Tu explicación", // PENDIENTE PASADA DE COPY
+    placeholder: "Escribe tu explicación acá...", // PENDIENTE PASADA DE COPY
+    minimoCaracteres: 120,
+    contadorCaracteres: "caracteres", // PENDIENTE PASADA DE COPY
+    siguienteCta: "Siguiente", // PENDIENTE PASADA DE COPY
+  },
+  argumentacion: {
+    titulo: "Argumentación", // PENDIENTE PASADA DE COPY
+    instrucciones: "Lee el dilema y da tu postura. Defiéndela en 3 o 4 frases.", // PENDIENTE PASADA DE COPY
+    etiqueta: "Tu postura", // PENDIENTE PASADA DE COPY
+    placeholder: "Escribe tu argumento acá...", // PENDIENTE PASADA DE COPY
+    minimoCaracteres: 120,
+    siguienteCta: "Terminar", // PENDIENTE PASADA DE COPY
+  },
+  evaluando: "Evaluando tu respuesta...", // PENDIENTE PASADA DE COPY
+  error: "No pudimos evaluar esta respuesta. Puedes seguir igual.", // PENDIENTE PASADA DE COPY
+  reintentar: "Reintentar", // PENDIENTE PASADA DE COPY
+};
+
+// ── Transiciones entre bloques (sección 1) ─────────────────────────
+export const transiciones = {
+  pliegues: [
+    "Primer pliegue listo. Ahora, a jugar.", // PENDIENTE PASADA DE COPY
+    "Bien jugado. Segundo pliegue: verbal.", // PENDIENTE PASADA DE COPY
+    "Último pliegue. Armando tu informe...", // PENDIENTE PASADA DE COPY
+  ],
+  grullaProgreso: ["25%", "50%", "75%", "100%"], // PENDIENTE PASADA DE COPY
+};
+
+// ── Informe (sección 5 de la spec) ─────────────────────────────────
+export const informe = {
+  titulo: "Tu mapa inicial", // PENDIENTE PASADA DE COPY
+  subtitulo: "Esto es lo que vimos hoy. No es un veredicto, es un punto de partida.", // PENDIENTE PASADA DE COPY
+  saltarAnimacion: "Saltar animación", // PENDIENTE PASADA DE COPY
+  seccionIntereses: "Tu perfil de intereses", // PENDIENTE PASADA DE COPY
+  etiquetaIntereses: "Top dimensiones", // PENDIENTE PASADA DE COPY
+  seccionCapacidades: "Tus capacidades", // PENDIENTE PASADA DE COPY
+  etiquetaCapacidades: (label: string) => `${label}:`, // PENDIENTE PASADA DE COPY
+  leyendaCapacidades: {
+    patrones: "Patrones",
+    espacial: "Espacial",
+    memoria: "Memoria",
+    comunicacion: "Comunicación",
+  },
+  rangoCapacidad: {
+    muyAlto: "Muy desarrollada", // PENDIENTE PASADA DE COPY
+    alto: "Bien desarrollada", // PENDIENTE PASADA DE COPY
+    medio: "En desarrollo", // PENDIENTE PASADA DE COPY
+    bajo: "Área a desarrollar", // PENDIENTE PASADA DE COPY
+  },
+  seccionCaminos: "Caminos para explorar", // PENDIENTE PASADA DE COPY
+  cierre:
+    "Este es tu primer mapa, no tu destino. La versión profunda — carreras concretas, datos de empleo e ingresos reales, y contenido para explorar cada camino — viene pronto.", // PENDIENTE PASADA DE COPY
+  correoOpcional: "¿Quieres recibir tu informe por correo?", // PENDIENTE PASADA DE COPY
+  correoPlaceholder: "tu@correo.cl", // PENDIENTE PASADA DE COPY
+  correoEnviar: "Enviar", // PENDIENTE PASADA DE COPY
+  correoGracias: "Recibirás tu informe en unos minutos.", // PENDIENTE PASADA DE COPY
+  correoError: "No pudimos enviar el correo. Intenta de nuevo.", // PENDIENTE PASADA DE COPY
+  disclaimer:
+    "Este instrumento está en desarrollo. Los resultados son orientativos y no constituyen una recomendación vocacional definitiva.", // PENDIENTE PASADA DE COPY
+};
+
+// Banco de lecturas amables por dimensión — sección 5.2. Se usa para las top 3 dimensiones.
 // PENDIENTE PASADA DE COPY (todas las entradas de este registro)
 export const lecturasPorDimension: Record<string, string> = {
   tec: "Te mueve resolver con las manos y ver resultados concretos. El trabajo técnico te queda cómodo.",

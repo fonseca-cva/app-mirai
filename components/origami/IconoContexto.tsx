@@ -20,7 +20,7 @@ const TONO_BASE = colores.tinta;
 const TONO_CLARO = ajustarLuminosidad(TONO_BASE, 8);
 const TONO_OSCURO = ajustarLuminosidad(TONO_BASE, -12);
 
-const ACENTOS: Record<DimensionCodigo, string> = {
+export const ACENTOS: Record<DimensionCodigo, string> = {
   tec: "#D9A441",
   cie: "#7FA08C",
   cre: "#E86A4F",

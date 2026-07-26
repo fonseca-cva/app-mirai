@@ -7,9 +7,10 @@ import { lecturasPorDimension, resultadoParcial } from "@/lib/config/textos";
 
 interface ResultadoParcialProps {
   top3: PuntajeDimension[];
+  onContinuar: () => void;
 }
 
-export function ResultadoParcial({ top3 }: ResultadoParcialProps) {
+export function ResultadoParcial({ top3, onContinuar }: ResultadoParcialProps) {
   const prefiereMenosMovimiento = useReducedMotion();
   const top1 = top3[0];
 
@@ -49,10 +50,14 @@ export function ResultadoParcial({ top3 }: ResultadoParcialProps) {
 
       <p className="max-w-md text-sm text-tinta/60">{resultadoParcial.cierre}</p>
 
-      <a
-        href={resultadoParcial.mailto}
-        className="rounded-[14px] bg-coral px-6 py-3 text-base font-medium text-blanco-papel transition hover:opacity-90"
+      <button
+        onClick={onContinuar}
+        className="rounded-[14px] bg-coral px-8 py-3 text-base font-medium text-blanco-papel transition hover:opacity-90"
       >
+        {resultadoParcial.continuarCta}
+      </button>
+
+      <a href={resultadoParcial.mailto} className="text-sm text-tinta/60 underline">
         {resultadoParcial.cta}
       </a>
     </section>

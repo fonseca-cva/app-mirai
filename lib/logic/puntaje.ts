@@ -3,6 +3,8 @@ import { contextos, dimensiones, type DimensionCodigo } from "@/lib/data/context
 export interface Respuesta {
   contextoId: string;
   valor: 0 | 1 | 2;
+  // ITERACIÓN 2: señal de calidad del estímulo (¿se abrió "¿Qué se hace acá?"?), no afecta puntaje.
+  ayudaAbierta?: boolean;
 }
 
 export interface PuntajeDimension {

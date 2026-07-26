@@ -1,70 +1,90 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { IntroExperiencia } from "@/components/experiencia/IntroExperiencia";
 import { TarjetaContexto } from "@/components/experiencia/TarjetaContexto";
 import { BarraProgreso } from "@/components/experiencia/BarraProgreso";
 import { ResultadoParcial } from "@/components/experiencia/ResultadoParcial";
 import { FoldTransition } from "@/components/origami/FoldTransition";
+import { BloqueCognitivo } from "@/components/experiencia/juegos/BloqueCognitivo";
+import { BloqueVerbal } from "@/components/experiencia/verbal/BloqueVerbal";
+import { Informe } from "@/components/experiencia/Informe";
 import { contextos } from "@/lib/data/contextos";
-import { calcularPuntajes, type Respuesta } from "@/lib/logic/puntaje";
+import { calcularPuntajes } from "@/lib/logic/puntaje";
 import { experienciaTarjeta } from "@/lib/config/textos";
-
-type Fase = "intro" | "jugando" | "pausado" | "resultado";
+import { useExperienciaStore } from "@/lib/store/experiencia";
 
 export default function ExperienciaPage() {
-  const [fase, setFase] = useState<Fase>("intro");
-  const [indice, setIndice] = useState(0);
-  const [respuestas, setRespuestas] = useState<Respuesta[]>([]);
+  const paso = useExperienciaStore((s) => s.paso);
+  const pausado = useExperienciaStore((s) => s.pausado);
+  const respuestasGustos = useExperienciaStore((s) => s.respuestasGustos);
+  const inicializarSesion = useExperienciaStore((s) => s.inicializarSesion);
+  const irAPaso = useExperienciaStore((s) => s.irAPaso);
+  const pausar = useExperienciaStore((s) => s.pausar);
+  const reanudar = useExperienciaStore((s) => s.reanudar);
+  const agregarRespuestaGustos = useExperienciaStore((s) => s.agregarRespuestaGustos);
 
-  const top3 = useMemo(() => calcularPuntajes(respuestas).slice(0, 3), [respuestas]);
+  useEffect(() => {
+    inicializarSesion();
+  }, [inicializarSesion]);
 
-  function responder(valor: 0 | 1 | 2) {
+  const indice = respuestasGustos.length;
+  const top3 = useMemo(() => calcularPuntajes(respuestasGustos).slice(0, 3), [respuestasGustos]);
+
+  function responderGustos(valor: 0 | 1 | 2, ayudaAbierta: boolean) {
     const contextoActual = contextos[indice];
-    const nuevasRespuestas = [...respuestas, { contextoId: contextoActual.id, valor }];
-    setRespuestas(nuevasRespuestas);
-
-    if (indice + 1 >= contextos.length) {
-      setFase("resultado");
-    } else {
-      setIndice(indice + 1);
-    }
+    agregarRespuestaGustos({ contextoId: contextoActual.id, valor, ayudaAbierta });
   }
 
-  if (fase === "intro") {
-    return <IntroExperiencia onEmpezar={() => setFase("jugando")} />;
+  if (paso === "intro") {
+    return <IntroExperiencia onEmpezar={() => irAPaso("gustos")} />;
   }
 
-  if (fase === "resultado") {
-    return <ResultadoParcial top3={top3} />;
+  // Pausa global (spec sección 6): válida en cualquier bloque con progreso que retomar
+  // (gustos, cognitivo, verbal). El informe es la pantalla final, no requiere pausa.
+  if (pausado && paso !== "informe") {
+    return (
+      <section className="flex min-h-screen flex-col items-center justify-center gap-4 px-4 text-center">
+        <p className="text-tinta/70">Pausado. Vuelve cuando quieras.</p>
+        <button
+          onClick={reanudar}
+          className="rounded-[14px] bg-coral px-6 py-3 text-base font-medium text-blanco-papel transition hover:opacity-90"
+        >
+          {experienciaTarjeta.reanudar}
+        </button>
+      </section>
+    );
   }
 
+  if (paso === "gustos" && indice >= contextos.length) {
+    return <ResultadoParcial top3={top3} onContinuar={() => irAPaso("cognitivo")} />;
+  }
+
+  if (paso === "cognitivo") {
+    return <BloqueCognitivo onCompletar={() => irAPaso("verbal")} onPausar={pausar} />;
+  }
+
+  if (paso === "verbal") {
+    return <BloqueVerbal onCompletar={() => irAPaso("informe")} onPausar={pausar} />;
+  }
+
+  if (paso === "informe") {
+    return <Informe />;
+  }
+
+  // Paso gustos activo: mostrar tarjetas una a una
   const contextoActual = contextos[indice];
 
   return (
     <section className="flex min-h-screen flex-col items-center justify-center gap-8 px-4 py-16 sm:px-8">
       <BarraProgreso actual={indice} total={contextos.length} />
 
-      {fase === "pausado" ? (
-        <div className="flex flex-col items-center gap-4 text-center">
-          <p className="text-tinta/70">Pausado. Vuelve cuando quieras.</p>
-          <button
-            onClick={() => setFase("jugando")}
-            className="rounded-[14px] bg-coral px-6 py-3 text-base font-medium text-blanco-papel transition hover:opacity-90"
-          >
-            {experienciaTarjeta.reanudar}
-          </button>
-        </div>
-      ) : (
-        <>
-          <FoldTransition llave={contextoActual.id}>
-            <TarjetaContexto contexto={contextoActual} onResponder={responder} />
-          </FoldTransition>
-          <button onClick={() => setFase("pausado")} className="text-sm text-tinta/60 underline">
-            {experienciaTarjeta.pausa}
-          </button>
-        </>
-      )}
+      <FoldTransition llave={contextoActual.id}>
+        <TarjetaContexto contexto={contextoActual} onResponder={responderGustos} />
+      </FoldTransition>
+      <button onClick={pausar} className="text-sm text-tinta/60 underline">
+        {experienciaTarjeta.pausa}
+      </button>
     </section>
   );
 }
