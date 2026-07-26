@@ -32,10 +32,9 @@ export function Hero() {
         </Link>
       </header>
 
-      <NubesDeriva prefersReducedMotion={reducedMotion} />
-
       <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 pt-20 text-center sm:px-8">
-        <FondoCapas className="scale-125 origin-bottom" />
+        <FondoCapas />
+        <NubesDeriva prefersReducedMotion={reducedMotion} />
 
         {/* Avión detrás de capas medias */}
         <AvionPapel animar prefersReducedMotion={reducedMotion} />

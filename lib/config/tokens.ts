@@ -13,6 +13,11 @@ export const colores = {
   dorado: "#D9A441",
   blancoPapel: "#FFFDF8",
   teal: "#74C2CE",
+  // Bandas de sección (estilo referencia: bandas planas a sangre completa)
+  tealMedio: "#53ACBB",
+  tealProfundo: "#2F9AAC",
+  verdeManzana: "#A7D692",
+  grisPapel: "#EFF0EA",
 } as const;
 
 export const tipografia = {
@@ -35,6 +40,16 @@ export const breakpoints = {
 } as const;
 
 export type ColorToken = keyof typeof colores;
+
+/** Mezcla dos colores hex por una razón t (0 = hexA puro, 1 = hexB puro). */
+export function mezclarHex(hexA: string, hexB: string, t: number): string {
+  const parse = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const [ar, ag, ab] = parse(hexA);
+  const [br, bg, bb] = parse(hexB);
+  const mezclar = (a: number, b: number) => Math.round(a + (b - a) * t);
+  const toHex = (v: number) => v.toString(16).padStart(2, "0");
+  return `#${toHex(mezclar(ar, br))}${toHex(mezclar(ag, bg))}${toHex(mezclar(ab, bb))}`;
+}
 
 // ─── SISTEMA DE LUZ Y SOMBRA (Fase 1, sección A) ────────────────────────
 

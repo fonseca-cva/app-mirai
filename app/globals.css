@@ -11,6 +11,10 @@
   --color-dorado: #d9a441;
   --color-blanco-papel: #fffdf8;
   --color-teal: #74c2ce;
+  --color-teal-medio: #53acbb;
+  --color-teal-profundo: #2f9aac;
+  --color-verde-manzana: #a7d692;
+  --color-gris-papel: #eff0ea;
 
   --font-display: var(--font-fraunces);
   --font-cuerpo: var(--font-inter);

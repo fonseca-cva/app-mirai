@@ -18,12 +18,20 @@ export function ComoFunciona() {
   const prefiereMenosMovimiento = useReducedMotion();
 
   return (
-    <section id="como-funciona" className="px-4 py-24 sm:px-8">
-      <div className="mb-8 flex items-center justify-center gap-2 text-sm text-tinta/70">
+    <section id="como-funciona" className="bg-teal-medio px-4 py-24 sm:px-8">
+      <div className="mb-8 flex items-center justify-center gap-2 text-sm text-blanco-papel/85">
         <GruaOrigami className="h-6 w-6" />
         <p className="font-display">{nombreSignificado.texto}</p>
       </div>
-      <h2 className="mb-12 text-center text-3xl font-semibold">{comoFunciona.titulo}</h2>
+      <h2 className="mb-6 text-center text-2xl font-semibold uppercase tracking-[0.2em] text-blanco-papel sm:text-3xl">
+        {comoFunciona.titulo}
+      </h2>
+      {/* Olas de papel (adorno de la referencia) */}
+      <svg viewBox="0 0 60 8" className="mx-auto mb-12 h-2 w-16" aria-hidden="true">
+        {[0, 22, 44].map((x) => (
+          <path key={x} d={`M${x},8 Q${x + 8},-6 ${x + 16},8 Z`} fill="#FFFDF8" opacity={0.45} />
+        ))}
+      </svg>
       <div className="mx-auto grid max-w-4xl gap-6 sm:grid-cols-3">
         {comoFunciona.tarjetas.map((tarjeta, i) => (
           <motion.div

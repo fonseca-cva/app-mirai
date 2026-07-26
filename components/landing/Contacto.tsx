@@ -21,7 +21,7 @@ export function Contacto() {
   return (
     <section className="px-4 py-24 sm:px-8">
       <div className="mx-auto max-w-md">
-        <h2 className="mb-8 text-center text-3xl font-semibold">{contacto.titulo}</h2>
+        <h2 className="mb-8 text-center text-2xl font-semibold uppercase tracking-[0.2em] sm:text-3xl">{contacto.titulo}</h2>
         <form onSubmit={manejarEnvio} className="flex flex-col gap-4">
           <label className="flex flex-col gap-1 text-sm">
             {contacto.campos.nombre}

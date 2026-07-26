@@ -2,99 +2,123 @@
 
 import { useEffect, useId, useRef } from "react";
 import { motion, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform } from "framer-motion";
-import { ajustarLuminosidad, atmosfera, colores, dropShadowCSS, type DistanciaCapa } from "@/lib/config/tokens";
+import { atmosfera, colores, dropShadowCSS, mezclarHex, type DistanciaCapa } from "@/lib/config/tokens";
 
 interface FondoCapasProps {
   className?: string;
 }
 
-type Punto = [number, number];
+/** Un pico triangular de papel: centro, semiancho, alto y si lleva cumbre nevada. */
+interface Pico {
+  cx: number;
+  hw: number;
+  alto: number;
+  nieve?: boolean;
+}
 
 interface CapaDef {
   distancia: DistanciaCapa;
-  colorBase: string;
-  cresta: Punto[];
+  /** Cara iluminada (hacia LUZ, superior-izquierda): crema/khaki claro. */
+  luz: string;
+  /** Cara en sombra (ladera derecha): oliva. */
+  sombra: string;
+  picos: Pico[];
   parallax: number;
-  ocultarMobile?: boolean;
 }
 
-const BASE_Y = 200;
+// Geometría dentro del viewBox 0 0 400 200:
+// - SUELO_Y: línea superior del prado verde (se dibuja DETRÁS de los cerros).
+// - BASE_Y: base de los picos, por debajo de SUELO_Y, de modo que los cerros
+//   quedan DELANTE del pasto y sus bases entran en el prado (como en la
+//   referencia, donde las montañas se apoyan sobre el verde).
+const SUELO_Y = 180;
+const BASE_Y = 194;
 
-// Cordillera de papel en 6 capas (4 en mobile, ver `ocultarMobile`), de más lejana
-// a más cercana. Fase 1 — secciones A y B: cada capa respeta LUZ (drop-shadow +
-// facetas de 3 tonos según pendiente) y la perspectiva atmosférica de `tokens.ts`.
+// Grupo compacto y centrado de cerros de papel (≈45% del ancho, no de borde a
+// borde), como el clúster central de la referencia: un pico protagonista alto
+// con nieve, flanqueado por picos menores; detrás, un par de siluetas oliva.
 const CAPAS: CapaDef[] = [
   {
     distancia: "lejana",
-    colorBase: "#D8CDB8",
-    cresta: [[0, 120], [70, 85], [150, 110], [230, 80], [320, 105], [400, 90]],
+    luz: "#D9D9A9",
+    sombra: "#A9A97B",
+    picos: [
+      { cx: 152, hw: 54, alto: 64 },
+      { cx: 258, hw: 48, alto: 50 },
+    ],
     parallax: 0,
   },
   {
-    distancia: "lejana",
-    colorBase: "#C9BCA0",
-    cresta: [[0, 145], [90, 105], [190, 135], [270, 100], [400, 120]],
-    parallax: 18,
-    ocultarMobile: true,
-  },
-  {
     distancia: "media",
-    colorBase: "#93A88F",
-    cresta: [[0, 158], [110, 132], [230, 152], [340, 128], [400, 142]],
-    parallax: 36,
-  },
-  {
-    distancia: "media",
-    colorBase: "#7FA08C",
-    cresta: [[0, 172], [130, 148], [260, 168], [400, 152]],
-    parallax: 54,
-    ocultarMobile: true,
-  },
-  {
-    distancia: "cercana",
-    colorBase: "#4F5F45",
-    cresta: [
-      [0, 182], [30, 160], [55, 178], [85, 155], [115, 180], [150, 158],
-      [185, 182], [220, 160], [255, 180], [290, 155], [325, 178], [360, 160], [400, 178],
+    luz: "#F0F0C0",
+    sombra: "#C0C090",
+    picos: [
+      { cx: 198, hw: 62, alto: 112, nieve: true },
+      { cx: 128, hw: 44, alto: 68, nieve: true },
     ],
-    parallax: 72,
+    parallax: 26,
+  },
+  {
+    distancia: "media",
+    luz: "#EDEDBA",
+    sombra: "#B9B98A",
+    picos: [{ cx: 262, hw: 50, alto: 84, nieve: true }],
+    parallax: 46,
   },
   {
     distancia: "cercana",
-    colorBase: "#33402E",
-    cresta: [[0, 196], [60, 178], [140, 192], [230, 175], [320, 190], [400, 184]],
-    parallax: 90,
+    luz: "#EAEAAF",
+    sombra: "#ABAD7C",
+    picos: [
+      { cx: 164, hw: 40, alto: 52 },
+      { cx: 238, hw: 34, alto: 42 },
+    ],
+    parallax: 66,
   },
 ];
 
-/** Mezcla dos colores hex por una razón t (0 = hexA puro, 1 = hexB puro). */
-function mezclarHex(hexA: string, hexB: string, t: number): string {
-  const parse = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
-  const [ar, ag, ab] = parse(hexA);
-  const [br, bg, bb] = parse(hexB);
-  const mezclar = (a: number, b: number) => Math.round(a + (b - a) * t);
-  const toHex = (v: number) => v.toString(16).padStart(2, "0");
-  return `#${toHex(mezclar(ar, br))}${toHex(mezclar(ag, bg))}${toHex(mezclar(ab, bb))}`;
-}
+/** El pliegue cae un poco a la derecha del vértice: la cara iluminada (izquierda)
+ *  es más ancha que la ladera en sombra, como un doblez de papel bajo LUZ 45°. */
+const FOLD = 0.14;
 
 /**
- * Convierte la silueta de una cresta en facetas trapezoidales (A.3): cada
- * tramo ascendente (mirando hacia LUZ) queda "claro", cada tramo descendente
- * queda "oscuro", y los tramos planos quedan en el tono base. También junta
- * las aristas internas para las líneas de pliegue (A.4).
+ * Descompone un pico triangular en sus dos caras de papel (clara / sombra), la
+ * arista del pliegue central y, si corresponde, una cumbre nevada de dos tonos.
  */
-function construirFacetas(cresta: Punto[], baseY: number) {
-  const facetas: { d: string; tono: "claro" | "oscuro" | "base" }[] = [];
-  const aristas: { x1: number; y1: number; x2: number; y2: number }[] = [];
-  for (let i = 0; i < cresta.length - 1; i++) {
-    const [x1, y1] = cresta[i];
-    const [x2, y2] = cresta[i + 1];
-    const tono = y2 < y1 ? "claro" : y2 > y1 ? "oscuro" : "base";
-    facetas.push({ d: `M${x1},${y1} L${x2},${y2} L${x2},${baseY} L${x1},${baseY} Z`, tono });
-    aristas.push({ x1, y1, x2, y2 });
+function construirPico(p: Pico, baseY: number) {
+  const { cx, hw, alto } = p;
+  const apexY = baseY - alto;
+  const leftX = cx - hw;
+  const rightX = cx + hw;
+  const foldX = cx + hw * FOLD;
+
+  const caraLuz = `M${cx},${apexY} L${leftX},${baseY} L${foldX},${baseY} Z`;
+  const caraSombra = `M${cx},${apexY} L${foldX},${baseY} L${rightX},${baseY} Z`;
+  const pliegue = { x1: cx, y1: apexY, x2: foldX, y2: baseY };
+
+  let nieveLuz: string | undefined;
+  let nieveSombra: string | undefined;
+  if (p.nieve) {
+    const sf = 0.3; // la nieve baja hasta el 30% de la altura del pico
+    const snowY = apexY + alto * sf;
+    const slX = cx - hw * sf;
+    const srX = cx + hw * sf;
+    const sFoldX = cx + hw * FOLD * sf;
+    nieveLuz = `M${cx},${apexY} L${slX},${snowY} L${sFoldX},${snowY} Z`;
+    nieveSombra = `M${cx},${apexY} L${sFoldX},${snowY} L${srX},${snowY} Z`;
   }
-  return { facetas, aristas };
+
+  return { caraLuz, caraSombra, pliegue, nieveLuz, nieveSombra };
 }
+
+// Arbolitos planos del prado, flanqueando la escena como en la referencia:
+// copa triangular de dos pliegues sobre un tronco fino.
+const ARBOLES = [
+  { x: 24, alto: 30, ancho: 12, tono: "#4E8A63" },
+  { x: 52, alto: 22, ancho: 9, tono: "#5A9670" },
+  { x: 350, alto: 24, ancho: 10, tono: "#5A9670" },
+  { x: 378, alto: 32, ancho: 13, tono: "#4E8A63" },
+];
 
 export function FondoCapas({ className = "" }: FondoCapasProps) {
   const ref = useRef<HTMLDivElement>(null);
@@ -108,9 +132,7 @@ export function FondoCapas({ className = "" }: FondoCapasProps) {
   const y1 = useTransform(scrollYProgress, [0, 1], prefiereMenosMovimiento ? [0, 0] : [0, CAPAS[1].parallax]);
   const y2 = useTransform(scrollYProgress, [0, 1], prefiereMenosMovimiento ? [0, 0] : [0, CAPAS[2].parallax]);
   const y3 = useTransform(scrollYProgress, [0, 1], prefiereMenosMovimiento ? [0, 0] : [0, CAPAS[3].parallax]);
-  const y4 = useTransform(scrollYProgress, [0, 1], prefiereMenosMovimiento ? [0, 0] : [0, CAPAS[4].parallax]);
-  const y5 = useTransform(scrollYProgress, [0, 1], prefiereMenosMovimiento ? [0, 0] : [0, CAPAS[5].parallax]);
-  const parallaxPorCapa = [y0, y1, y2, y3, y4, y5];
+  const parallaxPorCapa = [y0, y1, y2, y3];
 
   // Parallax de mouse (C.12): desplazamiento diferencial ±12px máximo,
   // proporcional al parallax de scroll de cada capa (capas lejanas casi no
@@ -139,8 +161,8 @@ export function FondoCapas({ className = "" }: FondoCapasProps) {
       aria-hidden="true"
       style={{ "--mx": mouseXSuave, "--my": mouseYSuave } as React.CSSProperties}
     >
-      {/* Gradiente de pliegue reutilizado (A.4): objectBoundingBox 0,0→1,1 hace
-          que cada línea sea más clara en su extremo superior-izquierdo (hacia LUZ)
+      {/* Gradiente de pliegue reutilizado: objectBoundingBox 0,0→1,1 hace que
+          cada línea sea más clara en su extremo superior-izquierdo (hacia LUZ)
           y más oscura en el opuesto, sin importar su orientación individual. */}
       <svg width="0" height="0">
         <defs>
@@ -151,23 +173,28 @@ export function FondoCapas({ className = "" }: FondoCapasProps) {
         </defs>
       </svg>
 
+      {/* Prado: banda verde mar profundo, DETRÁS de los cerros (los cerros se
+          apoyan sobre ella, como en la referencia). */}
+      <svg viewBox="0 0 400 200" preserveAspectRatio="xMidYMax slice" className="absolute bottom-0 w-full">
+        <rect x="0" y={SUELO_Y} width="400" height={200 - SUELO_Y} fill="#407058" />
+        <rect x="0" y={SUELO_Y} width="400" height={2.5} fill="#4C7E63" />
+      </svg>
+
       {CAPAS.map((capa, i) => {
         const atm = atmosfera[capa.distancia];
-        const tonoBase = mezclarHex(capa.colorBase, colores.papel, atm.mezclaPapel);
-        const tonos = {
-          base: tonoBase,
-          claro: ajustarLuminosidad(tonoBase, 8),
-          oscuro: ajustarLuminosidad(tonoBase, -12),
-        };
-        const { facetas, aristas } = construirFacetas(capa.cresta, BASE_Y);
+        // Perspectiva atmosférica: las capas lejanas se funden hacia el papel.
+        const luz = mezclarHex(capa.luz, colores.papel, atm.mezclaPapel);
+        const sombra = mezclarHex(capa.sombra, colores.papel, atm.mezclaPapel);
+        const nieveLuz = mezclarHex("#F8F8F4", colores.papel, atm.mezclaPapel * 0.6);
+        const nieveSombra = mezclarHex("#E2E2CE", colores.papel, atm.mezclaPapel * 0.6);
         // Offset máximo de parallax de mouse (±12px), proporcional al parallax
         // de scroll de la capa (0 en la más lejana → 12px en la más cercana).
-        const mouseMax = (capa.parallax / 90) * 12;
+        const mouseMax = (capa.parallax / 66) * 12;
 
         return (
           <div
             key={i}
-            className={`absolute inset-0 ${capa.ocultarMobile ? "hidden sm:block" : ""}`}
+            className="absolute inset-0"
             style={{ transform: `translate(calc(var(--mx) * ${mouseMax}px), calc(var(--my) * ${mouseMax}px))` }}
           >
             <motion.svg
@@ -176,45 +203,67 @@ export function FondoCapas({ className = "" }: FondoCapasProps) {
                 transformOrigin: "50% 100%",
                 filter: `saturate(${atm.saturacion}) ${dropShadowCSS(capa.distancia)}`,
               }}
-              animate={prefiereMenosMovimiento ? undefined : { scale: [1, 1.008, 1] }}
+              animate={prefiereMenosMovimiento ? undefined : { scale: [1, 1.006, 1] }}
               transition={
                 prefiereMenosMovimiento
                   ? undefined
                   : { duration: 8 + i * 0.7, repeat: Infinity, ease: "easeInOut", delay: i * 0.5 }
               }
               viewBox="0 0 400 200"
+              preserveAspectRatio="xMidYMax slice"
               className="absolute bottom-0 w-full"
             >
-              {facetas.map((f, j) => (
-                <path key={j} d={f.d} fill={tonos[f.tono]} />
-              ))}
-              {aristas.map((a, j) => (
-                <line
-                  key={j}
-                  x1={a.x1}
-                  y1={a.y1}
-                  x2={a.x2}
-                  y2={a.y2}
-                  stroke={`url(#${creaseId})`}
-                  strokeWidth={1}
-                  opacity={0.25}
-                />
-              ))}
+              {capa.picos.map((p, j) => {
+                const { caraLuz, caraSombra, pliegue, nieveLuz: nL, nieveSombra: nS } = construirPico(p, BASE_Y);
+                return (
+                  <g key={j}>
+                    <path d={caraLuz} fill={luz} />
+                    <path d={caraSombra} fill={sombra} />
+                    {nL && nS && (
+                      <>
+                        <path d={nL} fill={nieveLuz} />
+                        <path d={nS} fill={nieveSombra} />
+                      </>
+                    )}
+                    <line
+                      x1={pliegue.x1}
+                      y1={pliegue.y1}
+                      x2={pliegue.x2}
+                      y2={pliegue.y2}
+                      stroke={`url(#${creaseId})`}
+                      strokeWidth={1}
+                      opacity={0.22}
+                    />
+                  </g>
+                );
+              })}
             </motion.svg>
           </div>
         );
       })}
 
-      {/* Marco de primer plano (B.7): silueta muy cercana recortada por el borde. */}
-      <div
-        className="absolute -bottom-6 -left-10 h-44 w-44"
-        style={{ filter: "blur(2px) saturate(1.4)" }}
+      {/* Arbolitos de papel a los costados, delante de todo. */}
+      <svg
+        viewBox="0 0 400 200"
+        preserveAspectRatio="xMidYMax slice"
+        className="absolute bottom-0 w-full"
+        style={{ filter: dropShadowCSS("cercana") }}
       >
-        <svg viewBox="0 0 100 100" className="h-full w-full">
-          <polygon points="8,92 58,18 88,48 38,96" fill={colores.salvia} />
-          <polygon points="8,92 58,18 42,62" fill={ajustarLuminosidad(colores.salvia, 10)} />
-        </svg>
-      </div>
+        {ARBOLES.map((a, i) => {
+          const apexY = SUELO_Y - a.alto;
+          return (
+            <g key={i}>
+              <rect x={a.x - 1.2} y={SUELO_Y - 5} width={2.4} height={7} fill="#7A5A3C" />
+              {/* Copa triangular de dos pliegues (papel) */}
+              <polygon points={`${a.x},${apexY} ${a.x - a.ancho},${SUELO_Y} ${a.x},${SUELO_Y}`} fill={a.tono} />
+              <polygon
+                points={`${a.x},${apexY} ${a.x},${SUELO_Y} ${a.x + a.ancho},${SUELO_Y}`}
+                fill={mezclarHex(a.tono, colores.tinta, 0.2)}
+              />
+            </g>
+          );
+        })}
+      </svg>
     </motion.div>
   );
 }
