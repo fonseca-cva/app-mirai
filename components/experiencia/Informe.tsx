@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { informe, lecturasPorDimension } from "@/lib/config/textos";
 import { useExperienciaStore } from "@/lib/store/experiencia";
 import { calcularPuntajes } from "@/lib/logic/puntaje";
@@ -8,6 +8,7 @@ import { calcularPuntajesCognitivo } from "@/lib/logic/puntajeCognitivo";
 import { recomendarAreas } from "@/lib/logic/matching";
 import { contextos } from "@/lib/data/contextos";
 import { GruaOrigami } from "@/components/origami/GruaOrigami";
+import { obtenerAccessToken } from "@/lib/supabase/client";
 import type { AreaRecomendada } from "@/lib/logic/matching";
 
 // --- Helper para convertir puntaje numérico a etiqueta de capacidad ---
@@ -28,9 +29,12 @@ export function Informe({ onVolver }: Props) {
   const [correoEnviado, setCorreoEnviado] = useState(false);
   const [correoError, setCorreoError] = useState(false);
 
+  const sessionId = useExperienciaStore((s) => s.sessionId);
   const respuestasGustos = useExperienciaStore((s) => s.respuestasGustos);
   const respuestasCognitivo = useExperienciaStore((s) => s.respuestasCognitivo);
   const respuestasVerbal = useExperienciaStore((s) => s.respuestasVerbal);
+  const sincronizarBloque = useExperienciaStore((s) => s.sincronizarBloque);
+  const resultadoSincronizado = useRef(false);
 
   const puntajesDimension = useMemo(() => calcularPuntajes(respuestasGustos), [respuestasGustos]);
   const top3 = puntajesDimension.slice(0, 3);
@@ -57,6 +61,31 @@ export function Informe({ onVolver }: Props) {
     () => recomendarAreas(puntajesDimension, puntajesCognitivo),
     [puntajesDimension, puntajesCognitivo]
   );
+
+  const perfilResultado = useMemo(
+    () => ({
+      dimensionTop3: top3.map((d) => ({ codigo: d.dimension, etiqueta: d.etiqueta, puntaje: d.puntaje })),
+      capacidades: {
+        patrones: puntajesCognitivo.patrones,
+        espacial: puntajesCognitivo.espacial,
+        memoria: puntajesCognitivo.memoria,
+        comunicacion: puntajeComunicacion,
+      },
+      areasCarreras: areasRecomendadas.map((a) => a.area.id),
+      generado_en: new Date().toISOString(),
+    }),
+    [top3, puntajesCognitivo, puntajeComunicacion, areasRecomendadas]
+  );
+
+  // Bloque D (informe) generado: sync del perfil de resultados, una sola vez por sesión.
+  useEffect(() => {
+    if (resultadoSincronizado.current || !sessionId) return;
+    resultadoSincronizado.current = true;
+    sincronizarBloque([
+      { id: `resultado-${sessionId}`, tipo: "resultado", payload: { session_id: sessionId, perfil_json: perfilResultado } },
+    ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId, sincronizarBloque]);
 
   // Animación de la grulla: se salta después de 3s o al hacer clic
   if (!animacionLista) {
@@ -181,10 +210,26 @@ export function Informe({ onVolver }: Props) {
           />
           <button
             onClick={async () => {
-              if (!correo.trim()) return;
+              if (!correo.trim() || !sessionId) return;
               setCorreoError(false);
               try {
-                // Simulado: en Fase 3 se implementará el envío real
+                // Reintenta el upsert de resultados por si el sync del efecto (al montar)
+                // todavía no terminó — evita que /api/enviar-informe no encuentre la fila.
+                await sincronizarBloque([
+                  { id: `resultado-${sessionId}`, tipo: "resultado", payload: { session_id: sessionId, perfil_json: perfilResultado } },
+                  { id: `correo-${sessionId}`, tipo: "correo", payload: { session_id: sessionId, email: correo.trim() } },
+                ]);
+
+                const token = await obtenerAccessToken();
+                if (!token) throw new Error("sin sesión");
+
+                const respuesta = await fetch("/api/enviar-informe", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                  body: JSON.stringify({ sessionId }),
+                });
+                if (!respuesta.ok) throw new Error("envío falló");
+
                 setCorreoEnviado(true);
               } catch {
                 setCorreoError(true);

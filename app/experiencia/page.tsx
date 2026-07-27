@@ -17,12 +17,14 @@ import { useExperienciaStore } from "@/lib/store/experiencia";
 export default function ExperienciaPage() {
   const paso = useExperienciaStore((s) => s.paso);
   const pausado = useExperienciaStore((s) => s.pausado);
+  const sessionId = useExperienciaStore((s) => s.sessionId);
   const respuestasGustos = useExperienciaStore((s) => s.respuestasGustos);
   const inicializarSesion = useExperienciaStore((s) => s.inicializarSesion);
   const irAPaso = useExperienciaStore((s) => s.irAPaso);
   const pausar = useExperienciaStore((s) => s.pausar);
   const reanudar = useExperienciaStore((s) => s.reanudar);
   const agregarRespuestaGustos = useExperienciaStore((s) => s.agregarRespuestaGustos);
+  const sincronizarBloque = useExperienciaStore((s) => s.sincronizarBloque);
 
   useEffect(() => {
     inicializarSesion();
@@ -30,6 +32,36 @@ export default function ExperienciaPage() {
 
   const indice = respuestasGustos.length;
   const top3 = useMemo(() => calcularPuntajes(respuestasGustos).slice(0, 3), [respuestasGustos]);
+
+  // Bloque A (gustos) completado: sync de la sesión + todas sus respuestas.
+  // La sesión debe crearse primero (FK session_id → sesiones.id en la migración 00001).
+  useEffect(() => {
+    if (paso !== "gustos" || indice < contextos.length || !sessionId) return;
+    sincronizarBloque([
+      {
+        id: `sesion-${sessionId}`,
+        tipo: "sesion",
+        payload: {
+          id: sessionId,
+          creada_en: new Date().toISOString(),
+          edad: null,
+          curso: null,
+          dispositivo: typeof navigator !== "undefined" ? navigator.userAgent : null,
+        },
+      },
+      {
+        id: `gustos-${sessionId}`,
+        tipo: "gustos",
+        payload: respuestasGustos.map((r) => ({
+          session_id: sessionId,
+          contexto_id: r.contextoId,
+          valor: r.valor,
+          latencia_ms: null,
+          ayuda_abierta: r.ayudaAbierta ?? false,
+        })),
+      },
+    ]);
+  }, [paso, indice, sessionId, respuestasGustos, sincronizarBloque]);
 
   function responderGustos(valor: 0 | 1 | 2, ayudaAbierta: boolean) {
     const contextoActual = contextos[indice];

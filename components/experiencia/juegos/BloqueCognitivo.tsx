@@ -22,7 +22,9 @@ const NIVEL_POR_DIFICULTAD = { facil: 1, media: 2, dificil: 3 } as const;
 // en orden fijo, despachando cada respuesta al store para su sync posterior con Supabase.
 export function BloqueCognitivo({ onCompletar, onPausar }: Props) {
   const [juego, setJuego] = useState<Juego>("matrices");
+  const sessionId = useExperienciaStore((s) => s.sessionId);
   const agregarRespuestaCognitivo = useExperienciaStore((s) => s.agregarRespuestaCognitivo);
+  const sincronizarBloque = useExperienciaStore((s) => s.sincronizarBloque);
 
   function registrarMatrices(resultados: ResultadoMatrices[]) {
     resultados.forEach((r) => {
@@ -62,6 +64,26 @@ export function BloqueCognitivo({ onCompletar, onPausar }: Props) {
         duracionMs: intento.duracionMs,
       });
     });
+
+    // Bloque B (cognitivo) completado: sync de todas las respuestas de los 3 juegos.
+    if (sessionId) {
+      const respuestas = useExperienciaStore.getState().respuestasCognitivo;
+      sincronizarBloque([
+        {
+          id: `cognitivo-${sessionId}`,
+          tipo: "cognitivo",
+          payload: respuestas.map((r) => ({
+            session_id: sessionId,
+            juego: r.juego,
+            item_id: r.itemId,
+            correcto: r.correcto,
+            nivel: r.nivel,
+            duracion_ms: r.duracionMs,
+          })),
+        },
+      ]);
+    }
+
     onCompletar();
   }
 

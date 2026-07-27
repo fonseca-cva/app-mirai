@@ -1,6 +1,9 @@
-// Tipos que reflejan el esquema de Supabase (migración 00001).
+// Tipos que reflejan el esquema de Supabase (migraciones 00001-00004).
 // Los tipos compuestos se usan para insert/select tipados desde el cliente.
-// Las políticas RLS garantizan que cada sesión solo ve sus propios datos.
+// Las políticas RLS garantizan que cada sesión solo ve sus propios datos, vía
+// auth.uid() = user_id (Anonymous Auth, migración 00003). user_id es opcional
+// en estos tipos porque la columna tiene DEFAULT auth.uid(): el cliente no
+// necesita enviarlo en los inserts.
 
 export interface SesionRow {
   id: string;
@@ -8,6 +11,7 @@ export interface SesionRow {
   edad: string | null;
   curso: string | null;
   dispositivo: string | null;
+  user_id?: string;
 }
 
 export interface RespuestaGustoRow {
@@ -18,6 +22,7 @@ export interface RespuestaGustoRow {
   latencia_ms: number | null;
   ayuda_abierta: boolean;
   creado_en?: string;
+  user_id?: string;
 }
 
 export interface RespuestaCognitivoRow {
@@ -29,6 +34,7 @@ export interface RespuestaCognitivoRow {
   nivel: number;
   duracion_ms: number;
   creado_en?: string;
+  user_id?: string;
 }
 
 export interface RespuestaVerbalRow {
@@ -40,6 +46,7 @@ export interface RespuestaVerbalRow {
   estado: "pendiente" | "evaluado" | "error";
   creado_en?: string;
   evaluado_en?: string | null;
+  user_id?: string;
 }
 
 export interface EvaluacionVerbal {
@@ -54,6 +61,7 @@ export interface ResultadoRow {
   session_id: string;
   perfil_json: PerfilResultado;
   generado_en?: string;
+  user_id?: string;
 }
 
 export interface PerfilResultado {
@@ -72,5 +80,8 @@ export interface CorreoInformeRow {
   id?: number;
   session_id: string;
   email: string;
+  estado?: "pendiente" | "enviado" | "error";
   creado_en?: string;
+  enviado_en?: string | null;
+  user_id?: string;
 }

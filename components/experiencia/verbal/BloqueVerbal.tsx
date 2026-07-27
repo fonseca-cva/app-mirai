@@ -5,6 +5,7 @@ import { bloqueVerbal } from "@/lib/config/textos";
 import { TEXTOS_COMPRENSION, DILEMAS_ARGUMENTACION } from "@/lib/config/rubricas";
 import { useExperienciaStore, type RespuestaVerbal } from "@/lib/store/experiencia";
 import { juegosCognitivos } from "@/lib/config/textos";
+import type { RespuestaVerbalRow } from "@/lib/supabase/types";
 
 interface Props {
   onCompletar: () => void;
@@ -21,6 +22,7 @@ export function BloqueVerbal({ onCompletar, onPausar }: Props) {
   const [hecho, setHecho] = useState(false);
   const sessionId = useExperienciaStore((s) => s.sessionId);
   const agregarRespuestaVerbal = useExperienciaStore((s) => s.agregarRespuestaVerbal);
+  const sincronizarBloque = useExperienciaStore((s) => s.sincronizarBloque);
 
   // Índices determinísticos para textos/dilemas basados en sessionId
   const indiceTexto = sessionId ? sessionId.charCodeAt(0) % TEXTOS_COMPRENSION.length : 0;
@@ -98,10 +100,29 @@ export function BloqueVerbal({ onCompletar, onPausar }: Props) {
         setTarea("argumentacion");
       } else {
         setHecho(true);
+
+        // Bloque C (verbal) completado: sync de las 2 respuestas (comprensión + argumentación).
+        if (sessionId) {
+          const respuestas = useExperienciaStore.getState().respuestasVerbal;
+          sincronizarBloque(
+            respuestas.map((r, i) => ({
+              id: `verbal-${sessionId}-${i}`,
+              tipo: "verbal" as const,
+              payload: {
+                session_id: sessionId,
+                tarea: r.tarea,
+                texto: r.texto,
+                evaluacion_json: r.evaluacion as RespuestaVerbalRow["evaluacion_json"],
+                estado: r.estado,
+              },
+            }))
+          );
+        }
+
         setTimeout(() => onCompletar(), 1500);
       }
     }
-  }, [texto, tarea, sessionId, indiceTexto, indiceDilema, agregarRespuestaVerbal, onCompletar, caracteresMinimos]);
+  }, [texto, tarea, sessionId, indiceTexto, indiceDilema, agregarRespuestaVerbal, sincronizarBloque, onCompletar, caracteresMinimos]);
 
   if (hecho) {
     return (
