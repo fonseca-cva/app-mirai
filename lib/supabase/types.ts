@@ -21,6 +21,7 @@ export interface RespuestaGustoRow {
   valor: 0 | 1 | 2;
   latencia_ms: number | null;
   ayuda_abierta: boolean;
+  audio_activado: boolean;
   creado_en?: string;
   user_id?: string;
 }
@@ -33,6 +34,7 @@ export interface RespuestaCognitivoRow {
   correcto: boolean;
   nivel: number;
   duracion_ms: number;
+  repetido_timeout: boolean;
   creado_en?: string;
   user_id?: string;
 }
@@ -74,6 +76,19 @@ export interface PerfilResultado {
   };
   areasCarreras: string[];
   generado_en: string;
+}
+
+export interface TutorialEstadoRow {
+  id?: number;
+  session_id: string;
+  juego: "matrices" | "rotacion" | "secuencias";
+  tutorial_visto: boolean;
+  practica_dominada: boolean | null;
+  demo_loops_vistos: number;
+  uso_atras: number;
+  uso_saltar_tutorial: boolean;
+  creado_en?: string;
+  user_id?: string;
 }
 
 export interface CorreoInformeRow {

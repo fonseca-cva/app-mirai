@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { bloqueVerbal } from "@/lib/config/textos";
+import { bloqueVerbal, juegosCognitivos } from "@/lib/config/textos";
 import { TEXTOS_COMPRENSION, DILEMAS_ARGUMENTACION } from "@/lib/config/rubricas";
 import { useExperienciaStore, type RespuestaVerbal } from "@/lib/store/experiencia";
-import { juegosCognitivos } from "@/lib/config/textos";
 import type { RespuestaVerbalRow } from "@/lib/supabase/types";
 
 interface Props {
@@ -119,17 +118,20 @@ export function BloqueVerbal({ onCompletar, onPausar }: Props) {
           );
         }
 
-        setTimeout(() => onCompletar(), 1500);
       }
     }
-  }, [texto, tarea, sessionId, indiceTexto, indiceDilema, agregarRespuestaVerbal, sincronizarBloque, onCompletar, caracteresMinimos]);
+  }, [texto, tarea, sessionId, indiceTexto, indiceDilema, agregarRespuestaVerbal, sincronizarBloque, caracteresMinimos]);
 
   if (hecho) {
     return (
       <section className="flex min-h-screen flex-col items-center justify-center gap-4 px-4 text-center">
-        <p className="font-display text-xl text-tinta/80">
-          {tarea === "argumentacion" ? "¡Bien! Tercer pliegue listo." : ""}
-        </p>
+        <p className="font-display text-xl text-tinta/80">¡Bien! Tercer pliegue listo.</p>
+        <button
+          onClick={onCompletar}
+          className="rounded-[14px] bg-coral px-6 py-3 text-base font-medium text-blanco-papel transition hover:opacity-90"
+        >
+          {juegosCognitivos.seguir}
+        </button>
       </section>
     );
   }
@@ -149,13 +151,18 @@ export function BloqueVerbal({ onCompletar, onPausar }: Props) {
         <p className="text-base leading-relaxed text-tinta/80">{textoBase}</p>
       </div>
 
-      <p className="text-sm text-tinta/60">{config.instrucciones}</p>
-
-      {/* ITERACIÓN 2: mini-ejemplo de informalidad */}
-      <div className="rounded-[10px] border border-teal-profundo/20 bg-teal-profundo/5 px-4 py-3 text-sm">
-        <p className="text-teal-profundo/80">{bloqueVerbal.miniEjemplo}</p>
-        <p className="mt-1 text-xs text-tinta/50">{bloqueVerbal.disclaimer}</p>
-      </div>
+      {/* ITERACIÓN 3: consigna + mini-ejemplo en panel colapsable, abierto por defecto,
+          visible mientras el estudiante escribe (punto 9 de la spec). */}
+      <details open className="rounded-[10px] border border-teal-profundo/20 bg-teal-profundo/5 text-sm">
+        <summary className="cursor-pointer select-none px-4 py-3 font-medium text-teal-profundo/80">
+          Instrucciones
+        </summary>
+        <div className="px-4 pb-3">
+          <p className="text-tinta/60">{config.instrucciones}</p>
+          <p className="mt-2 text-teal-profundo/80">{bloqueVerbal.miniEjemplo}</p>
+          <p className="mt-1 text-xs text-tinta/50">{bloqueVerbal.disclaimer}</p>
+        </div>
+      </details>
 
       <textarea
         value={texto}

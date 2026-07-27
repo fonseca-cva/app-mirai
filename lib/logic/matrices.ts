@@ -1,6 +1,11 @@
-import { clamp, figurasIguales, type FiguraOrigami } from "@/lib/logic/figuraOrigami";
+import {
+  clamp,
+  figurasColisionanVisualmente,
+  figurasIguales,
+  type FiguraOrigami,
+} from "@/lib/logic/figuraOrigami";
 
-export type AtributoRegla = "lados" | "rotacionDeg" | "tono" | "pliegues";
+export type AtributoRegla = "lados" | "rotacionDeg" | "relleno" | "pliegues";
 
 // Una regla describe cómo cambia UN atributo a lo largo de las columnas de la matriz.
 // baseFila fija el valor de partida (columna 0) por fila, para que cada fila explore
@@ -14,22 +19,25 @@ export interface Regla {
 const ATRIBUTO_RANGO: Record<AtributoRegla, [number, number]> = {
   lados: [3, 8],
   rotacionDeg: [0, 315],
-  tono: [0, 1],
+  relleno: [0, 1],
   pliegues: [1, 3],
 };
 
 const PERTURBACION: Record<AtributoRegla, number> = {
   lados: 1,
   rotacionDeg: 90,
-  tono: 0.3,
+  relleno: 1,
   pliegues: 1,
 };
 
-const FIGURA_BASE: FiguraOrigami = { lados: 4, rotacionDeg: 0, tono: 0.3, pliegues: 1 };
+const FIGURA_BASE: FiguraOrigami = { lados: 4, rotacionDeg: 0, relleno: 0, pliegues: 1 };
 
 function resolverValor(atributo: AtributoRegla, crudo: number): number {
   const [min, max] = ATRIBUTO_RANGO[atributo];
   if (atributo === "rotacionDeg") return ((crudo % 360) + 360) % 360;
+  // relleno es binario (sólido/contorno): envuelve mod 2 en vez de saturar, para que
+  // pueda alternar como regla (p.ej. tablero de ajedrez) igual que rotacionDeg envuelve mod 360.
+  if (atributo === "relleno") return ((crudo % 2) + 2) % 2;
   return clamp(crudo, min, max);
 }
 
@@ -49,14 +57,30 @@ function perturbar(figura: FiguraOrigami, atributo: AtributoRegla, signo: 1 | -1
   return { ...figura, [atributo]: valor };
 }
 
+// Offsets candidatos para un distractor de rotación, en orden de preferencia. Cubre todas las
+// simetrías posibles de un polígono de 3-8 lados (120°, 90°, 72°, 60°, ~51.4°, 45°): para
+// cualquiera de ellas, al menos uno de estos offsets NO es congruente mod esa simetría, así
+// que el distractor resultante nunca es "el mismo polígono rotado a una orientación equivalente"
+// (el bug que producía p.ej. dos cuadrados a 90° de diferencia = geométricamente idénticos).
+const OFFSETS_ROTACION_SEGUROS = [90, -90, 45, -45, 135, -135, 30, -30];
+
+function perturbarRotacion(correcta: FiguraOrigami): FiguraOrigami {
+  for (const offset of OFFSETS_ROTACION_SEGUROS) {
+    const candidato = { ...correcta, rotacionDeg: resolverValor("rotacionDeg", correcta.rotacionDeg + offset) };
+    if (!figurasColisionanVisualmente(candidato, correcta)) return candidato;
+  }
+  throw new Error(`No se encontró un ángulo de distractor seguro para lados=${correcta.lados}`);
+}
+
 // Genera un distractor alterando un solo atributo (los demás quedan fieles a la correcta),
 // para que el error sea "creíble" dentro del mismo sistema de figuras, no ruido arbitrario.
 function distractorPorAtributo(correcta: FiguraOrigami, atributo: AtributoRegla): FiguraOrigami {
+  if (atributo === "rotacionDeg") return perturbarRotacion(correcta);
   const candidato = perturbar(correcta, atributo, 1);
   return figurasIguales(candidato, correcta) ? perturbar(correcta, atributo, -1) : candidato;
 }
 
-const TODOS_LOS_ATRIBUTOS: AtributoRegla[] = ["lados", "rotacionDeg", "tono", "pliegues"];
+const TODOS_LOS_ATRIBUTOS: AtributoRegla[] = ["lados", "rotacionDeg", "relleno", "pliegues"];
 
 function generarDistractores(correcta: FiguraOrigami, reglas: Regla[]): FiguraOrigami[] {
   const controlados = reglas.map((r) => r.atributo);
@@ -66,7 +90,10 @@ function generarDistractores(correcta: FiguraOrigami, reglas: Regla[]): FiguraOr
   for (const atributo of [...controlados, ...libres]) {
     if (distractores.length >= 4) break;
     const candidato = distractorPorAtributo(correcta, atributo);
-    if (!figurasIguales(candidato, correcta) && !distractores.some((d) => figurasIguales(d, candidato))) {
+    const colisiona =
+      figurasColisionanVisualmente(candidato, correcta) ||
+      distractores.some((d) => figurasColisionanVisualmente(d, candidato));
+    if (!colisiona) {
       distractores.push(candidato);
     }
   }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { IntroExperiencia } from "@/components/experiencia/IntroExperiencia";
 import { TarjetaContexto } from "@/components/experiencia/TarjetaContexto";
 import { BarraProgreso } from "@/components/experiencia/BarraProgreso";
@@ -9,9 +9,10 @@ import { FoldTransition } from "@/components/origami/FoldTransition";
 import { BloqueCognitivo } from "@/components/experiencia/juegos/BloqueCognitivo";
 import { BloqueVerbal } from "@/components/experiencia/verbal/BloqueVerbal";
 import { Informe } from "@/components/experiencia/Informe";
+import { useAudioAmbiente } from "@/components/experiencia/useAudioAmbiente";
 import { contextos } from "@/lib/data/contextos";
 import { calcularPuntajes } from "@/lib/logic/puntaje";
-import { experienciaTarjeta } from "@/lib/config/textos";
+import { experienciaAudioAmbiente, experienciaTarjeta } from "@/lib/config/textos";
 import { useExperienciaStore } from "@/lib/store/experiencia";
 
 export default function ExperienciaPage() {
@@ -19,12 +20,17 @@ export default function ExperienciaPage() {
   const pausado = useExperienciaStore((s) => s.pausado);
   const sessionId = useExperienciaStore((s) => s.sessionId);
   const respuestasGustos = useExperienciaStore((s) => s.respuestasGustos);
+  const audioActivado = useExperienciaStore((s) => s.audioActivado);
   const inicializarSesion = useExperienciaStore((s) => s.inicializarSesion);
   const irAPaso = useExperienciaStore((s) => s.irAPaso);
   const pausar = useExperienciaStore((s) => s.pausar);
   const reanudar = useExperienciaStore((s) => s.reanudar);
+  const activarAudio = useExperienciaStore((s) => s.activarAudio);
   const agregarRespuestaGustos = useExperienciaStore((s) => s.agregarRespuestaGustos);
   const sincronizarBloque = useExperienciaStore((s) => s.sincronizarBloque);
+
+  const [muted, setMuted] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
     inicializarSesion();
@@ -32,6 +38,13 @@ export default function ExperienciaPage() {
 
   const indice = respuestasGustos.length;
   const top3 = useMemo(() => calcularPuntajes(respuestasGustos).slice(0, 3), [respuestasGustos]);
+  const contextoActual = contextos[indice];
+  const audioEfectivo = audioActivado && !muted;
+  useAudioAmbiente(
+    audioRef,
+    paso === "gustos" ? contextoActual?.escenaId : undefined,
+    audioEfectivo
+  );
 
   // Bloque A (gustos) completado: sync de la sesión + todas sus respuestas.
   // La sesión debe crearse primero (FK session_id → sesiones.id en la migración 00001).
@@ -58,18 +71,30 @@ export default function ExperienciaPage() {
           valor: r.valor,
           latencia_ms: null,
           ayuda_abierta: r.ayudaAbierta ?? false,
+          audio_activado: r.audioActivado ?? false,
         })),
       },
     ]);
   }, [paso, indice, sessionId, respuestasGustos, sincronizarBloque]);
 
   function responderGustos(valor: 0 | 1 | 2, ayudaAbierta: boolean) {
-    const contextoActual = contextos[indice];
-    agregarRespuestaGustos({ contextoId: contextoActual.id, valor, ayudaAbierta });
+    agregarRespuestaGustos({
+      contextoId: contextoActual.id,
+      valor,
+      ayudaAbierta,
+      audioActivado: audioEfectivo,
+    });
   }
 
   if (paso === "intro") {
-    return <IntroExperiencia onEmpezar={() => irAPaso("gustos")} />;
+    return (
+      <IntroExperiencia
+        onEmpezar={(conAudio) => {
+          activarAudio(conAudio);
+          irAPaso("gustos");
+        }}
+      />
+    );
   }
 
   // Pausa global (spec sección 6): válida en cualquier bloque con progreso que retomar
@@ -105,18 +130,28 @@ export default function ExperienciaPage() {
   }
 
   // Paso gustos activo: mostrar tarjetas una a una
-  const contextoActual = contextos[indice];
-
   return (
     <section className="flex min-h-screen flex-col items-center justify-center gap-8 px-4 py-16 sm:px-8">
+      <audio ref={audioRef} preload="none" />
       <BarraProgreso actual={indice} total={contextos.length} />
 
       <FoldTransition llave={contextoActual.id}>
         <TarjetaContexto contexto={contextoActual} onResponder={responderGustos} />
       </FoldTransition>
-      <button onClick={pausar} className="text-sm text-tinta/60 underline">
-        {experienciaTarjeta.pausa}
-      </button>
+      <div className="flex items-center gap-4">
+        <button onClick={pausar} className="text-sm text-tinta/60 underline">
+          {experienciaTarjeta.pausa}
+        </button>
+        {audioActivado && (
+          <button
+            onClick={() => setMuted((m) => !m)}
+            aria-label={muted ? experienciaAudioAmbiente.activarSonido : experienciaAudioAmbiente.silenciar}
+            className="text-sm text-tinta/60 underline"
+          >
+            {muted ? experienciaAudioAmbiente.activarSonido : experienciaAudioAmbiente.silenciar}
+          </button>
+        )}
+      </div>
     </section>
   );
 }

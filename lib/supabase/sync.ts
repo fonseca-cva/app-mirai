@@ -5,7 +5,7 @@
 // los datos pendientes se pierden (no hay service worker persistente en esta fase).
 
 import { supabase, asegurarSesionAnonima } from "@/lib/supabase/client";
-import type { SesionRow, RespuestaGustoRow, RespuestaCognitivoRow, RespuestaVerbalRow, ResultadoRow, CorreoInformeRow } from "@/lib/supabase/types";
+import type { SesionRow, RespuestaGustoRow, RespuestaCognitivoRow, RespuestaVerbalRow, ResultadoRow, CorreoInformeRow, TutorialEstadoRow } from "@/lib/supabase/types";
 
 const TIMEOUT_MS = 5000;
 
@@ -106,6 +106,18 @@ export async function syncResultados(resultado: ResultadoRow): Promise<boolean> 
   }
 }
 
+// ── Sync de estado del tutorial (ITERACIÓN 3 — telemetría de calidad) ─
+export async function syncTutorialEstado(estado: TutorialEstadoRow): Promise<boolean> {
+  if (!supabase) return false;
+  const cliente = supabase;
+  try {
+    await conSesion(() => cliente.from("tutorial_estado").upsert(estado, { onConflict: "session_id,juego" }));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // ── Sync de correo informe ────────────────────────────────────────
 export async function syncCorreoInforme(correo: CorreoInformeRow): Promise<boolean> {
   if (!supabase) return false;
@@ -124,7 +136,7 @@ export async function syncCorreoInforme(correo: CorreoInformeRow): Promise<boole
 // en el próximo bloque o al recargar la página.
 export interface TareaSync {
   id: string;
-  tipo: "sesion" | "gustos" | "cognitivo" | "verbal" | "resultado" | "correo";
+  tipo: "sesion" | "gustos" | "cognitivo" | "verbal" | "resultado" | "correo" | "tutorial";
   payload: unknown;
 }
 
@@ -151,6 +163,9 @@ export async function procesarColaSync(cola: TareaSync[]): Promise<TareaSync[]> 
         break;
       case "correo":
         ok = await syncCorreoInforme(tarea.payload as CorreoInformeRow);
+        break;
+      case "tutorial":
+        ok = await syncTutorialEstado(tarea.payload as TutorialEstadoRow);
         break;
     }
     if (!ok) fallaron.push(tarea);

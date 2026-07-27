@@ -1,14 +1,14 @@
 import type { FiguraOrigami } from "@/lib/logic/figuraOrigami";
 import { FiguraOrigamiSVG } from "@/components/experiencia/juegos/FiguraOrigamiSVG";
 
-// 6 símbolos fijos (sección 3.3): distintos en lados y tono para no depender solo del color.
+// 6 símbolos fijos (sección 3.3): distintos en número de lados, no dependen del color.
 const SIMBOLOS: FiguraOrigami[] = [
-  { lados: 3, rotacionDeg: 0, tono: 0.1, pliegues: 1 },
-  { lados: 4, rotacionDeg: 45, tono: 0.3, pliegues: 1 },
-  { lados: 5, rotacionDeg: 0, tono: 0.5, pliegues: 1 },
-  { lados: 6, rotacionDeg: 30, tono: 0.7, pliegues: 1 },
-  { lados: 7, rotacionDeg: 0, tono: 0.9, pliegues: 1 },
-  { lados: 8, rotacionDeg: 22.5, tono: 1, pliegues: 1 },
+  { lados: 3, rotacionDeg: 0, relleno: 0, pliegues: 1 },
+  { lados: 4, rotacionDeg: 45, relleno: 0, pliegues: 1 },
+  { lados: 5, rotacionDeg: 0, relleno: 0, pliegues: 1 },
+  { lados: 6, rotacionDeg: 30, relleno: 0, pliegues: 1 },
+  { lados: 7, rotacionDeg: 0, relleno: 0, pliegues: 1 },
+  { lados: 8, rotacionDeg: 22.5, relleno: 0, pliegues: 1 },
 ];
 
 interface Props {
@@ -19,7 +19,11 @@ interface Props {
 
 export function PadSecuencias({ simboloResaltado, deshabilitado, onTocar }: Props) {
   return (
-    <div className="grid grid-cols-3 gap-3">
+    <div
+      className={`grid grid-cols-3 gap-3 transition-opacity duration-500 ${
+        deshabilitado ? "opacity-30" : "opacity-100"
+      }`}
+    >
       {SIMBOLOS.map((figura, i) => (
         <button
           key={i}

@@ -14,6 +14,9 @@ export interface RespuestaCognitivo {
   correcto: boolean;
   nivel: number;
   duracionMs: number;
+  // Anexo 3: solo aplica a "secuencias" — si esta respuesta vino tras usar la única
+  // repetición por timeout de inactividad de la ronda (para no penalizar por distracción).
+  repetidoPorTimeout: boolean;
 }
 
 export interface RespuestaVerbal {
@@ -27,6 +30,9 @@ interface EstadoExperiencia {
   sessionId: string | null;
   paso: PasoExperiencia;
   pausado: boolean;
+  // Mejora Bloque A: elección de audio ambiente hecha en IntroExperiencia (opt-in,
+  // nunca autoplay). El mute momentáneo durante el bloque es estado local del componente.
+  audioActivado: boolean;
   respuestasGustos: RespuestaGustos[];
   respuestasCognitivo: RespuestaCognitivo[];
   respuestasVerbal: RespuestaVerbal[];
@@ -36,6 +42,7 @@ interface EstadoExperiencia {
   irAPaso: (paso: PasoExperiencia) => void;
   pausar: () => void;
   reanudar: () => void;
+  activarAudio: (conAudio: boolean) => void;
   agregarRespuestaGustos: (respuesta: RespuestaGustos) => void;
   agregarRespuestaCognitivo: (respuesta: RespuestaCognitivo) => void;
   agregarRespuestaVerbal: (respuesta: RespuestaVerbal) => void;
@@ -51,6 +58,7 @@ export const useExperienciaStore = create<EstadoExperiencia>()(
       sessionId: null,
       paso: "intro",
       pausado: false,
+      audioActivado: false,
       respuestasGustos: [],
       respuestasCognitivo: [],
       respuestasVerbal: [],
@@ -60,6 +68,7 @@ export const useExperienciaStore = create<EstadoExperiencia>()(
       irAPaso: (paso) => set({ paso, pausado: false }),
       pausar: () => set({ pausado: true }),
       reanudar: () => set({ pausado: false }),
+      activarAudio: (conAudio) => set({ audioActivado: conAudio }),
 
       agregarRespuestaGustos: (respuesta) =>
         set((estado) => ({ respuestasGustos: [...estado.respuestasGustos, respuesta] })),
@@ -82,6 +91,7 @@ export const useExperienciaStore = create<EstadoExperiencia>()(
         sessionId: estado.sessionId,
         paso: estado.paso,
         pausado: estado.pausado,
+        audioActivado: estado.audioActivado,
         respuestasGustos: estado.respuestasGustos,
         respuestasCognitivo: estado.respuestasCognitivo,
         respuestasVerbal: estado.respuestasVerbal,

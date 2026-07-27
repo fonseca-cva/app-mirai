@@ -3,6 +3,7 @@ import { ComoFunciona } from "@/components/landing/ComoFunciona";
 import { TeaserExperiencia } from "@/components/landing/TeaserExperiencia";
 import { TeaserInforme } from "@/components/landing/TeaserInforme";
 import { Respaldo } from "@/components/landing/Respaldo";
+import { Apoderados } from "@/components/landing/Apoderados";
 import { ParaColegios } from "@/components/landing/ParaColegios";
 import { Contacto } from "@/components/landing/Contacto";
 import { Footer } from "@/components/landing/Footer";
@@ -18,6 +19,7 @@ export default function Home() {
       <TeaserExperiencia />
       <TeaserInforme />
       <Respaldo />
+      <Apoderados />
       <ParaColegios />
       <Contacto />
       <Footer />

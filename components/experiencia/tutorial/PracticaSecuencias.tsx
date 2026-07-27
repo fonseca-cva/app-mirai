@@ -3,16 +3,16 @@
 import { useState, useEffect, useRef } from "react";
 import { PadSecuencias } from "@/components/experiencia/juegos/PadSecuencias";
 import { bloqueSecuencias } from "@/lib/config/textos";
+import { MS_ENTRE_SIMBOLOS, MS_PAUSA_FIN_PRESENTACION, MS_SIMBOLO } from "@/lib/logic/secuencias";
 
 interface Props {
   secuencia: number[];
   onRespuesta: (indice: number) => void;
 }
 
-type Estado = "mostrando" | "esperando" | "feedback";
-
-const MS_SIMBOLO = 800;
-const MS_ENTRE_SIMBOLOS = 250;
+// "pausa" replica en la práctica el mismo hueco en blanco de 900ms que el juego real
+// (Anexo 3), para que la práctica entrene el mismo ritmo perceptible.
+type Estado = "mostrando" | "pausa" | "esperando" | "feedback";
 
 // Práctica de Secuencias: muestra una secuencia fija, espera la repetición del usuario,
 // y luego pasa a feedback.
@@ -32,12 +32,19 @@ export function PracticaSecuencias({ secuencia, onRespuesta }: Props) {
       timers.push(setTimeout(() => setSimboloResaltado(null), inicio + MS_SIMBOLO));
     });
     const fin = secuencia.length * (MS_SIMBOLO + MS_ENTRE_SIMBOLOS);
-    timers.push(setTimeout(() => {
-      inicioRef.current = performance.now();
-      setEstado("esperando");
-    }, fin));
+    timers.push(setTimeout(() => setEstado("pausa"), fin));
     return () => timers.forEach(clearTimeout);
   }, [secuencia]);
+
+  // Pausa en blanco antes de habilitar la respuesta (mismo hueco que el juego real).
+  useEffect(() => {
+    if (estado !== "pausa") return;
+    const t = setTimeout(() => {
+      inicioRef.current = performance.now();
+      setEstado("esperando");
+    }, MS_PAUSA_FIN_PRESENTACION);
+    return () => clearTimeout(t);
+  }, [estado]);
 
   function tocar(simbolo: number) {
     if (estado !== "esperando" || completado) return;
@@ -63,14 +70,16 @@ export function PracticaSecuencias({ secuencia, onRespuesta }: Props) {
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <p className="text-sm text-tinta/60">
+      <p className="h-5 text-sm text-tinta/60">
         {estado === "mostrando"
           ? "Mira la secuencia..."
-          : estado === "esperando"
-            ? "Ahora repítela en el mismo orden"
-            : correcto
-              ? bloqueSecuencias.tutorial.practicaAcierto
-              : bloqueSecuencias.tutorial.practicaFalloMensaje}
+          : estado === "pausa"
+            ? ""
+            : estado === "esperando"
+              ? "Ahora repítela en el mismo orden"
+              : correcto
+                ? bloqueSecuencias.tutorial.practicaAcierto
+                : bloqueSecuencias.tutorial.practicaFalloMensaje}
       </p>
 
       <PadSecuencias

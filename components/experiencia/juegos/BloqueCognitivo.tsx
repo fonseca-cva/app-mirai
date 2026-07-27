@@ -35,6 +35,7 @@ export function BloqueCognitivo({ onCompletar, onPausar }: Props) {
         correcto: r.correcto,
         nivel: item ? NIVEL_POR_DIFICULTAD[item.dificultad] : 1,
         duracionMs: r.duracionMs,
+        repetidoPorTimeout: false,
       });
     });
     setJuego("rotacion");
@@ -49,6 +50,7 @@ export function BloqueCognitivo({ onCompletar, onPausar }: Props) {
         correcto: r.correcto,
         nivel: item ? NIVEL_POR_DIFICULTAD[item.dificultad] : 1,
         duracionMs: r.duracionMs,
+        repetidoPorTimeout: false,
       });
     });
     setJuego("secuencias");
@@ -62,6 +64,7 @@ export function BloqueCognitivo({ onCompletar, onPausar }: Props) {
         correcto: intento.correcto,
         nivel: intento.nivel,
         duracionMs: intento.duracionMs,
+        repetidoPorTimeout: intento.repetidoPorTimeout,
       });
     });
 
@@ -79,6 +82,7 @@ export function BloqueCognitivo({ onCompletar, onPausar }: Props) {
             correcto: r.correcto,
             nivel: r.nivel,
             duracion_ms: r.duracionMs,
+            repetido_timeout: r.repetidoPorTimeout,
           })),
         },
       ]);

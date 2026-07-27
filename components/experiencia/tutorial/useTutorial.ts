@@ -5,15 +5,22 @@ import { useState, useCallback, useRef, useEffect } from "react";
 export interface TutorialResult {
   tutorialVisto: boolean;
   practicaDominada: boolean;
+  ciclosDemo: number;
+  usoAtras: number;
+  usoSaltarTutorial: boolean;
 }
 
 export type FaseTutorial =
+  | "proposito"
   | "demo"
   | "practica-1"
-  | "practica-2"
-  | "practica-3"
+  | "acierto-1"
   | "feedback-1"
+  | "practica-2"
+  | "acierto-2"
   | "feedback-2"
+  | "practica-3"
+  | "acierto-3"
   | "feedback-3"
   | "transicion"
   | "listo";
@@ -23,38 +30,54 @@ interface PracticaMeta {
 }
 
 /**
- * Hook compartido para el tutorial de 3 pasos (demo → práctica x2 → transición).
- *
- * Cada juego usa este hook y renderiza su propio contenido visual según `fase`.
+ * Hook compartido para el tutorial de cada juego, en pantallas discretas
+ * que solo avanzan por acción del usuario (ITERACIÓN 3 — regla madre).
  *
  * Flujo:
- * - demo (saltable) → practica-1
- *   - Acierto → practica-2
- *   - Error → feedback-1 → practica-2
- *     - Acierto → transicion
- *     - Error → feedback-2 → (replay demo si hay practica-3) → transicion
- * - transicion → (onCompletado) → listo
+ * - proposito → demo (botón "Ver cómo funciona"; "Atrás" desde demo vuelve acá)
+ * - demo → practica-1 (botón "Ya entendí, quiero practicar"; el loop de la demo no avanza nada)
+ *   - Acierto → acierto-1 → (botón "Seguir") → practica-2
+ *   - Error → feedback-1 → (botón "Entendido, otra práctica") → practica-2
+ *     - Acierto → acierto-2 → transición (o practica-3 si el juego tiene 3 ítems)
+ *     - Error → feedback-2 → transición (o practica-3)
+ * - transicion → (onCompletar) → listo
+ * - saltarTutorial: disponible en las 3 pantallas, salta directo a "listo" (desafíos reales)
  */
 export function useTutorial(
   meta: [PracticaMeta, PracticaMeta] | [PracticaMeta, PracticaMeta, PracticaMeta]
 ) {
-  const [fase, setFase] = useState<FaseTutorial>("demo");
+  const [fase, setFase] = useState<FaseTutorial>("proposito");
   const dominadaRef = useRef(true);
   const vistoRef = useRef(false);
+  const ciclosDemoRef = useRef(0);
+  const usoAtrasRef = useRef(0);
+  const usoSaltarRef = useRef(false);
 
-  const saltarDemo = useCallback(() => {
+  const verComoFunciona = useCallback(() => {
     vistoRef.current = true;
+    setFase("demo");
+  }, []);
+
+  const atrasDemo = useCallback(() => {
+    usoAtrasRef.current += 1;
+    setFase("proposito");
+  }, []);
+
+  const continuarAPractica = useCallback(() => {
     setFase("practica-1");
   }, []);
 
-  const demoTerminada = useCallback(() => {
-    vistoRef.current = true;
-    setFase("practica-1");
+  const registrarCicloDemo = useCallback(() => {
+    ciclosDemoRef.current += 1;
+  }, []);
+
+  const saltarTutorial = useCallback(() => {
+    usoSaltarRef.current = true;
+    setFase("listo");
   }, []);
 
   const responder = useCallback(
     (indice: number) => {
-      // Determinar en qué paso estamos
       const paso: "practica-1" | "practica-2" | "practica-3" =
         fase === "practica-1" ? "practica-1"
           : fase === "practica-2" ? "practica-2"
@@ -71,11 +94,9 @@ export function useTutorial(
       if (!correcto) dominadaRef.current = false;
 
       if (correcto) {
-        // Acierto: avanzar
-        if (paso === "practica-1") setFase("practica-2");
-        else setFase("transicion");
+        const fa: FaseTutorial = paso === "practica-1" ? "acierto-1" : paso === "practica-2" ? "acierto-2" : "acierto-3";
+        setFase(fa);
       } else {
-        // Error: feedback
         const fb: FaseTutorial = paso === "practica-1" ? "feedback-1" : paso === "practica-2" ? "feedback-2" : "feedback-3";
         setFase(fb);
       }
@@ -83,27 +104,27 @@ export function useTutorial(
     [fase, meta]
   );
 
+  const continuarTrasAcierto = useCallback(() => {
+    const paso =
+      fase === "acierto-1" ? 0
+        : fase === "acierto-2" ? 1
+          : 2;
+
+    if (paso === 0) setFase("practica-2");
+    else if (paso === 1) setFase(meta.length >= 3 ? "practica-3" : "transicion");
+    else setFase("transicion");
+  }, [fase, meta.length]);
+
   const cerrarFeedback = useCallback(() => {
     const paso =
       fase === "feedback-1" ? 0
         : fase === "feedback-2" ? 1
           : 2;
 
-    if (paso === 0) {
-      setFase("practica-2");
-    } else if (paso === 1) {
-      // Tras 2 errores: si hay 3ra práctica (replay), ir a ella; si no, transición
-      if (meta.length >= 3) {
-        setFase("practica-3");
-      } else {
-        setFase("transicion");
-      }
-    } else {
-      setFase("transicion");
-    }
+    if (paso === 0) setFase("practica-2");
+    else if (paso === 1) setFase(meta.length >= 3 ? "practica-3" : "transicion");
+    else setFase("transicion");
   }, [fase, meta.length]);
-
-  const irATransicion = useCallback(() => setFase("transicion"), []);
 
   const completar = useCallback(() => {
     setFase("listo");
@@ -113,12 +134,22 @@ export function useTutorial(
     fase,
     dominadaRef,
     vistoRef,
-    saltarDemo,
-    demoTerminada,
+    verComoFunciona,
+    atrasDemo,
+    continuarAPractica,
+    registrarCicloDemo,
+    saltarTutorial,
     responder,
+    continuarTrasAcierto,
     cerrarFeedback,
-    irATransicion,
     completar,
+    resultado: (): TutorialResult => ({
+      tutorialVisto: vistoRef.current,
+      practicaDominada: dominadaRef.current,
+      ciclosDemo: ciclosDemoRef.current,
+      usoAtras: usoAtrasRef.current,
+      usoSaltarTutorial: usoSaltarRef.current,
+    }),
   };
 }
 

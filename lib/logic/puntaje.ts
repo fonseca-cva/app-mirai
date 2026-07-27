@@ -5,6 +5,9 @@ export interface Respuesta {
   valor: 0 | 1 | 2;
   // ITERACIÓN 2: señal de calidad del estímulo (¿se abrió "¿Qué se hace acá?"?), no afecta puntaje.
   ayudaAbierta?: boolean;
+  // Mejora Bloque A: audio ambiente activo (opt-in global && no muteado) al momento
+  // de responder — para comparar comportamiento con/sin audio en el análisis del piloto.
+  audioActivado?: boolean;
 }
 
 export interface PuntajeDimension {

@@ -26,10 +26,18 @@ describe("calcularCelda", () => {
   });
 
   it("no controlar un atributo lo deja en su valor base fijo", () => {
-    const reglas: Regla[] = [{ atributo: "tono", baseFila: [0, 0, 0], pasoColumna: 0.3 }];
+    const reglas: Regla[] = [{ atributo: "relleno", baseFila: [0, 0, 0], pasoColumna: 1 }];
     const celda = calcularCelda(reglas, 1, 1);
     expect(celda.lados).toBe(4);
     expect(celda.pliegues).toBe(1);
+  });
+
+  it("relleno envuelve mod 2 en vez de saturar (permite alternar como regla)", () => {
+    const reglas: Regla[] = [{ atributo: "relleno", baseFila: [0, 0, 0], pasoColumna: 1 }];
+    expect(calcularCelda(reglas, 0, 0).relleno).toBe(0);
+    expect(calcularCelda(reglas, 0, 1).relleno).toBe(1);
+    expect(calcularCelda(reglas, 0, 2).relleno).toBe(0);
+    expect(calcularCelda(reglas, 0, 3).relleno).toBe(1);
   });
 });
 
