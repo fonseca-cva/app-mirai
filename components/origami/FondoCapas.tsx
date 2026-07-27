@@ -215,26 +215,20 @@ export function FondoCapas({ className = "" }: FondoCapasProps) {
             >
               {capa.picos.map((p, j) => {
                 const { caraLuz, caraSombra, pliegue, nieveLuz: nL, nieveSombra: nS } = construirPico(p, BASE_Y);
+                const apexY = BASE_Y - p.alto;
+                const alturaTotal = BASE_Y - apexY + 2;
+                const leftX = p.cx - p.hw;
+                const rightX = p.cx + p.hw;
+                const foldX = pliegue.x2;
+                const delayBase = i * 0.55 + j * 0.22;
+                const clipIdLuz = `${creaseId}-pico-${i}-${j}-luz`;
+                const clipIdSombra = `${creaseId}-pico-${i}-${j}-sombra`;
                 return (
-                  <motion.g
-                    key={j}
-                    initial={prefiereMenosMovimiento ? undefined : { scaleY: 0.04, opacity: 0 }}
-                    animate={prefiereMenosMovimiento ? undefined : { scaleY: 1, opacity: 1 }}
-                    transition={
-                      prefiereMenosMovimiento
-                        ? undefined
-                        : { type: "spring", stiffness: 110, damping: 13, mass: 0.7, delay: i * 0.15 + j * 0.08 }
-                    }
-                    style={{ transformOrigin: `${p.cx}px ${BASE_Y}px` }}
-                  >
-                    <path d={caraLuz} fill={luz} />
-                    <path d={caraSombra} fill={sombra} />
-                    {nL && nS && (
-                      <>
-                        <path d={nL} fill={nieveLuz} />
-                        <path d={nS} fill={nieveSombra} />
-                      </>
-                    )}
+                  <g key={j}>
+                    {/* La línea de pliegue (bisagra) se ve desde el primer frame:
+                        las dos caras se desdoblan a partir de ella, cada una por
+                        su cuenta, creciendo verticalmente desde la cumbre hacia
+                        la base — como dos hojas de papel abriéndose desde el eje. */}
                     <line
                       x1={pliegue.x1}
                       y1={pliegue.y1}
@@ -244,7 +238,45 @@ export function FondoCapas({ className = "" }: FondoCapasProps) {
                       strokeWidth={1}
                       opacity={0.22}
                     />
-                  </motion.g>
+                    <g style={{ clipPath: `url(#${clipIdLuz})` }}>
+                      <clipPath id={clipIdLuz}>
+                        <motion.rect
+                          x={leftX - 4}
+                          y={apexY}
+                          width={foldX - leftX + 4}
+                          height={alturaTotal}
+                          initial={prefiereMenosMovimiento ? undefined : { height: 0 }}
+                          animate={prefiereMenosMovimiento ? undefined : { height: alturaTotal }}
+                          transition={
+                            prefiereMenosMovimiento
+                              ? undefined
+                              : { duration: 2.6, ease: "easeInOut", delay: delayBase }
+                          }
+                        />
+                      </clipPath>
+                      <path d={caraLuz} fill={luz} />
+                      {nL && <path d={nL} fill={nieveLuz} />}
+                    </g>
+                    <g style={{ clipPath: `url(#${clipIdSombra})` }}>
+                      <clipPath id={clipIdSombra}>
+                        <motion.rect
+                          x={foldX - 4}
+                          y={apexY}
+                          width={rightX - foldX + 8}
+                          height={alturaTotal}
+                          initial={prefiereMenosMovimiento ? undefined : { height: 0 }}
+                          animate={prefiereMenosMovimiento ? undefined : { height: alturaTotal }}
+                          transition={
+                            prefiereMenosMovimiento
+                              ? undefined
+                              : { duration: 2.6, ease: "easeInOut", delay: delayBase + 0.25 }
+                          }
+                        />
+                      </clipPath>
+                      <path d={caraSombra} fill={sombra} />
+                      {nS && <path d={nS} fill={nieveSombra} />}
+                    </g>
+                  </g>
                 );
               })}
             </motion.svg>
@@ -261,26 +293,55 @@ export function FondoCapas({ className = "" }: FondoCapasProps) {
       >
         {ARBOLES.map((a, i) => {
           const apexY = SUELO_Y - a.alto;
+          const baseTroncoY = SUELO_Y + 2;
+          const alturaTotal = baseTroncoY - apexY;
+          const delayBase = 2.3 + i * 0.22;
+          const clipIdLuz = `${creaseId}-arbol-${i}-luz`;
+          const clipIdSombra = `${creaseId}-arbol-${i}-sombra`;
           return (
-            <motion.g
-              key={i}
-              initial={prefiereMenosMovimiento ? undefined : { scaleY: 0.04, opacity: 0 }}
-              animate={prefiereMenosMovimiento ? undefined : { scaleY: 1, opacity: 1 }}
-              transition={
-                prefiereMenosMovimiento
-                  ? undefined
-                  : { type: "spring", stiffness: 110, damping: 13, mass: 0.7, delay: 0.65 + i * 0.06 }
-              }
-              style={{ transformOrigin: `${a.x}px ${SUELO_Y}px` }}
-            >
+            <g key={i}>
               <rect x={a.x - 1.2} y={SUELO_Y - 5} width={2.4} height={7} fill="#7A5A3C" />
-              {/* Copa triangular de dos pliegues (papel) */}
-              <polygon points={`${a.x},${apexY} ${a.x - a.ancho},${SUELO_Y} ${a.x},${SUELO_Y}`} fill={a.tono} />
-              <polygon
-                points={`${a.x},${apexY} ${a.x},${SUELO_Y} ${a.x + a.ancho},${SUELO_Y}`}
-                fill={mezclarHex(a.tono, colores.tinta, 0.2)}
-              />
-            </motion.g>
+              {/* Copa triangular de dos pliegues (papel): cada cara se desdobla
+                  por su cuenta desde la cumbre, con un leve desfase entre
+                  ellas, como dos hojas abriéndose desde el eje central. */}
+              <g style={{ clipPath: `url(#${clipIdLuz})` }}>
+                <clipPath id={clipIdLuz}>
+                  <motion.rect
+                    x={a.x - a.ancho - 2}
+                    y={apexY}
+                    width={a.ancho + 2}
+                    height={alturaTotal}
+                    initial={prefiereMenosMovimiento ? undefined : { height: 0 }}
+                    animate={prefiereMenosMovimiento ? undefined : { height: alturaTotal }}
+                    transition={
+                      prefiereMenosMovimiento ? undefined : { duration: 2, ease: "easeInOut", delay: delayBase }
+                    }
+                  />
+                </clipPath>
+                <polygon points={`${a.x},${apexY} ${a.x - a.ancho},${SUELO_Y} ${a.x},${SUELO_Y}`} fill={a.tono} />
+              </g>
+              <g style={{ clipPath: `url(#${clipIdSombra})` }}>
+                <clipPath id={clipIdSombra}>
+                  <motion.rect
+                    x={a.x}
+                    y={apexY}
+                    width={a.ancho + 2}
+                    height={alturaTotal}
+                    initial={prefiereMenosMovimiento ? undefined : { height: 0 }}
+                    animate={prefiereMenosMovimiento ? undefined : { height: alturaTotal }}
+                    transition={
+                      prefiereMenosMovimiento
+                        ? undefined
+                        : { duration: 2, ease: "easeInOut", delay: delayBase + 0.2 }
+                    }
+                  />
+                </clipPath>
+                <polygon
+                  points={`${a.x},${apexY} ${a.x},${SUELO_Y} ${a.x + a.ancho},${SUELO_Y}`}
+                  fill={mezclarHex(a.tono, colores.tinta, 0.2)}
+                />
+              </g>
+            </g>
           );
         })}
       </svg>
