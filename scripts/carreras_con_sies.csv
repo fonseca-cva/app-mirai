@@ -1,0 +1,61 @@
+id,nombre,estado_matching,tipo_institucion_matcheado,carrera_estandar_matcheado,empleabilidad_1er_anio_pct,empleabilidad_1er_anio_cohorte,ingreso_4to_anio_clp,ingreso_4to_anio_cohorte,retencion_1er_anio_pct,retencion_1er_anio_cohorte,retencion_2do_anio_pct,retencion_2do_anio_cohorte,duracion_esperada_semestres,duracion_real_semestres,duracion_fuente_etiqueta,resuelto_por_via
+medicina,Medicina,ok,Universidad,Medicina,89.2,2019,3295856,2019,95.5,2009,93.7,2009,13.9,15.1,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",no
+enfermeria,Enfermería,ok,Universidad,Enfermería,64.7,2019,1850417,2019,87.7,2009,82.7,2009,10,12.1,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",no
+kinesiologia,Kinesiología,ok,Universidad,Kinesiología,40.3,2019,1345678,2019,84.5,2009,78.7,2009,10,12.2,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",si
+odontologia,Odontología,ok,Universidad,Odontología,49,2019,1884264,2019,88.2,2009,84.1,2009,11.9,15.1,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",no
+obstetricia,Obstetricia y Puericultura,ok,Universidad,Obstetricia y Puericultura,54.7,2019,1591555,2019,90.6,2009,85.7,2009,10,12.3,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",no
+nutricion,Nutrición y Dietética,ok,Universidad,Nutrición y Dietética,40.4,2019,1153884,2019,79.5,2009,72,2009,10,12.6,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",si
+fonoaudiologia,Fonoaudiología,ok,Universidad,Fonoaudiología,36.2,2019,1112634,2019,79.4,2009,72.9,2009,10,12.2,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",si
+tecnologia_medica,Tecnología Médica,ok,Universidad,Tecnología Médica,56.7,2019,1732892,2019,85.5,2009,,,10,12.7,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",no
+quimica_farmacia,Química y Farmacia,ok,Universidad,Química y Farmacia,98.1,2019,2407808,2019,88.5,2009,83,2009,10.8,14.2,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",no
+tecnico_enfermeria,Técnico en Enfermería,ok,Centro de Formación Técnica,Técnico en Enfermería,54,2019,925838,2019,75.1,2009,,,5,6.1,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",si
+psicologia,Psicología,ok,Universidad,Psicología,56.2,2019,1281635,2019,87,2009,82,2009,10.1,11.5,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",no
+trabajo_social,Trabajo Social,ok,Universidad,Trabajo Social,64.1,2019,1203414,2019,82.3,2009,,,9.8,11.3,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",si
+derecho,Derecho,ok,Universidad,Derecho,72.6,2019,2206370,2019,83.2,2009,75.7,2009,10.4,16.2,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",no
+pedagogia_basica,Pedagogía en Educación Básica,ok,Universidad,Pedagogía en Educación Básica,90.3,2019,1221517,2019,88.9,2009,83.4,2009,9.5,10.6,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",no
+pedagogia_media,"Pedagogía en Educación Media (Lenguaje, Historia, Matemática u otra)",ok,Universidad,Pedagogía en Educación Media,76.7,2019,1273508,2019,,,,,,,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",no
+pedagogia_fisica,Pedagogía en Física,ok,Universidad,Pedagogía en Educación Física,54.5,2019,1121504,2019,87.1,2009,80.7,2009,9.5,11.1,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",no
+pedagogia_quimica,Pedagogía en Química,sin_match,,,,,,,,,,,,,,
+pedagogia_parvularia,Pedagogía en Educación Parvularia,ok,Universidad,Pedagogía en Educación de Párvulos,65.9,2019,1058559,2019,88.7,2009,82.9,2009,8.9,10.2,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",no
+educacion_diferencial,Educación Diferencial,ok,Universidad,Pedagogía en Educación Diferencial,91.4,2019,1225425,2019,89.5,2009,84.1,2009,9.5,10.4,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",no
+sociologia,Sociología,ok,Universidad,Sociología,58.3,2019,1425350,2019,74.3,2009,66.2,2009,9.8,13,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",no
+ingenieria_civil,Ingeniería Civil (plan común / Obras Civiles),ok,Universidad,Ingeniería Civil en Obras Civiles,80.7,2019,2089395,2019,76.6,2009,66.9,2009,11.2,15.1,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",no
+ing_civil_electrica,Ingeniería Civil Eléctrica,ok,Universidad,Ingeniería Civil Eléctrica,89.4,2019,2764338,2019,78.4,2009,62.9,2009,11.6,15.4,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",no
+ing_civil_mecanica,Ingeniería Civil Mecánica,ok,Universidad,Ingeniería Civil Mecánica,81.5,2019,2916533,2019,76,2009,61.1,2009,11.7,16.2,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",no
+ing_civil_minas,Ingeniería Civil en Minas,ok,Universidad,Ingeniería Civil en Minas,81.4,2019,3178733,2019,76.9,2009,64.7,2009,11.1,15.7,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",no
+geologia,Geología,ok,Universidad,Geología,66.5,2019,2762677,2019,82.4,2009,74.5,2009,10.7,16.2,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",no
+construccion_civil,Construcción Civil,ok,Universidad,Construcción Civil,77.6,2019,1778659,2019,83.8,2009,74.9,2009,9.4,14.1,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",si
+arquitectura,Arquitectura,ok,Universidad,Arquitectura,57,2019,1491468,2019,81.9,2009,74.7,2009,11.2,14.7,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",no
+ing_energias_renovables,Ingeniería en Energías Renovables,sin_match,,,,,,,,,,,,,,
+tecnico_mantenimiento,Técnico en Mantenimiento Industrial,ok,Centro de Formación Técnica,Técnico en Mantenimiento Industrial,79.5,2019,1598153,2019,71.4,2009,,,4.3,6.7,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",si
+tecnico_electricidad,Técnico en Electricidad,ok,Centro de Formación Técnica,Técnico en Electricidad y Electricidad Industrial,78.7,2019,1482024,2019,68.1,2009,,,4.9,6.7,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",si
+tecnico_mineria,Técnico en Minería,ok,Centro de Formación Técnica,Técnico en Minería,77.7,2019,2175082,2019,64.3,2009,,,4.4,7.1,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",si
+ing_informatica,Ingeniería en Informática / Computación,ok,Universidad,Ingeniería en Computación e Informática,79.4,2019,2147332,2019,79.1,2009,68.6,2009,8.4,12.3,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",si
+ciencia_datos,Ciencia de Datos,sin_match,,,,,,,,,,,,,,
+ciberseguridad,Ingeniería / Técnico en Ciberseguridad,sin_match,,,,,,,,,,,,,,
+contador_auditor,Contador Auditor,ok,Universidad,Contador Auditor,82.9,2019,1662338,2019,83.9,2009,75.3,2009,9.2,11.8,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",si
+ing_comercial,Ingeniería Comercial,ok,Universidad,Ingeniería Comercial,79.3,2019,2175494,2019,82.8,2009,74.7,2009,10,12.3,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",no
+administracion_publica,Administración Pública,ok,Universidad,Administración Pública,75.4,2019,1853783,2019,82.6,2009,76.6,2009,10.1,11.3,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",si
+tecnico_administracion,Técnico en Administración,ok,Instituto Profesional,Técnico en Administración de Empresas,78.4,2019,1353296,2019,67.1,2009,,,4.8,6,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",si
+periodismo,Periodismo,ok,Universidad,Periodismo,62.5,2019,1450562,2019,87.4,2009,81.9,2009,9.4,11.4,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",no
+publicidad,Publicidad,ok,Universidad,Publicidad,66.5,2019,1478464,2019,88.7,2009,85.6,2009,8.4,9.6,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",si
+comunicacion_audiovisual,Comunicación Audiovisual,ok,Universidad,Comunicación Audiovisual y/o Multimedia,39.1,2019,1007944,2019,83.2,2009,75.2,2009,9.1,11.5,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",si
+diseno,Diseño,ok,Universidad,Diseño,50.3,2019,1444639,2019,88.5,2009,82.2,2009,9.9,12.1,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",no
+traduccion,Traducción e Interpretación,ok,Universidad,Traducción e Interpretación,38.8,2019,1033383,2019,81.7,2009,,,9,12.4,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",no
+artes_actuacion,Artes / Actuación y Teatro,ok,Universidad,Artes y Licenciatura en Artes,26,2019,1026537,2019,83.1,2009,74.9,2009,8.4,10.9,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",no
+agronomia,Agronomía,ok,Universidad,Agronomía,65.6,2019,1732205,2019,80.9,2009,73.1,2009,10,14.2,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",no
+medicina_veterinaria,Medicina Veterinaria,ok,Universidad,Medicina Veterinaria,58.9,2019,1342248,2019,85.9,2009,79.4,2009,10.1,14.4,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",no
+ing_forestal_rrnn,Ingeniería Forestal / en Recursos Naturales,ok,Universidad,Ingeniería Forestal,84.4,2019,,,79.5,2009,63.8,2009,10,13.6,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",no
+tecnico_agricola,Técnico Agrícola,ok,Centro de Formación Técnica,Técnico Agropecuario,50.9,2019,1054268,2019,66.5,2009,,,4.6,6.7,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",si
+bioquimica,Bioquímica,ok,Universidad,Bioquímica,56.2,2019,1266671,2019,79.1,2009,70.4,2009,10.5,14.1,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",no
+ing_civil_quimica,Ingeniería Civil Química,ok,Universidad,Ingeniería Civil Química,79.2,2019,2330576,2019,80.5,2009,67.1,2009,11.7,15.6,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",no
+tecnico_educacion_parvularia,Técnico en Educación Parvularia,ok,Centro de Formación Técnica,Técnico Asistente del Educador de Párvulos,30.3,2019,712168,2019,72.5,2009,,,5,6.1,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",si
+ingenieria_civil_industrial,Ingeniería Civil Industrial,ok,Universidad,Ingeniería Civil Industrial,88.7,2019,2774395,2019,85.1,2009,76.3,2009,11.1,14.1,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",no
+ingenieria_civil_en_computacion,Ingeniería Civil en Computación,ok,Universidad,Ingeniería Civil en Computación e Informática,85.2,2019,2592683,2019,84.2,2009,73.7,2009,11.1,14.1,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",no
+administracion_de_empresas,Administración de Empresas,ok,Universidad,Administración de Empresas e Ing. Asociadas,76.7,2019,1725478,2019,75.1,2009,66.4,2009,8.1,12,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",si
+biotecnologia,Biotecnología,ok,Universidad,Ingeniería en Biotecnología y Bioingeniería,55.6,2019,1380331,2019,83.3,2009,75.5,2009,9.9,13.5,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",no
+gastronomia,Gastronomía,ok,Centro de Formación Técnica,Técnico en Gastronomía y Cocina,39.4,2019,836127,2019,77.2,2009,,,4.3,6.5,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",si
+terapia_ocupacional,Terapia Ocupacional,ok,Universidad,Terapia Ocupacional,43,2019,1210672,2019,84.1,2009,,,10,11.5,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",si
+tecnico_en_mecanica_automotriz,Técnico en Mecánica Automotriz,ok,Centro de Formación Técnica,Técnico en Mecánica Automotriz,73.5,2019,1319517,2019,69.1,2009,,,4.1,6.9,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",si
+tecnico_en_prevencion_de_riesgos,Técnico en Prevención de Riesgos,ok,Centro de Formación Técnica,Técnico en Prevención de Riesgos,77.5,2019,1219125,2019,57.1,2009,,,4.5,8.4,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",si
+tecnico_en_contabilidad,Técnico en Contabilidad,ok,Instituto Profesional,Técnico en Contabilidad General,70.7,2019,1329231,2019,68.9,2009,,,4.9,6.5,"structural — plan de estudios (mifuturo.cl / SIES, sin cohorte)",si

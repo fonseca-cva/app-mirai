@@ -24,6 +24,9 @@
 .DS_Store
 *.pem
 
+# dev audio tests
+Sonidos Test/
+
 # debug
 npm-debug.log*
 yarn-debug.log*
