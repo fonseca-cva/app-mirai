@@ -73,11 +73,14 @@ if (correoError) {
 }
 console.log(`✅ Correo registrado para envío — destino=${emailDestino}`);
 
+const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+
 const respuesta = await fetch(`${baseUrl}/api/enviar-informe`, {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
     Authorization: `Bearer ${auth.session.access_token}`,
+    ...(bypassSecret ? { "x-vercel-protection-bypass": bypassSecret } : {}),
   },
   body: JSON.stringify({ sessionId }),
 });
