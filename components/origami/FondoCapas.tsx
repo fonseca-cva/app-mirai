@@ -216,7 +216,17 @@ export function FondoCapas({ className = "" }: FondoCapasProps) {
               {capa.picos.map((p, j) => {
                 const { caraLuz, caraSombra, pliegue, nieveLuz: nL, nieveSombra: nS } = construirPico(p, BASE_Y);
                 return (
-                  <g key={j}>
+                  <motion.g
+                    key={j}
+                    initial={prefiereMenosMovimiento ? undefined : { scaleY: 0.04, opacity: 0 }}
+                    animate={prefiereMenosMovimiento ? undefined : { scaleY: 1, opacity: 1 }}
+                    transition={
+                      prefiereMenosMovimiento
+                        ? undefined
+                        : { type: "spring", stiffness: 110, damping: 13, mass: 0.7, delay: i * 0.15 + j * 0.08 }
+                    }
+                    style={{ transformOrigin: `${p.cx}px ${BASE_Y}px` }}
+                  >
                     <path d={caraLuz} fill={luz} />
                     <path d={caraSombra} fill={sombra} />
                     {nL && nS && (
@@ -234,7 +244,7 @@ export function FondoCapas({ className = "" }: FondoCapasProps) {
                       strokeWidth={1}
                       opacity={0.22}
                     />
-                  </g>
+                  </motion.g>
                 );
               })}
             </motion.svg>
@@ -252,7 +262,17 @@ export function FondoCapas({ className = "" }: FondoCapasProps) {
         {ARBOLES.map((a, i) => {
           const apexY = SUELO_Y - a.alto;
           return (
-            <g key={i}>
+            <motion.g
+              key={i}
+              initial={prefiereMenosMovimiento ? undefined : { scaleY: 0.04, opacity: 0 }}
+              animate={prefiereMenosMovimiento ? undefined : { scaleY: 1, opacity: 1 }}
+              transition={
+                prefiereMenosMovimiento
+                  ? undefined
+                  : { type: "spring", stiffness: 110, damping: 13, mass: 0.7, delay: 0.65 + i * 0.06 }
+              }
+              style={{ transformOrigin: `${a.x}px ${SUELO_Y}px` }}
+            >
               <rect x={a.x - 1.2} y={SUELO_Y - 5} width={2.4} height={7} fill="#7A5A3C" />
               {/* Copa triangular de dos pliegues (papel) */}
               <polygon points={`${a.x},${apexY} ${a.x - a.ancho},${SUELO_Y} ${a.x},${SUELO_Y}`} fill={a.tono} />
@@ -260,7 +280,7 @@ export function FondoCapas({ className = "" }: FondoCapasProps) {
                 points={`${a.x},${apexY} ${a.x},${SUELO_Y} ${a.x + a.ancho},${SUELO_Y}`}
                 fill={mezclarHex(a.tono, colores.tinta, 0.2)}
               />
-            </g>
+            </motion.g>
           );
         })}
       </svg>
