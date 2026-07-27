@@ -4,7 +4,7 @@
 // // LIMITACIÓN: si el usuario cierra la pestaña antes de que la cola se vacíe,
 // los datos pendientes se pierden (no hay service worker persistente en esta fase).
 
-import { supabase } from "@/lib/supabase/client";
+import { supabase, asegurarSesionAnonima } from "@/lib/supabase/client";
 import type { SesionRow, RespuestaGustoRow, RespuestaCognitivoRow, RespuestaVerbalRow, ResultadoRow, CorreoInformeRow } from "@/lib/supabase/types";
 
 const TIMEOUT_MS = 5000;
@@ -20,11 +20,19 @@ function conTimeout<T>(promesa: PromiseLike<T>, ms: number): Promise<T> {
   });
 }
 
+// Las policies RLS exigen auth.uid() = user_id: sin sesión anónima activa,
+// toda operación contra estas tablas es rechazada.
+async function conSesion<T>(operacion: () => PromiseLike<T>): Promise<T> {
+  await asegurarSesionAnonima();
+  return conTimeout(operacion(), TIMEOUT_MS);
+}
+
 // ── Sync de sesión ─────────────────────────────────────────────────
 export async function syncSesion(sesion: SesionRow): Promise<boolean> {
   if (!supabase) return false;
+  const cliente = supabase;
   try {
-    await conTimeout(supabase.from("sesiones").upsert(sesion, { onConflict: "id" }), TIMEOUT_MS);
+    await conSesion(() => cliente.from("sesiones").upsert(sesion, { onConflict: "id" }));
     return true;
   } catch {
     return false;
@@ -34,8 +42,9 @@ export async function syncSesion(sesion: SesionRow): Promise<boolean> {
 // ── Sync de respuestas gustos ─────────────────────────────────────
 export async function syncRespuestasGustos(respuestas: RespuestaGustoRow[]): Promise<boolean> {
   if (!supabase || respuestas.length === 0) return false;
+  const cliente = supabase;
   try {
-    await conTimeout(supabase.from("respuestas_gustos").insert(respuestas), TIMEOUT_MS);
+    await conSesion(() => cliente.from("respuestas_gustos").insert(respuestas));
     return true;
   } catch {
     return false;
@@ -45,8 +54,9 @@ export async function syncRespuestasGustos(respuestas: RespuestaGustoRow[]): Pro
 // ── Sync de respuestas cognitivo ──────────────────────────────────
 export async function syncRespuestasCognitivo(respuestas: RespuestaCognitivoRow[]): Promise<boolean> {
   if (!supabase || respuestas.length === 0) return false;
+  const cliente = supabase;
   try {
-    await conTimeout(supabase.from("respuestas_cognitivo").insert(respuestas), TIMEOUT_MS);
+    await conSesion(() => cliente.from("respuestas_cognitivo").insert(respuestas));
     return true;
   } catch {
     return false;
@@ -57,8 +67,9 @@ export async function syncRespuestasCognitivo(respuestas: RespuestaCognitivoRow[
 // El texto se guarda aunque la evaluación falle (spec sección 4).
 export async function syncRespuestaVerbal(respuesta: RespuestaVerbalRow): Promise<boolean> {
   if (!supabase) return false;
+  const cliente = supabase;
   try {
-    await conTimeout(supabase.from("respuestas_verbal").insert(respuesta), TIMEOUT_MS);
+    await conSesion(() => cliente.from("respuestas_verbal").insert(respuesta));
     return true;
   } catch {
     return false;
@@ -72,10 +83,10 @@ export async function updateEvaluacionVerbal(
   estado: "evaluado" | "error"
 ): Promise<boolean> {
   if (!supabase) return false;
+  const cliente = supabase;
   try {
-    await conTimeout(
-      supabase.from("respuestas_verbal").update({ evaluacion_json: evaluacionJson, estado, evaluado_en: new Date().toISOString() }).eq("id", id),
-      TIMEOUT_MS
+    await conSesion(() =>
+      cliente.from("respuestas_verbal").update({ evaluacion_json: evaluacionJson, estado, evaluado_en: new Date().toISOString() }).eq("id", id)
     );
     return true;
   } catch {
@@ -86,8 +97,9 @@ export async function updateEvaluacionVerbal(
 // ── Sync de resultados ────────────────────────────────────────────
 export async function syncResultados(resultado: ResultadoRow): Promise<boolean> {
   if (!supabase) return false;
+  const cliente = supabase;
   try {
-    await conTimeout(supabase.from("resultados").upsert(resultado, { onConflict: "session_id" }), TIMEOUT_MS);
+    await conSesion(() => cliente.from("resultados").upsert(resultado, { onConflict: "session_id" }));
     return true;
   } catch {
     return false;
@@ -97,8 +109,9 @@ export async function syncResultados(resultado: ResultadoRow): Promise<boolean> 
 // ── Sync de correo informe ────────────────────────────────────────
 export async function syncCorreoInforme(correo: CorreoInformeRow): Promise<boolean> {
   if (!supabase) return false;
+  const cliente = supabase;
   try {
-    await conTimeout(supabase.from("correos_informe").insert(correo), TIMEOUT_MS);
+    await conSesion(() => cliente.from("correos_informe").insert(correo));
     return true;
   } catch {
     return false;

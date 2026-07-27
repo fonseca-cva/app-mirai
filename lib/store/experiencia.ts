@@ -2,6 +2,9 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Respuesta as RespuestaGustos } from "@/lib/logic/puntaje";
 import { obtenerOCrearSessionId } from "@/lib/store/sesion";
+import { procesarColaSync, type TareaSync } from "@/lib/supabase/sync";
+
+export type { TareaSync } from "@/lib/supabase/sync";
 
 export type PasoExperiencia = "intro" | "gustos" | "cognitivo" | "verbal" | "informe";
 
@@ -20,13 +23,6 @@ export interface RespuestaVerbal {
   estado: "pendiente" | "evaluado" | "error";
 }
 
-// Operación de sync a Supabase encolada para reintento (p. ej. si la conexión falla al cerrar un bloque).
-export interface TareaSync {
-  id: string;
-  tabla: string;
-  payload: Record<string, unknown>;
-}
-
 interface EstadoExperiencia {
   sessionId: string | null;
   paso: PasoExperiencia;
@@ -43,13 +39,15 @@ interface EstadoExperiencia {
   agregarRespuestaGustos: (respuesta: RespuestaGustos) => void;
   agregarRespuestaCognitivo: (respuesta: RespuestaCognitivo) => void;
   agregarRespuestaVerbal: (respuesta: RespuestaVerbal) => void;
-  encolarSync: (tarea: TareaSync) => void;
-  resolverSync: (id: string) => void;
+  // Encola las tareas nuevas y reintenta toda la cola (incluida la pendiente de bloques
+  // anteriores) contra Supabase. No es crítico que falle: lo que no se sincroniza queda
+  // en colaSync para el próximo bloque completado.
+  sincronizarBloque: (tareas: TareaSync[]) => Promise<void>;
 }
 
 export const useExperienciaStore = create<EstadoExperiencia>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       sessionId: null,
       paso: "intro",
       pausado: false,
@@ -70,9 +68,11 @@ export const useExperienciaStore = create<EstadoExperiencia>()(
       agregarRespuestaVerbal: (respuesta) =>
         set((estado) => ({ respuestasVerbal: [...estado.respuestasVerbal, respuesta] })),
 
-      encolarSync: (tarea) => set((estado) => ({ colaSync: [...estado.colaSync, tarea] })),
-      resolverSync: (id) =>
-        set((estado) => ({ colaSync: estado.colaSync.filter((t) => t.id !== id) })),
+      sincronizarBloque: async (tareas) => {
+        set((estado) => ({ colaSync: [...estado.colaSync, ...tareas] }));
+        const fallaron = await procesarColaSync(get().colaSync);
+        set({ colaSync: fallaron });
+      },
     }),
     {
       name: "mirai-experiencia",
