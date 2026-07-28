@@ -168,21 +168,13 @@ export default function MetodologiaPage() {
               {metodologia.cierre.probar}
             </Link>
             <p className="max-w-md text-sm text-tinta/60">
-              {metodologia.cierre.contacto.split("colegios@miraiapp.cl").map((part, i, arr) =>
-                i < arr.length - 1 ? (
-                  <span key={i}>
-                    {part}
-                    <a
-                      href={metodologia.cierre.contactoMailto}
-                      className="text-coral underline transition hover:opacity-80"
-                    >
-                      colegios@miraiapp.cl
-                    </a>
-                  </span>
-                ) : (
-                  <span key={i}>{part}</span>
-                ),
-              )}
+              {metodologia.cierre.contacto.slice(0, metodologia.cierre.contacto.indexOf("colegios@miraiapp.cl"))}
+              <a
+                href={metodologia.cierre.contactoMailto}
+                className="font-cuerpo text-coral underline transition hover:opacity-80"
+              >
+                colegios@miraiapp.cl
+              </a>
             </p>
           </div>
         </footer>

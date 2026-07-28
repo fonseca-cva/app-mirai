@@ -25,19 +25,23 @@ export function IndiceMetodologia() {
           <polyline points="4,6 8,10 12,6" />
         </svg>
       </button>
-      <ul className={`mt-2 space-y-1 sm:mt-0 sm:flex sm:flex-wrap sm:gap-x-6 sm:gap-y-1 ${abierto ? "block" : "hidden sm:flex"}`}>
-        {metodologiaIndice.map((item) => (
-          <li key={item.href}>
-            <a
-              href={item.href}
-              className="block text-sm text-tinta/70 transition hover:text-coral sm:inline"
-              onClick={() => setAbierto(false)}
-            >
-              {item.label}
-            </a>
-          </li>
-        ))}
-      </ul>
+
+      {/* En desktop siempre visible (hidden ~ sm:block). En mobile solo cuando abierto. */}
+      <div className={`mt-2 sm:mt-0 ${abierto ? "block" : "hidden"} sm:block`}>
+        <ul className="flex flex-col gap-y-1 sm:flex-row sm:flex-wrap sm:gap-x-6">
+          {metodologiaIndice.map((item) => (
+            <li key={item.href}>
+              <a
+                href={item.href}
+                className="block py-0.5 text-sm text-tinta/70 transition hover:text-coral sm:inline"
+                onClick={() => setAbierto(false)}
+              >
+                {item.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
     </nav>
   );
 }

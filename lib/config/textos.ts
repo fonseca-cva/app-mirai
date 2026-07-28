@@ -371,13 +371,13 @@ export const lecturasPorDimension: Record<string, string> = {
 // ---------------------------------------------------------------------------
 
 export const metodologiaIndice = [
-  { label: "El modelo de tres pilares", href: "#tres-pilares" },
-  { label: "Intereses", href: "#intereses" },
-  { label: "Capacidades", href: "#capacidades" },
-  { label: "Comprensión y expresión", href: "#comprension-expresion" },
-  { label: "Datos del mercado", href: "#datos-mercado" },
+  { label: "Tres pilares, no uno", href: "#tres-pilares" },
+  { label: "Cómo medimos lo que te interesa", href: "#intereses" },
+  { label: "Cómo medimos para qué tienes facilidad", href: "#capacidades" },
+  { label: "Cómo evaluamos comprensión y expresión", href: "#comprension-expresion" },
+  { label: "De dónde salen los datos de sueldos y empleabilidad", href: "#datos-mercado" },
   { label: "Lo que no hacemos", href: "#lo-que-no-hacemos" },
-  { label: "Estado de desarrollo", href: "#estado-desarrollo" },
+  { label: "Dónde estamos hoy", href: "#estado-desarrollo" },
 ] as const;
 
 export const metodologia = {
