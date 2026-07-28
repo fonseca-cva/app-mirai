@@ -5,31 +5,14 @@ import { useReducedMotion } from "framer-motion"
 import { FondoCapas, NUBE_RAPIDA, NUBE_PATH } from "@/components/origami/FondoCapas"
 import { GruaOrigami } from "@/components/origami/GruaOrigami"
 import { AvionPapel } from "@/components/origami/AvionPapel"
-import { hero, nav } from "@/lib/config/textos"
+import { Header } from "@/components/landing/Header"
+import { hero } from "@/lib/config/textos"
 
 export function Hero() {
   const reducedMotion = !!useReducedMotion()
   return (
     <>
-      <header className="fixed top-0 z-50 flex w-full items-center justify-between gap-4 bg-papel/90 px-4 py-3 backdrop-blur-sm sm:px-8">
-        <a href="#" className="flex items-center gap-2 font-display text-lg font-semibold">
-          <GruaOrigami className="h-8 w-8" />
-          {nav.logo}
-        </a>
-        <nav className="hidden items-center gap-6 md:flex">
-          {nav.anclas.map((ancla) => (
-            <a key={ancla.href} href={ancla.href} className="text-sm hover:text-coral">
-              {ancla.label}
-            </a>
-          ))}
-        </nav>
-        <Link
-          href="/experiencia"
-          className="rounded-[14px] bg-coral px-4 py-2 text-sm font-medium text-blanco-papel transition hover:opacity-90"
-        >
-          {nav.cta}
-        </Link>
-      </header>
+      <Header />
 
       <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 pt-20 text-center sm:px-8">
         <FondoCapas />

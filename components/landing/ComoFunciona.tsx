@@ -18,7 +18,7 @@ export function ComoFunciona() {
   const prefiereMenosMovimiento = useReducedMotion();
 
   return (
-    <section id="como-funciona" className="bg-teal-medio px-4 py-24 sm:px-8">
+    <section id="como-funciona" className="scroll-mt-20 bg-teal-medio px-4 py-24 sm:px-8">
       <div className="mb-8 flex items-center justify-center gap-2 text-sm text-blanco-papel/85">
         <GruaOrigami className="h-6 w-6" />
         <p className="font-display">{nombreSignificado.texto}</p>

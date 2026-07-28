@@ -5,7 +5,7 @@ import { respaldo } from "@/lib/config/textos";
 // teal con texto blanco), transición recta, sin fondo de montañas.
 export function Respaldo() {
   return (
-    <section id="respaldo" className="bg-teal-medio px-4 py-24 sm:px-8">
+    <section id="respaldo" className="scroll-mt-20 bg-teal-medio px-4 py-24 sm:px-8">
       <div className="mx-auto max-w-3xl">
         <h2 className="mb-10 text-center text-2xl font-semibold uppercase tracking-[0.2em] text-blanco-papel sm:text-3xl">
           {respaldo.titulo}

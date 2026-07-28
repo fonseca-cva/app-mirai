@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { GruaOrigami } from "@/components/origami/GruaOrigami";
 import { IndiceMetodologia } from "@/components/metodologia/IndiceMetodologia";
+import { MetodologiaHero } from "@/components/metodologia/MetodologiaHero";
+import { TresPilaresCirculos } from "@/components/metodologia/TresPilaresCirculos";
+import { SeccionVisual } from "@/components/metodologia/SeccionVisual";
+import { Header } from "@/components/landing/Header";
 import { metodologia } from "@/lib/config/textos";
 
 export const metadata: Metadata = {
@@ -18,148 +21,128 @@ export const metadata: Metadata = {
 };
 
 // ---------------------------------------------------------------------------
-// SVG decorativo estático: pliegue abstracto de papel
-// ---------------------------------------------------------------------------
-function PliegueAbstracto({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 120 80"
-      className={className}
-      fill="none"
-      aria-hidden="true"
-      role="img"
-      aria-label="Pliegue de papel abstracto"
-    >
-      <polygon points="0,80 60,0 120,80" fill="currentColor" className="text-salvia/15" />
-      <polygon points="0,80 60,0 60,80" fill="currentColor" className="text-salvia/25" />
-      <line x1="60" y1="0" x2="60" y2="80" stroke="currentColor" className="text-salvia/40" strokeWidth="1" />
-    </svg>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Tres pliegues rotulados para la sección de pilares
-// ---------------------------------------------------------------------------
-function TresPliegues() {
-  const pilares = [
-    { label: "Intereses", color: "text-coral" },
-    { label: "Capacidades", color: "text-salvia" },
-    { label: "Mercado", color: "text-dorado" },
-  ];
-
-  return (
-    <div className="my-10 flex flex-wrap justify-center gap-6" aria-hidden="true">
-      {pilares.map((p) => (
-        <div key={p.label} className="flex flex-col items-center gap-2">
-          <svg viewBox="0 0 80 60" className="h-20 w-24" fill="none" aria-hidden="true">
-            <polygon points="0,60 40,0 80,60" fill="currentColor" className={`${p.color} opacity-[0.18]`} />
-            <polygon points="0,60 40,0 40,60" fill="currentColor" className={`${p.color} opacity-[0.30]`} />
-            <line x1="40" y1="0" x2="40" y2="60" stroke="currentColor" className={`${p.color} opacity-40`} strokeWidth="1" />
-          </svg>
-          <span className={`text-xs font-semibold uppercase tracking-widest ${p.color}`}>{p.label}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Componente para sección de texto con cuerpo que respeta párrafos (\n\n)
-// ---------------------------------------------------------------------------
-function SeccionTexto({
-  id,
-  titulo,
-  cuerpo,
-  children,
-}: {
-  id?: string;
-  titulo: string;
-  cuerpo?: string;
-  children?: React.ReactNode;
-}) {
-  return (
-    <section id={id} className="scroll-mt-24">
-      <h2 className="font-display text-2xl font-semibold text-tinta">{titulo}</h2>
-      {cuerpo && (
-        <div className="mt-4 space-y-4 text-base leading-relaxed text-tinta/80">
-          {cuerpo.split("\n\n").map((parrafo, i) => (
-            <p key={i}>{parrafo}</p>
-          ))}
-        </div>
-      )}
-      {children}
-    </section>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Página
 // ---------------------------------------------------------------------------
 export default function MetodologiaPage() {
   return (
-    <main className="mx-auto flex flex-1 flex-col">
-      {/* Navegación superior mínima */}
-      <header className="flex items-center gap-3 px-4 pt-6 sm:px-8">
-        <Link href="/" className="flex items-center gap-2 font-display text-lg font-semibold text-tinta transition hover:text-coral">
-          <GruaOrigami className="h-7 w-7" />
-          Mirai
-        </Link>
-        <span className="text-xs text-tinta/30">/</span>
-        <span className="text-sm text-tinta/50">Metodología</span>
-      </header>
+    <main className="flex flex-1 flex-col">
+      <Header />
 
-      <article className="mx-auto w-full max-w-[680px] px-4 py-12 sm:px-6 sm:py-16">
-        {/* Encabezado */}
-        <section className="mb-8">
-          <PliegueAbstracto className="mb-6 h-16 w-24" />
+      {/* Hero con diorama — fondo papel completo */}
+      <div className="bg-papel">
+        <MetodologiaHero />
+      </div>
+
+      {/* Sección de encabezado — fondo papel */}
+      <section className="bg-papel px-4 py-12 sm:px-8 sm:py-16">
+        <article className="mx-auto w-full max-w-[680px]">
           <h1 className="font-display text-3xl font-semibold leading-tight sm:text-4xl">
             {metodologia.encabezado.titulo}
           </h1>
           <p className="mt-4 text-lg leading-relaxed text-tinta/70">
             {metodologia.encabezado.bajada}
           </p>
-        </section>
+        </article>
+      </section>
 
-        {/* Índice */}
-        <IndiceMetodologia />
+      {/* Índice — fondo papel */}
+      <section className="bg-papel px-4 sm:px-8 pb-6">
+        <article className="mx-auto w-full max-w-[680px]">
+          <IndiceMetodologia />
+        </article>
+      </section>
 
-        {/* Sección 2 — Tres pilares */}
-        <div className="space-y-16">
-          <SeccionTexto id="tres-pilares" titulo={metodologia.tresPilares.titulo} cuerpo={metodologia.tresPilares.cuerpo}>
-            <TresPliegues />
-          </SeccionTexto>
-
-          {/* Sección 3 — Intereses */}
-          <SeccionTexto id="intereses" titulo={metodologia.intereses.titulo} cuerpo={metodologia.intereses.cuerpo} />
-
-          {/* Sección 4 — Capacidades */}
-          <SeccionTexto id="capacidades" titulo={metodologia.capacidades.titulo} cuerpo={metodologia.capacidades.cuerpo} />
-
-          {/* Sección 5 — Comprensión y expresión */}
-          <SeccionTexto id="comprension-expresion" titulo={metodologia.comprensionExpresion.titulo} cuerpo={metodologia.comprensionExpresion.cuerpo} />
-
-          {/* Sección 6 — Datos del mercado */}
-          <SeccionTexto id="datos-mercado" titulo={metodologia.datosMercado.titulo} cuerpo={metodologia.datosMercado.cuerpo} />
-
-          {/* Sección 7 — Lo que no hacemos (recuadro diferenciado) */}
-          <section id="lo-que-no-hacemos" className="scroll-mt-24 rounded-[14px] border border-coral/20 bg-blanco-papel p-6 shadow-sm sm:p-8">
-            <h2 className="font-display text-2xl font-semibold text-tinta">{metodologia.loQueNoHacemos.titulo}</h2>
-            <ul className="mt-4 space-y-3">
-              {metodologia.loQueNoHacemos.items.map((item) => (
-                <li key={item} className="flex gap-3 text-base leading-relaxed text-tinta/80">
-                  <span aria-hidden="true" className="mt-1 text-coral shrink-0">—</span>
-                  {item}
-                </li>
-              ))}
-            </ul>
+      {/* Sección 2 — Tres pilares — fondo papel */}
+      <section className="bg-papel px-4 py-12 sm:px-8 sm:py-16">
+        <article className="mx-auto w-full max-w-[680px] space-y-16">
+          <section id="tres-pilares" className="scroll-mt-24">
+            <h2 className="font-display text-2xl font-semibold text-tinta">{metodologia.tresPilares.titulo}</h2>
+            <p className="mt-4 text-base leading-relaxed text-tinta/80">
+              {metodologia.tresPilares.cuerpo.split("\n\n")[0]}
+            </p>
+            <TresPilaresCirculos />
           </section>
+        </article>
+      </section>
 
-          {/* Sección 8 — Estado de desarrollo */}
-          <SeccionTexto id="estado-desarrollo" titulo={metodologia.estadoDesarrollo.titulo} cuerpo={metodologia.estadoDesarrollo.cuerpo} />
-        </div>
+      {/* Sección 3 — Intereses — fondo coral */}
+      <section className="bg-coral/10 px-4 py-12 sm:px-8 sm:py-16">
+        <article className="mx-auto w-full max-w-[680px]">
+          <h2 className="font-display text-2xl font-semibold text-tinta">{metodologia.intereses.titulo}</h2>
+          <div className="mt-4 space-y-4 text-base leading-relaxed text-tinta/80">
+            {metodologia.intereses.cuerpo.split("\n\n").map((parrafo, i) => (
+              <p key={i}>{parrafo}</p>
+            ))}
+          </div>
+        </article>
+      </section>
 
-        {/* Cierre */}
-        <footer className="mt-16 border-t border-tinta/10 pt-10 text-center">
+      {/* Sección 4 — Capacidades — fondo salvia */}
+      <section id="capacidades" className="bg-salvia/10 px-4 py-12 sm:px-8 sm:py-16 scroll-mt-24">
+        <article className="mx-auto w-full max-w-[680px]">
+          <h2 className="font-display text-2xl font-semibold text-tinta">{metodologia.capacidades.titulo}</h2>
+          <div className="mt-4 space-y-4 text-base leading-relaxed text-tinta/80">
+            {metodologia.capacidades.cuerpo.split("\n\n").map((parrafo, i) => (
+              <p key={i}>{parrafo}</p>
+            ))}
+          </div>
+        </article>
+      </section>
+
+      {/* Sección 5 — Comprensión y expresión — fondo dorado */}
+      <section id="comprension-expresion" className="bg-dorado/10 px-4 py-12 sm:px-8 sm:py-16 scroll-mt-24">
+        <article className="mx-auto w-full max-w-[680px]">
+          <h2 className="font-display text-2xl font-semibold text-tinta">{metodologia.comprensionExpresion.titulo}</h2>
+          <div className="mt-4 space-y-4 text-base leading-relaxed text-tinta/80">
+            {metodologia.comprensionExpresion.cuerpo.split("\n\n").map((parrafo, i) => (
+              <p key={i}>{parrafo}</p>
+            ))}
+          </div>
+        </article>
+      </section>
+
+      {/* Sección 6 — Datos del mercado — fondo teal */}
+      <section id="datos-mercado" className="bg-teal/10 px-4 py-12 sm:px-8 sm:py-16 scroll-mt-24">
+        <article className="mx-auto w-full max-w-[680px]">
+          <h2 className="font-display text-2xl font-semibold text-tinta">{metodologia.datosMercado.titulo}</h2>
+          <div className="mt-4 space-y-4 text-base leading-relaxed text-tinta/80">
+            {metodologia.datosMercado.cuerpo.split("\n\n").map((parrafo, i) => (
+              <p key={i}>{parrafo}</p>
+            ))}
+          </div>
+        </article>
+      </section>
+
+      {/* Sección 7 — Lo que no hacemos — fondo papel */}
+      <section id="lo-que-no-hacemos" className="bg-papel px-4 py-12 sm:px-8 sm:py-16 scroll-mt-24">
+        <article className="mx-auto w-full max-w-[680px]">
+          <h2 className="font-display text-2xl font-semibold text-tinta">{metodologia.loQueNoHacemos.titulo}</h2>
+          <ul className="mt-4 space-y-3">
+            {metodologia.loQueNoHacemos.items.map((item) => (
+              <li key={item} className="flex gap-3 text-base leading-relaxed text-tinta/80">
+                <span aria-hidden="true" className="mt-1 text-coral shrink-0">—</span>
+                {item}
+              </li>
+            ))}
+          </ul>
+        </article>
+      </section>
+
+      {/* Sección 8 — Estado de desarrollo — fondo papel */}
+      <section id="estado-desarrollo" className="bg-papel px-4 py-12 sm:px-8 sm:py-16 scroll-mt-24">
+        <article className="mx-auto w-full max-w-[680px]">
+          <h2 className="font-display text-2xl font-semibold text-tinta">{metodologia.estadoDesarrollo.titulo}</h2>
+          <div className="mt-4 space-y-4 text-base leading-relaxed text-tinta/80">
+            {metodologia.estadoDesarrollo.cuerpo.split("\n\n").map((parrafo, i) => (
+              <p key={i}>{parrafo}</p>
+            ))}
+          </div>
+        </article>
+      </section>
+
+      {/* Cierre — fondo papel */}
+      <section className="bg-papel px-4 py-12 sm:px-8 sm:py-16 text-center">
+        <article className="mx-auto w-full max-w-[680px]">
           <div className="flex flex-col items-center gap-6">
             <Link
               href={metodologia.cierre.probarHref}
@@ -177,8 +160,8 @@ export default function MetodologiaPage() {
               </a>
             </p>
           </div>
-        </footer>
-      </article>
+        </article>
+      </section>
     </main>
   );
 }
