@@ -175,7 +175,7 @@ export function FondoCapas({ className = "" }: FondoCapasProps) {
           height: n.ancho * 0.5,
           animation: prefiereMenosMovimiento
             ? undefined
-            : `nube-deriva ${n.dur}s linear ${n.delay}s infinite`,
+            : `nube-deriva ${n.dur}s linear ${n.delay}s infinite both`,
         }}
         fill="none"
       >
@@ -199,7 +199,7 @@ export function FondoCapas({ className = "" }: FondoCapasProps) {
         </defs>
       </svg>
 
-      {/* Prado verde claro */}
+      {/* Prado verde claro — fuera del grupo escalado para cubrir todo el ancho */}
       <svg viewBox="0 0 400 200" preserveAspectRatio="xMidYMax slice" className="absolute bottom-0 w-full">
         <rect x="0" y={SUELO_Y} width="400" height={200 - SUELO_Y} fill="#6BB889" />
         <rect x="0" y={SUELO_Y} width="400" height={2.5} fill="#7DC89B" />
@@ -208,153 +208,157 @@ export function FondoCapas({ className = "" }: FondoCapasProps) {
       {/* Nubes detrás de los cerros */}
       <div className="pointer-events-none absolute inset-0">{renderNubes(NUBES_ATRAS)}</div>
 
-      {CAPAS.map((capa, i) => {
-        const atm = atmosfera[capa.distancia];
-        const luz = mezclarHex(capa.luz, colores.papel, atm.mezclaPapel);
-        const sombra = mezclarHex(capa.sombra, colores.papel, atm.mezclaPapel);
-        const nieveLuz = mezclarHex("#F8F8F4", colores.papel, atm.mezclaPapel * 0.6);
-        const nieveSombra = mezclarHex("#E2E2CE", colores.papel, atm.mezclaPapel * 0.6);
-        const mouseMax = (capa.parallax / 46) * 12;
+      {/* Grupo escalado en desktop: cerros + árboles */}
+      <div className="absolute inset-0 origin-bottom md:scale-[0.7]">
 
-        return (
-          <div
-            key={i}
-            className="absolute inset-0"
-            style={{ transform: `translate(calc(var(--mx) * ${mouseMax}px), calc(var(--my) * ${mouseMax}px))` }}
-          >
-            <motion.svg
-              style={{
-                y: parallaxPorCapa[i],
-                transformOrigin: "50% 100%",
-                filter: `saturate(${atm.saturacion}) ${dropShadowCSS(capa.distancia)}`,
-              }}
-              viewBox="0 -30 400 230"
-              preserveAspectRatio="xMidYMax slice"
-              className="absolute bottom-0 w-full"
+        {CAPAS.map((capa, i) => {
+          const atm = atmosfera[capa.distancia];
+          const luz = mezclarHex(capa.luz, colores.papel, atm.mezclaPapel);
+          const sombra = mezclarHex(capa.sombra, colores.papel, atm.mezclaPapel);
+          const nieveLuz = mezclarHex("#F8F8F4", colores.papel, atm.mezclaPapel * 0.6);
+          const nieveSombra = mezclarHex("#E2E2CE", colores.papel, atm.mezclaPapel * 0.6);
+          const mouseMax = (capa.parallax / 46) * 12;
+
+          return (
+            <div
+              key={i}
+              className="absolute inset-0"
+              style={{ transform: `translate(calc(var(--mx) * ${mouseMax}px), calc(var(--my) * ${mouseMax}px))` }}
             >
-              {capa.picos.map((p, j) => {
-                const picoBaseY = (capa.distancia === "cercana" ? BASE_Y + 16 : BASE_Y) + (p.dy ?? 0);
-                const { caraLuz, caraSombra, creaseX, apexY, quillaY, nieveLuz: nL, nieveSombra: nS } = construirPico(p, picoBaseY);
-                const delay = i * 0.16 + j * 0.12;
-                return (
-                  <g key={j}>
-                    <line
-                      x1={creaseX}
-                      y1={apexY}
-                      x2={creaseX}
-                      y2={quillaY}
-                      stroke={`url(#${creaseId})`}
-                      strokeWidth={1}
-                      opacity={0.25}
+              <motion.svg
+                style={{
+                  y: parallaxPorCapa[i],
+                  transformOrigin: "50% 100%",
+                  filter: `saturate(${atm.saturacion}) ${dropShadowCSS(capa.distancia)}`,
+                }}
+                viewBox="0 -30 400 230"
+                preserveAspectRatio="xMidYMax slice"
+                className="absolute bottom-0 w-full"
+              >
+                {capa.picos.map((p, j) => {
+                  const picoBaseY = (capa.distancia === "cercana" ? BASE_Y + 16 : BASE_Y) + (p.dy ?? 0);
+                  const { caraLuz, caraSombra, creaseX, apexY, quillaY, nieveLuz: nL, nieveSombra: nS } = construirPico(p, picoBaseY);
+                  const delay = i * 0.16 + j * 0.12;
+                  return (
+                    <g key={j}>
+                      <line
+                        x1={creaseX}
+                        y1={apexY}
+                        x2={creaseX}
+                        y2={quillaY}
+                        stroke={`url(#${creaseId})`}
+                        strokeWidth={1}
+                        opacity={0.25}
+                      />
+                      <motion.g {...cara("right", delay)}>
+                        <path d={caraLuz} fill={luz} />
+                        {nL && <path d={nL} fill={nieveLuz} />}
+                      </motion.g>
+                      <motion.g {...cara("left", delay + 0.1)}>
+                        <path d={caraSombra} fill={sombra} />
+                        {nS && <path d={nS} fill={nieveSombra} />}
+                      </motion.g>
+                    </g>
+                  );
+                })}
+              </motion.svg>
+            </div>
+          );
+        })}
+
+        {/* Árboles de atrás (sobre los cerros): menos mouse parallax → perspectiva */}
+        <div
+          className="absolute inset-0"
+          style={{ transform: `translate(calc(var(--mx) * 4px), calc(var(--my) * 4px))` }}
+        >
+          <svg
+            viewBox="0 0 400 200"
+            preserveAspectRatio="xMidYMax slice"
+            className="absolute bottom-0 w-full"
+            style={{ filter: dropShadowCSS("media") }}
+          >
+            {ARBOLES_ATRAS.map((a, i) => {
+              const base = SUELO_Y + a.dy;
+              const apexY = base - a.alto;
+              const delay = 0.9 + i * 0.14;
+              return (
+                <g key={i}>
+                  <motion.rect
+                    x={a.x - 2}
+                    y={base - 2}
+                    width={4}
+                    height={14}
+                    fill="#7A5A3C"
+                    initial={prefiereMenosMovimiento ? false : { scaleY: 0, opacity: 0 }}
+                    animate={{ scaleY: 1, opacity: 1 }}
+                    style={{ originX: 0.5, originY: 0 }}
+                    transition={
+                      prefiereMenosMovimiento ? undefined : { duration: 0.5, delay: delay + DESDOBLA.duration + 0.15, ease: "easeOut" }
+                    }
+                  />
+                  <motion.g {...cara("right", delay)}>
+                    <polygon points={`${a.x},${apexY} ${a.x - a.ancho},${base} ${a.x},${base}`} fill={a.tono} />
+                  </motion.g>
+                  <motion.g {...cara("left", delay + 0.1)}>
+                    <polygon
+                      points={`${a.x},${apexY} ${a.x},${base} ${a.x + a.ancho},${base}`}
+                      fill={mezclarHex(a.tono, colores.tinta, 0.2)}
                     />
-                    <motion.g {...cara("right", delay)}>
-                      <path d={caraLuz} fill={luz} />
-                      {nL && <path d={nL} fill={nieveLuz} />}
-                    </motion.g>
-                    <motion.g {...cara("left", delay + 0.1)}>
-                      <path d={caraSombra} fill={sombra} />
-                      {nS && <path d={nS} fill={nieveSombra} />}
-                    </motion.g>
-                  </g>
-                );
-              })}
-            </motion.svg>
-          </div>
-        );
-      })}
+                  </motion.g>
+                </g>
+              );
+            })}
+          </svg>
+        </div>
+
+        {/* Árboles del frente: mouse parallax completo */}
+        <div
+          className="absolute inset-0"
+          style={{ transform: `translate(calc(var(--mx) * 12px), calc(var(--my) * 12px))` }}
+        >
+          <svg
+            viewBox="0 0 400 200"
+            preserveAspectRatio="xMidYMax slice"
+            className="absolute bottom-0 w-full"
+            style={{ filter: dropShadowCSS("cercana") }}
+          >
+            {ARBOLES_FRENTE.map((a, i) => {
+              const base = SUELO_Y + a.dy;
+              const apexY = base - a.alto;
+              const delay = 1.2 + i * 0.14;
+              return (
+                <g key={i}>
+                  <motion.rect
+                    x={a.x - 2}
+                    y={base - 2}
+                    width={4}
+                    height={14}
+                    fill="#7A5A3C"
+                    initial={prefiereMenosMovimiento ? false : { scaleY: 0, opacity: 0 }}
+                    animate={{ scaleY: 1, opacity: 1 }}
+                    style={{ originX: 0.5, originY: 0 }}
+                    transition={
+                      prefiereMenosMovimiento ? undefined : { duration: 0.5, delay: delay + DESDOBLA.duration + 0.15, ease: "easeOut" }
+                    }
+                  />
+                  <motion.g {...cara("right", delay)}>
+                    <polygon points={`${a.x},${apexY} ${a.x - a.ancho},${base} ${a.x},${base}`} fill={a.tono} />
+                  </motion.g>
+                  <motion.g {...cara("left", delay + 0.1)}>
+                    <polygon
+                      points={`${a.x},${apexY} ${a.x},${base} ${a.x + a.ancho},${base}`}
+                      fill={mezclarHex(a.tono, colores.tinta, 0.2)}
+                    />
+                  </motion.g>
+                </g>
+              );
+            })}
+          </svg>
+        </div>
+      </div>
 
       {/* Nubes delante de los cerros */}
       <div className="pointer-events-none absolute inset-0">{renderNubes(NUBES_FRENTE)}</div>
-
-      {/* Árboles de atrás (sobre los cerros): menos mouse parallax → perspectiva */}
-      <div
-        className="absolute inset-0"
-        style={{ transform: `translate(calc(var(--mx) * 4px), calc(var(--my) * 4px))` }}
-      >
-      <svg
-        viewBox="0 0 400 200"
-        preserveAspectRatio="xMidYMax slice"
-        className="absolute bottom-0 w-full"
-        style={{ filter: dropShadowCSS("media") }}
-      >
-        {ARBOLES_ATRAS.map((a, i) => {
-          const base = SUELO_Y + a.dy;
-          const apexY = base - a.alto;
-          const delay = 0.9 + i * 0.14;
-          return (
-            <g key={i}>
-              <motion.rect
-                x={a.x - 2}
-                y={base - 2}
-                width={4}
-                height={14}
-                fill="#7A5A3C"
-                initial={prefiereMenosMovimiento ? false : { scaleY: 0, opacity: 0 }}
-                animate={{ scaleY: 1, opacity: 1 }}
-                style={{ originX: 0.5, originY: 0 }}
-                transition={
-                  prefiereMenosMovimiento ? undefined : { duration: 0.5, delay: delay + DESDOBLA.duration + 0.15, ease: "easeOut" }
-                }
-              />
-              <motion.g {...cara("right", delay)}>
-                <polygon points={`${a.x},${apexY} ${a.x - a.ancho},${base} ${a.x},${base}`} fill={a.tono} />
-              </motion.g>
-              <motion.g {...cara("left", delay + 0.1)}>
-                <polygon
-                  points={`${a.x},${apexY} ${a.x},${base} ${a.x + a.ancho},${base}`}
-                  fill={mezclarHex(a.tono, colores.tinta, 0.2)}
-                />
-              </motion.g>
-            </g>
-          );
-        })}
-      </svg>
-      </div>
-
-      {/* Árboles del frente: mouse parallax completo */}
-      <div
-        className="absolute inset-0"
-        style={{ transform: `translate(calc(var(--mx) * 12px), calc(var(--my) * 12px))` }}
-      >
-      <svg
-        viewBox="0 0 400 200"
-        preserveAspectRatio="xMidYMax slice"
-        className="absolute bottom-0 w-full"
-        style={{ filter: dropShadowCSS("cercana") }}
-      >
-        {ARBOLES_FRENTE.map((a, i) => {
-          const base = SUELO_Y + a.dy;
-          const apexY = base - a.alto;
-          const delay = 1.2 + i * 0.14;
-          return (
-            <g key={i}>
-              <motion.rect
-                x={a.x - 2}
-                y={base - 2}
-                width={4}
-                height={14}
-                fill="#7A5A3C"
-                initial={prefiereMenosMovimiento ? false : { scaleY: 0, opacity: 0 }}
-                animate={{ scaleY: 1, opacity: 1 }}
-                style={{ originX: 0.5, originY: 0 }}
-                transition={
-                  prefiereMenosMovimiento ? undefined : { duration: 0.5, delay: delay + DESDOBLA.duration + 0.15, ease: "easeOut" }
-                }
-              />
-              <motion.g {...cara("right", delay)}>
-                <polygon points={`${a.x},${apexY} ${a.x - a.ancho},${base} ${a.x},${base}`} fill={a.tono} />
-              </motion.g>
-              <motion.g {...cara("left", delay + 0.1)}>
-                <polygon
-                  points={`${a.x},${apexY} ${a.x},${base} ${a.x + a.ancho},${base}`}
-                  fill={mezclarHex(a.tono, colores.tinta, 0.2)}
-                />
-              </motion.g>
-            </g>
-          );
-        })}
-      </svg>
-      </div>
 
       <style>{`
         @keyframes nube-deriva {

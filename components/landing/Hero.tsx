@@ -58,7 +58,7 @@ export function Hero() {
             height: NUBE_RAPIDA.ancho * 0.5,
             animation: reducedMotion
               ? undefined
-              : `nube-deriva ${NUBE_RAPIDA.dur}s linear ${NUBE_RAPIDA.delay}s infinite`,
+              : `nube-deriva ${NUBE_RAPIDA.dur}s linear ${NUBE_RAPIDA.delay}s infinite both`,
           }}
           fill="none"
         >
