@@ -103,7 +103,7 @@ export default function PrivacidadPage() {
         </h2>
         <p>
           Puedes solicitar la eliminación de tus datos en cualquier momento
-          escribiéndonos a <a href="mailto:privacidad@somosmirai.cl" className="text-coral underline">privacidad@somosmirai.cl</a>.
+          escribiéndonos a <a href="mailto:privacidad@miraiapp.cl" className="text-coral underline">privacidad@miraiapp.cl</a>.
           Indica tu <em>session_id</em> (lo encuentras en las cookies de tu
           navegador) y eliminaremos todos los registros asociados en un plazo
           máximo de 15 días hábiles.
@@ -127,7 +127,7 @@ export default function PrivacidadPage() {
         </h2>
         <p>
           Si tienes preguntas sobre tus datos o esta política, escríbenos a{" "}
-          <a href="mailto:privacidad@somosmirai.cl" className="text-coral underline">privacidad@somosmirai.cl</a>.
+          <a href="mailto:privacidad@miraiapp.cl" className="text-coral underline">privacidad@miraiapp.cl</a>.
         </p>
       </section>
 

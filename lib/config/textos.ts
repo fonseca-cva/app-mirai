@@ -67,8 +67,9 @@ export const respaldo = {
     "Construido sobre metodologías validadas internacionalmente en medición de intereses y capacidades.", // PENDIENTE PASADA DE COPY
     "Datos laborales de fuentes oficiales chilenas.", // PENDIENTE PASADA DE COPY
     "Datos personales: pedimos lo mínimo, jamás vendemos información, cumplimiento de la ley chilena de protección de datos.", // PENDIENTE PASADA DE COPY
-    "Los datos de empleabilidad e ingresos corresponden a las cohortes más recientes publicadas por SIES. Como se construyen cruzando información tributaria real, tienen algunos años de rezago: es el precio de que sean datos verdaderos y no estimaciones.",
   ],
+  notaCohorte:
+    "Los datos de empleabilidad e ingresos corresponden a las cohortes más recientes publicadas por SIES. Como se construyen cruzando información tributaria real, tienen algunos años de rezago: es el precio de que sean datos verdaderos y no estimaciones.",
   cifra:
     "Elegir carrera a ciegas sale caro. Entre un 24% y un 29% de los estudiantes deja su carrera durante el primer año (SIES, según cohorte), y la falta de orientación es una de las causas que los especialistas más repiten.",
 };
@@ -85,7 +86,7 @@ export const paraColegios = {
   texto:
     "Cada estudiante vive la experiencia y recibe su informe. Tu equipo de orientación recibe el mapa de la generación: perfiles, tendencias y datos para trabajar, no impresiones.",
   cta: "Conversemos", // PENDIENTE PASADA DE COPY
-  mailto: "mailto:colegios@somosmirai.cl",
+  mailto: "mailto:colegios@miraiapp.cl",
 };
 
 export const contacto = {
@@ -102,7 +103,7 @@ export const contacto = {
     mensaje: "Mensaje", // PENDIENTE PASADA DE COPY
   },
   submit: "Enviar", // PENDIENTE PASADA DE COPY
-  mailtoDestino: "hola@somosmirai.cl",
+  mailtoDestino: "hola@miraiapp.cl",
 };
 
 export const footer = {
@@ -157,7 +158,7 @@ export const resultadoParcial = {
   cierre: "Esto es tu primer pliegue, no tu horóscopo. Los mini-juegos y tu informe completo con datos reales: muy pronto.",
   continuarCta: "Ahora, a jugar", // PENDIENTE PASADA DE COPY
   cta: "Avísame cuando esté listo", // PENDIENTE PASADA DE COPY
-  mailto: "mailto:hola@somosmirai.cl?subject=Avísenme%20cuando%20esté%20listo",
+  mailto: "mailto:hola@miraiapp.cl?subject=Avísenme%20cuando%20esté%20listo",
 };
 
 // Placeholder temporal para bloques aún no construidos (Fases 2-4). Se elimina cuando

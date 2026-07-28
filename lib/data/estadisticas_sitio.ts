@@ -92,7 +92,7 @@ export function cifrasPorUbicacion(
 /** Cifras candidatas que Camilo debe verificar antes de agregar al banco:
  *    - Inscritos PAES último proceso (DEMRE)
  *    - Deserción/retención 1er año SIES (rango)
- *    - Combinaciones carrera-institución (mifuturo.cl) — cifra exacta pendiente
+ *    // NOTA: NO usamos el Buscador de Empleabilidad e Ingresos (1.740 combinaciones carrera-institución).
  *    - Visitas anuales mifuturo.cl
  *    - 24 lugares / 3 juegos / 25 minutos (producto propio)
  */

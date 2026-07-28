@@ -22,6 +22,11 @@ export function Respaldo() {
             </li>
           ))}
         </ul>
+        {respaldo.notaCohorte && (
+          <p className="mt-8 text-center text-sm text-blanco-papel/60">
+            {respaldo.notaCohorte}
+          </p>
+        )}
       </div>
     </section>
   );
