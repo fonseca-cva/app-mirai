@@ -9,7 +9,10 @@ export function Respaldo() {
         <h2 className="mb-10 text-center text-2xl font-semibold uppercase tracking-[0.2em] text-blanco-papel sm:text-3xl">
           {respaldo.titulo}
         </h2>
-        <ul className="mb-10 space-y-4">
+        <p className="mb-10 rounded-[14px] bg-blanco-papel p-6 text-center font-display text-lg text-tinta shadow-sm">
+          {respaldo.cifra}
+        </p>
+        <ul className="space-y-4">
           {respaldo.viñetas.map((viñeta) => (
             <li key={viñeta} className="flex gap-3 text-blanco-papel/90">
               <span aria-hidden="true" className="mt-1 text-blanco-papel">
@@ -19,9 +22,6 @@ export function Respaldo() {
             </li>
           ))}
         </ul>
-        <p className="rounded-[14px] bg-blanco-papel p-6 text-center font-display text-lg text-tinta shadow-sm">
-          {respaldo.cifra}
-        </p>
       </div>
     </section>
   );

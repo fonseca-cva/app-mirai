@@ -46,14 +46,14 @@ export const comoFunciona = {
 
 // Corrección D14: la portada habla de la experiencia completa (~25 min), no de este bloque (~6 min).
 export const teaserExperiencia = {
-  frase: "25 minutos. Sin paja: lo que te gusta, lo que se te da y lo que paga.",
-  cta: "Probar el Bloque de Gustos", // PENDIENTE PASADA DE COPY
+  frase: "25 minutos. Sin vueltas: lo que te gusta, lo que se te da y lo que paga.",
+  cta: "Probar una muestra",
 };
 
 export const teaserInforme = {
   titulo: "Un informe que sí sirve",
   bullets: [
-    "Nada de 'eres un espíritu libre'. Tu perfil de intereses y capacidades, cruzado con empleabilidad e ingresos reales de cada carrera e institución (datos de mifuturo.cl, construidos con declaraciones reales al SII — no con encuestas).",
+    "Nada de 'eres un espíritu libre'. Tu perfil de intereses y capacidades, cruzado con empleabilidad e ingresos reales de cada carrera (datos de mifuturo.cl, construidos con declaraciones reales al SII — no con encuestas).",
     "Mirai no pertenece a ninguna universidad. No te vamos a recomendar 'casualmente' la carrera que a alguien le conviene venderte. Te mostramos tus opciones — todas.",
   ],
   mencion: "Versión gratuita y versión profunda.", // PENDIENTE PASADA DE COPY
@@ -62,11 +62,12 @@ export const teaserInforme = {
 export const respaldo = {
   titulo: "¿Por qué confiar en Mirai?", // PENDIENTE PASADA DE COPY
   viñetas: [
-    "Los datos de sueldos y empleabilidad vienen de mifuturo.cl (Mineduc/SIES): 1.740 combinaciones de carrera e institución, construidas con datos reales del SII.",
+    "Estadísticas oficiales por carrera de mifuturo.cl (Mineduc/SIES), construidas con cruces reales del Servicio de Impuestos Internos — no con encuestas.",
     "Modelo de tres pilares: lo que te gusta + para qué eres bueno/a + cómo está el mercado.", // PENDIENTE PASADA DE COPY
     "Construido sobre metodologías validadas internacionalmente en medición de intereses y capacidades.", // PENDIENTE PASADA DE COPY
     "Datos laborales de fuentes oficiales chilenas.", // PENDIENTE PASADA DE COPY
     "Datos personales: pedimos lo mínimo, jamás vendemos información, cumplimiento de la ley chilena de protección de datos.", // PENDIENTE PASADA DE COPY
+    "Los datos de empleabilidad e ingresos corresponden a las cohortes más recientes publicadas por SIES. Como se construyen cruzando información tributaria real, tienen algunos años de rezago: es el precio de que sean datos verdaderos y no estimaciones.",
   ],
   cifra:
     "Elegir carrera a ciegas sale caro. Entre un 24% y un 29% de los estudiantes deja su carrera durante el primer año (SIES, según cohorte), y la falta de orientación es una de las causas que los especialistas más repiten.",
