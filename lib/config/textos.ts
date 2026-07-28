@@ -8,6 +8,7 @@ export const nav = {
   anclas: [
     { label: "Cómo funciona", href: "#como-funciona" }, // PENDIENTE PASADA DE COPY
     { label: "Respaldo", href: "#respaldo" }, // PENDIENTE PASADA DE COPY
+    { label: "Metodología", href: "/metodologia" },
     { label: "Colegios", href: "#colegios" }, // PENDIENTE PASADA DE COPY
   ],
   cta: "Descúbrelo gratis", // PENDIENTE PASADA DE COPY
@@ -72,6 +73,7 @@ export const respaldo = {
     "Los datos de empleabilidad e ingresos corresponden a las cohortes más recientes publicadas por SIES. Como se construyen cruzando información tributaria real, tienen algunos años de rezago: es el precio de que sean datos verdaderos y no estimaciones.",
   cifra:
     "Elegir carrera a ciegas sale caro. Entre un 24% y un 29% de los estudiantes deja su carrera durante el primer año (SIES, según cohorte), y la falta de orientación es una de las causas que los especialistas más repiten.",
+  metodologiaLink: "Conoce nuestra metodología completa →",
 };
 
 // Iteración 4: franja sobria para apoderados, insertada entre El informe y Para colegios.
@@ -109,6 +111,7 @@ export const contacto = {
 export const footer = {
   copyright: "© Mirai 2026 · Proyecto chileno", // PENDIENTE PASADA DE COPY
   enlaces: [
+    { label: "Metodología", href: "/metodologia" },
     { label: "Términos", href: "/terminos" }, // PENDIENTE PASADA DE COPY
     { label: "Privacidad", href: "/privacidad" }, // PENDIENTE PASADA DE COPY
   ],
@@ -361,3 +364,74 @@ export const lecturasPorDimension: Record<string, string> = {
   dat: "Te acomoda ordenar el caos: números, procesos, información. Ahí encuentras claridad.",
   nat: "Te mueve trabajar en terreno, con el cuerpo y al aire libre, lejos de una oficina cerrada.",
 };
+
+// ---------------------------------------------------------------------------
+// Metodología — página de lectura /metodologia
+// Copy v1 aprobado. No reescribir.
+// ---------------------------------------------------------------------------
+
+export const metodologiaIndice = [
+  { label: "El modelo de tres pilares", href: "#tres-pilares" },
+  { label: "Intereses", href: "#intereses" },
+  { label: "Capacidades", href: "#capacidades" },
+  { label: "Comprensión y expresión", href: "#comprension-expresion" },
+  { label: "Datos del mercado", href: "#datos-mercado" },
+  { label: "Lo que no hacemos", href: "#lo-que-no-hacemos" },
+  { label: "Estado de desarrollo", href: "#estado-desarrollo" },
+] as const;
+
+export const metodologia = {
+  encabezado: {
+    titulo: "Cómo funciona Mirai por dentro",
+    bajada:
+      "Sin secretos de fondo: este es el método. Sin spoilers tampoco: los ejercicios concretos no se muestran, para que la experiencia mida lo que tiene que medir.",
+  },
+  tresPilares: {
+    titulo: "Tres pilares, no uno",
+    cuerpo:
+      "Una buena decisión vocacional cruza tres cosas: lo que te interesa, aquello para lo que tienes facilidad, y cómo es el mundo laboral real. Mirai mide las dos primeras en una experiencia de unos 25 minutos, y cruza los resultados con la tercera usando datos oficiales.\n\nNingún pilar por sí solo basta: interés sin capacidad frustra, capacidad sin interés aburre, y ambos sin información del mercado es decidir a ciegas. La mayoría de los instrumentos disponibles se queda en el primero.",
+  },
+  intereses: {
+    titulo: "Cómo medimos lo que te interesa",
+    cuerpo:
+      "En vez de preguntarte '¿te interesa la investigación científica?' — una pregunta que casi todos responden pensando en quién quieren ser y no en quién son — te mostramos lugares de trabajo reales, con su ambiente y su sonido, y registramos tu reacción.\n\nEste enfoque proviene de una línea de instrumentos de medición de intereses basados en imágenes, con décadas de desarrollo en psicometría, actualizada hoy con material audiovisual. La reacción a un estímulo concreto es más rápida y menos influida por lo que uno cree que debería responder.\n\nHay un segundo efecto buscado: mostrar el trabajo como es de verdad, con lo entretenido y lo incómodo, ayuda a calibrar expectativas. Buena parte de los cambios de carrera no ocurren porque la persona se equivocó de interés, sino porque no sabía cómo era el día a día de esa profesión.",
+  },
+  capacidades: {
+    titulo: "Cómo medimos para qué tienes facilidad",
+    cuerpo:
+      "Usamos mini-juegos, pero no cualquier juego. Cada uno está construido sobre un tipo de tarea con décadas de evidencia en psicología cognitiva: razonamiento con patrones, razonamiento espacial y memoria de trabajo. Son tres de las capacidades con mayor respaldo científico como predictores del desempeño académico posterior.\n\nEl formato de juego cumple una función concreta: reduce la ansiedad de examen, que distorsiona los resultados. La tarea de fondo es la que hace la medición.\n\nDos decisiones importantes: el tiempo no te presiona — medimos precisión y nivel alcanzado, no velocidad — y antes de cada juego hay una práctica que no puntúa, para que nadie sea evaluado mientras todavía está entendiendo las instrucciones.",
+  },
+  comprensionExpresion: {
+    titulo: "Cómo evaluamos comprensión y expresión",
+    cuerpo:
+      "Las capacidades verbales no se pueden medir bien con alternativas. Por eso te pedimos escribir con tus palabras, y esa respuesta la evalúa inteligencia artificial aplicando rúbricas diseñadas por profesionales.\n\nEl orden importa: la IA aplica criterios definidos por personas, no improvisa juicios. Evaluamos cómo comprendes un texto y cómo estructuras un argumento. Nunca tu opinión, y nunca tu ortografía.\n\nDurante la etapa de validación, una parte de estas evaluaciones se revisa manualmente para verificar que la corrección automática coincide con la de un evaluador humano.",
+  },
+  datosMercado: {
+    titulo: "De dónde salen los datos de sueldos y empleabilidad",
+    cuerpo:
+      "Los datos laborales de tu informe vienen del Buscador de Estadísticas por Carrera de mifuturo.cl, el portal oficial del Ministerio de Educación. Esas cifras no salen de encuestas ni de promedios de la industria: se construyen cruzando información real del Servicio de Impuestos Internos, es decir, las declaraciones efectivas de personas tituladas.\n\nEso tiene una consecuencia que preferimos explicar antes de que la note: los datos tienen algunos años de rezago. Para saber cuánto gana alguien al cuarto año de titulado, hay que esperar a que efectivamente pasen esos años y se declaren esos ingresos. Es el precio de que sean datos verdaderos y no proyecciones. Cada cifra de tu informe indica a qué cohorte corresponde.\n\nLas tendencias a futuro son otra cosa y las tratamos distinto: cuando decimos que un área está en expansión o en transformación, citamos el informe y el año del que sale esa proyección, y la presentamos como tendencia, no como certeza.\n\nY cuando una carrera no tiene datos oficiales publicados —porque no existe como categoría en las estadísticas del Ministerio— lo decimos explícitamente en vez de estimarlos.",
+  },
+  loQueNoHacemos: {
+    titulo: "Lo que no hacemos",
+    items: [
+      "No pertenecemos a ninguna universidad ni recibimos comisión por recomendar carreras.",
+      "No usamos tus datos para publicidad ni los vendemos a nadie.",
+      "No inferimos emociones ni rasgos de personalidad a partir de tu forma de escribir o de tu voz. Las señales técnicas que registra la plataforma se usan solo para verificar la calidad de los datos, y está declarado en el consentimiento.",
+      "No mostramos los ejercicios fuera de la experiencia. Un instrumento que se conoce de antemano deja de medir.",
+      "No te decimos 'no sirves para esto'. El resultado abre opciones para explorar; no las cierra.",
+      "No pedimos más datos personales de los necesarios para entregarte tu informe.",
+    ],
+  },
+  estadoDesarrollo: {
+    titulo: "Dónde estamos hoy",
+    cuerpo:
+      "Mirai está en desarrollo activo y lo decimos con todas sus letras. La arquitectura del instrumento se construyó sobre marcos con respaldo científico internacional, y estamos en el proceso de validarla con estudiantes chilenos: pilotos en colegios, comparación con instrumentos ya establecidos y construcción de normas locales.\n\nPublicaremos los avances de ese proceso en esta misma página. Mientras tanto, cada informe declara sus alcances: es orientación fundamentada para explorar, no un veredicto.",
+  },
+  cierre: {
+    probar: "Probar la experiencia",
+    probarHref: "/experiencia",
+    contacto:
+      "¿Eres orientador, docente o directivo y quieres conversar sobre la metodología? Escríbenos a colegios@miraiapp.cl",
+    contactoMailto: "mailto:colegios@miraiapp.cl",
+  },
+} as const;

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { respaldo } from "@/lib/config/textos";
 
 // Banda teal a sangre completa (estilo referencia: sección de cifras sobre
@@ -25,6 +26,16 @@ export function Respaldo() {
         {respaldo.notaCohorte && (
           <p className="mt-8 text-center text-sm text-blanco-papel/60">
             {respaldo.notaCohorte}
+          </p>
+        )}
+        {respaldo.metodologiaLink && (
+          <p className="mt-8 text-center">
+            <Link
+              href="/metodologia"
+              className="inline-block text-sm font-medium text-blanco-papel underline underline-offset-4 transition hover:opacity-80"
+            >
+              {respaldo.metodologiaLink}
+            </Link>
           </p>
         )}
       </div>
