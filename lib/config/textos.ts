@@ -9,6 +9,7 @@ export const nav = {
     { label: "Cómo funciona", href: "#como-funciona" }, // PENDIENTE PASADA DE COPY
     { label: "Respaldo", href: "#respaldo" }, // PENDIENTE PASADA DE COPY
     { label: "Metodología", href: "/metodologia" },
+    { label: "Artículos", href: "/articulos" },
     { label: "Colegios", href: "#colegios" }, // PENDIENTE PASADA DE COPY
   ],
   cta: "Descúbrelo gratis", // PENDIENTE PASADA DE COPY
@@ -111,6 +112,7 @@ export const contacto = {
 export const footer = {
   copyright: "© Mirai 2026 · Proyecto chileno", // PENDIENTE PASADA DE COPY
   enlaces: [
+    { label: "Artículos", href: "/articulos" },
     { label: "Metodología", href: "/metodologia" },
     { label: "Términos", href: "/terminos" }, // PENDIENTE PASADA DE COPY
     { label: "Privacidad", href: "/privacidad" }, // PENDIENTE PASADA DE COPY
