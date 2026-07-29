@@ -63,7 +63,13 @@ export function parseArticulos(): ParseResult {
       slugsSeen.add(frontmatter.slug);
 
       // Renderizar markdown a HTML
-      const contenidoHtml = md.render(markdown);
+      let contenidoHtml = md.render(markdown);
+
+      // Eliminar marcadores de cita [cite: N] o [cite: N, M] — son residuos internos de generación
+      contenidoHtml = contenidoHtml.replace(/\[\s*cite\s*:\s*\d+(?:\s*,\s*\d+)*\s*\]/g, '');
+
+      // Reemplazar links externos a miraiapp.cl por /metodologia (CTA de los artículos)
+      contenidoHtml = contenidoHtml.replace(/https:\/\/www\.miraiapp\.cl/g, '/metodologia');
 
       // Recolectar medios pendientes
       for (const medio of frontmatter.medios) {
