@@ -63,7 +63,9 @@ export function parseArticulos(): ParseResult {
       slugsSeen.add(frontmatter.slug);
 
       // Renderizar markdown a HTML
-      let contenidoHtml = md.render(markdown);
+      // Eliminar el primer H1 del cuerpo (el frontmatter ya provee titulo como H1 en la página)
+      const markdownSinH1 = markdown.replace(/^\s*#[^#].*\n?/, '');
+      let contenidoHtml = md.render(markdownSinH1);
 
       // Eliminar marcadores de cita [cite: N] o [cite: N, M] — son residuos internos de generación
       contenidoHtml = contenidoHtml.replace(/\[\s*cite\s*:\s*\d+(?:\s*,\s*\d+)*\s*\]/g, '');
