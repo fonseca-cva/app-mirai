@@ -1,3 +1,18 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Privacidad — Mirai",
+  description:
+    "Política de privacidad de Mirai: qué datos recopilamos durante el test vocacional, cómo los usamos y cómo ejercer tus derechos.",
+  openGraph: {
+    title: "Privacidad — Mirai",
+    description:
+      "Política de privacidad de Mirai: qué datos recopilamos durante el test vocacional, cómo los usamos y cómo ejercer tus derechos.",
+    locale: "es_CL",
+    type: "website",
+  },
+};
+
 // Página de privacidad v1 — sección 2 de la spec Fase 2.
 // // PENDIENTE REVISIÓN LEGAL: este texto debe ser revisado por un/a abogado/a
 // antes de producción. No constituye asesoría legal.

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getArticuloBySlug, getSlugs, getArticulos } from "@/lib/articulos";
+import { articleSchema } from "@/lib/schemas";
 import { Header } from "@/components/landing/Header";
 import { Footer } from "@/components/landing/Footer";
 
@@ -55,7 +56,7 @@ function formatDate(iso: string): string {
 // ---------------------------------------------------------------------------
 const CTA_MAP: Record<string, { label: string; href: string }> = {
   experiencia: {
-    label: "Descubrir mi perfil",
+    label: "Prueba el test vocacional de Mirai",
     href: "/experiencia",
   },
   metodologia: {
@@ -91,8 +92,15 @@ export default async function ArticuloPage({
   const ctaConfig = CTA_MAP[articulo.cta];
 
   return (
-    <main className="flex flex-1 flex-col">
-      <Header />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(articleSchema(articulo)),
+        }}
+      />
+      <main className="flex flex-1 flex-col">
+        <Header />
 
       {/* Breadcrumb */}
       <nav aria-label="Navegación secundaria" className="bg-papel px-4 pt-24 sm:px-8">
@@ -245,7 +253,8 @@ export default async function ArticuloPage({
         </section>
       )}
 
-      <Footer />
-    </main>
+        <Footer />
+      </main>
+    </>
   );
 }

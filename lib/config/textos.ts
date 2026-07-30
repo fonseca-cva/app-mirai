@@ -19,6 +19,7 @@ export const hero = {
   titular: "¿Y tú, qué forma tienes?", // PENDIENTE PASADA DE COPY
   subtitulo:
     "Un juego de 25 minutos que cruza lo que te gusta y lo que se te da con los sueldos y la pega reales de cada carrera. No es horóscopo: son datos.",
+  testVocacionalLine: "Sí, es un test vocacional. No, no funciona como los otros: acá no hay preguntas de horóscopo ni una universidad tratando de venderte su carrera.",
   cta: "Descúbrelo gratis", // PENDIENTE PASADA DE COPY
 };
 

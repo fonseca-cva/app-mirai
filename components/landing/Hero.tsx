@@ -23,6 +23,7 @@ export function Hero() {
           <GruaOrigami className="h-24 w-24" animarEntrada />
           <h1 className="max-w-2xl text-4xl font-semibold sm:text-6xl">{hero.titular}</h1>
           <p className="max-w-xl text-lg text-tinta/80">{hero.subtitulo}</p>
+          <p className="max-w-xl text-sm text-tinta/70">{hero.testVocacionalLine}</p>
           <Link
             href="/experiencia"
             className="rounded-[14px] bg-coral px-6 py-3 text-base font-medium text-blanco-papel shadow-[0_12px_32px_-12px_rgba(232,106,79,0.5)] transition hover:opacity-90"

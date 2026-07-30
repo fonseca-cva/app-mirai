@@ -1,4 +1,18 @@
+import type { Metadata } from "next";
 import { paginaEnConstruccion } from "@/lib/config/textos";
+
+export const metadata: Metadata = {
+  title: "Términos de uso — Mirai",
+  description:
+    "Términos y condiciones de uso del test vocacional Mirai.",
+  openGraph: {
+    title: "Términos de uso — Mirai",
+    description:
+      "Términos y condiciones de uso del test vocacional Mirai.",
+    locale: "es_CL",
+    type: "website",
+  },
+};
 
 export default function TerminosPage() {
   return (
