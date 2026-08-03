@@ -439,7 +439,7 @@ export const informe = {
   seccionCaminos: "Caminos para explorar", // PENDIENTE PASADA DE COPY
   // Bloque Integración: de dónde sale el perfil de intereses (pesos 45/40/15).
   seccionConvergencia: "De dónde sale este perfil", // PENDIENTE PASADA DE COPY
-  textoConvergencia: "Combinamos tres fuentes, con más peso en lo que observas y haces:", // PENDIENTE PASADA DE COPY
+  textoConvergencia: "Combinamos cuatro fuentes, con más peso en lo que observas y haces:", // PENDIENTE PASADA DE COPY
   fuenteGustos: "Escenas de trabajo a las que reaccionaste (45%)", // PENDIENTE PASADA DE COPY
   fuenteActividades: "Actividades que te gusta hacer (20%)", // PENDIENTE PASADA DE COPY
   fuenteAsignaturas: "Asignaturas que te gustan (20%)", // PENDIENTE PASADA DE COPY
@@ -477,6 +477,7 @@ export const lecturasPorDimension: Record<string, string> = {
 export const metodologiaIndice = [
   { label: "Tres pilares, no uno", href: "#tres-pilares" },
   { label: "Cómo medimos lo que te interesa", href: "#intereses" },
+  { label: "Por qué preguntamos lo mismo de varias formas", href: "#por-que-preguntamos" },
   { label: "Cómo medimos para qué tienes facilidad", href: "#capacidades" },
   { label: "Cómo evaluamos comprensión y expresión", href: "#comprension-expresion" },
   { label: "De dónde salen los datos de sueldos y empleabilidad", href: "#datos-mercado" },
@@ -493,22 +494,27 @@ export const metodologia = {
   tresPilares: {
     titulo: "Tres pilares, no uno",
     cuerpo:
-      "Una buena decisión vocacional cruza tres cosas: lo que te interesa, aquello para lo que tienes facilidad, y cómo es el mundo laboral real. Mirai mide las dos primeras en una experiencia de unos 25 minutos, y cruza los resultados con la tercera usando datos oficiales.\n\nNingún pilar por sí solo basta: interés sin capacidad frustra, capacidad sin interés aburre, y ambos sin información del mercado es decidir a ciegas. La mayoría de los instrumentos disponibles se queda en el primero.",
+      "Una buena decisión vocacional cruza tres cosas: lo que te interesa, aquello para lo que tienes facilidad, y cómo es el mundo laboral real. Mirai mide las dos primeras en una experiencia de alrededor de media hora, y cruza los resultados con la tercera usando datos oficiales.\n\nNingún pilar por sí solo basta: interés sin capacidad frustra, capacidad sin interés aburre, y ambos sin información del mercado es decidir a ciegas. La mayoría de los instrumentos disponibles se queda en el primero.",
   },
   intereses: {
     titulo: "Cómo medimos lo que te interesa",
     cuerpo:
-      "En vez de preguntarte '¿te interesa la investigación científica?' — una pregunta que casi todos responden pensando en quién quieren ser y no en quién son — te mostramos lugares de trabajo reales, con su ambiente y su sonido, y registramos tu reacción.\n\nEste enfoque proviene de una línea de instrumentos de medición de intereses basados en imágenes, con décadas de desarrollo en psicometría, actualizada hoy con material audiovisual. La reacción a un estímulo concreto es más rápida y menos influida por lo que uno cree que debería responder.\n\nHay un segundo efecto buscado: mostrar el trabajo como es de verdad, con lo entretenido y lo incómodo, ayuda a calibrar expectativas. Buena parte de los cambios de carrera no ocurren porque la persona se equivocó de interés, sino porque no sabía cómo era el día a día de esa profesión.",
+      "Los inventarios de intereses serios no preguntan de una sola forma. La práctica establecida en evaluación vocacional es combinar tres tipos de pregunta: qué actividades te gustan, qué asignaturas te gustan y qué ocupaciones te atraen. El patrón de todas esas respuestas es lo que forma el perfil. Mirai usa esos tres tipos, más uno propio.\n\nContextos de trabajo reales. En vez de preguntarte '¿te interesa la investigación científica?' — una pregunta que casi todos responden pensando en quién quieren ser y no en quién son — te mostramos lugares de trabajo reales, con su ambiente y su sonido, y registramos tu reacción. Este enfoque proviene de una línea de instrumentos basados en imágenes, con décadas de desarrollo en psicometría, actualizada hoy con material audiovisual. Hay un segundo efecto buscado: mostrar el trabajo como es de verdad, con lo entretenido y lo incómodo, ayuda a calibrar expectativas. Buena parte de los cambios de carrera no ocurren porque la persona se equivocó de interés, sino porque no sabía cómo era el día a día de esa profesión.\n\nActividades y pasatiempos. Te preguntamos por cosas concretas que haces o harías por gusto, no por obligación. Esto no es un invento nuestro: el Self-Directed Search de John Holland — el instrumento de orientación vocacional más usado del mundo — dedica una sección completa a actividades y pasatiempos de tiempo libre, con once preguntas por cada tipo de interés, respondidas simplemente como 'me gusta' o 'no me gusta'. Sus secciones reportan consistencia interna entre .72 y .92 y confiabilidad en el tiempo entre .76 y .89 en muestras de adolescentes y adultos jóvenes.\n\nAsignaturas escolares. Llevas años descubriendo qué ramos te resultan y cuáles se te hacen cuesta arriba. Esa información es demasiado valiosa para ignorarla, y es el tercer tipo de pregunta que usan los inventarios establecidos.\n\nLo que ya estabas pensando. Al comenzar te preguntamos si tienes algo en mente. No es una formalidad: la evidencia muestra que las aspiraciones que una persona declara espontáneamente predicen su ocupación futura tan bien como — o mejor que — los inventarios estandarizados. Nos sirve para comparar al final lo que creías con lo que encontramos, no para confirmarte lo que ya pensabas.",
+  },
+  porQuePreguntamos: {
+    titulo: "Por qué preguntamos lo mismo de varias formas",
+    cuerpo:
+      "Ninguna forma de preguntar es suficiente por sí sola. Una respuesta puede estar teñida por lo que uno cree que debería contestar, por el día que tuvo o por la palabra exacta que usamos. Al medir cada área de interés con varios tipos de pregunta, el perfil se vuelve más estable.\n\nPor eso tu informe no entrega un solo número: muestra de dónde sale el perfil, con el peso de cada fuente — tus reacciones a las escenas de trabajo, tus actividades, tus asignaturas y lo que ya tenías en mente. Preferimos que veas cómo se arma la conclusión antes que ocultarla detrás de un promedio.",
   },
   capacidades: {
     titulo: "Cómo medimos para qué tienes facilidad",
     cuerpo:
-      "Usamos mini-juegos, pero no cualquier juego. Cada uno está construido sobre un tipo de tarea con décadas de evidencia en psicología cognitiva: razonamiento con patrones, razonamiento espacial y memoria de trabajo. Son tres de las capacidades con mayor respaldo científico como predictores del desempeño académico posterior.\n\nEl formato de juego cumple una función concreta: reduce la ansiedad de examen, que distorsiona los resultados. La tarea de fondo es la que hace la medición.\n\nDos decisiones importantes: el tiempo no te presiona — medimos precisión y nivel alcanzado, no velocidad — y antes de cada juego hay una práctica que no puntúa, para que nadie sea evaluado mientras todavía está entendiendo las instrucciones.",
+      "Usamos mini-juegos, pero no cualquier juego. Cada uno está construido sobre un tipo de tarea con décadas de evidencia en psicología cognitiva. Medimos cuatro capacidades: razonamiento con patrones, razonamiento espacial, memoria de trabajo, y comprensión y expresión verbal. Están entre las capacidades con mayor respaldo científico como predictores del desempeño académico posterior, y cada una se mide con su propio tipo de ejercicio: no repetimos la misma prueba con distinta cara.\n\nEl formato de juego cumple una función concreta: reduce la ansiedad de examen, que distorsiona los resultados. La tarea de fondo es la que hace la medición.\n\nDos decisiones importantes: el tiempo no te presiona — medimos precisión y nivel alcanzado, no velocidad — y antes de cada juego hay una práctica que no puntúa, para que nadie sea evaluado mientras todavía está entendiendo las instrucciones.",
   },
   comprensionExpresion: {
     titulo: "Cómo evaluamos comprensión y expresión",
     cuerpo:
-      "Las capacidades verbales no se pueden medir bien con alternativas. Por eso te pedimos escribir con tus palabras, y esa respuesta la evalúa inteligencia artificial aplicando rúbricas diseñadas por profesionales.\n\nEl orden importa: la IA aplica criterios definidos por personas, no improvisa juicios. Evaluamos cómo comprendes un texto y cómo estructuras un argumento. Nunca tu opinión, y nunca tu ortografía.\n\nDurante la etapa de validación, una parte de estas evaluaciones se revisa manualmente para verificar que la corrección automática coincide con la de un evaluador humano.",
+      "Las capacidades verbales no se pueden medir bien con alternativas. Por eso te pedimos escribir con tus palabras, y esa respuesta la evalúa inteligencia artificial aplicando rúbricas diseñadas por profesionales.\n\nEl orden importa: la IA aplica criterios definidos por personas, no improvisa juicios. Evaluamos tres cosas distintas: cómo comprendes un texto, cómo estructuras un argumento y cómo te expresas cuando escribes libremente. Nunca tu opinión, y nunca tu ortografía.\n\nDurante la etapa de validación, una parte de estas evaluaciones se revisa manualmente para verificar que la corrección automática coincide con la de un evaluador humano.",
   },
   datosMercado: {
     titulo: "De dónde salen los datos de sueldos y empleabilidad",
@@ -520,7 +526,8 @@ export const metodologia = {
     items: [
       "No pertenecemos a ninguna universidad ni recibimos comisión por recomendar carreras.",
       "No usamos tus datos para publicidad ni los vendemos a nadie.",
-      "No inferimos emociones ni rasgos de personalidad a partir de tu forma de escribir o de tu voz. Las señales técnicas que registra la plataforma se usan solo para verificar la calidad de los datos, y está declarado en el consentimiento.",
+      "No inferimos emociones ni rasgos de personalidad a partir de tu forma de escribir, de tu voz o de tus tiempos de respuesta. Esas señales técnicas se usan solo para verificar la calidad de los datos, y está declarado en el consentimiento.",
+      "Sí tenemos una parte experimental, y preferimos decirlo: hay un bloque corto al final que estamos estudiando y que no afecta tu resultado ni aparece en tu informe. Te lo advertimos en pantalla antes de que lo hagas. Si algún día esa parte demuestra medir algo útil, lo diremos aquí antes de usarla.",
       "No mostramos los ejercicios fuera de la experiencia. Un instrumento que se conoce de antemano deja de medir.",
       "No te decimos 'no sirves para esto'. El resultado abre opciones para explorar; no las cierra.",
       "No pedimos más datos personales de los necesarios para entregarte tu informe.",
@@ -529,7 +536,7 @@ export const metodologia = {
   estadoDesarrollo: {
     titulo: "Dónde estamos hoy",
     cuerpo:
-      "Mirai está en desarrollo activo y lo decimos con todas sus letras. La arquitectura del instrumento se construyó sobre marcos con respaldo científico internacional, y estamos en el proceso de validarla con estudiantes chilenos: pilotos en colegios, comparación con instrumentos ya establecidos y construcción de normas locales.\n\nPublicaremos los avances de ese proceso en esta misma página. Mientras tanto, cada informe declara sus alcances: es orientación fundamentada para explorar, no un veredicto.",
+      "Mirai está en desarrollo activo y lo decimos con todas sus letras. La arquitectura del instrumento se construyó sobre marcos con respaldo científico internacional, y estamos en el proceso de validarla con estudiantes chilenos: pilotos en colegios, comparación con instrumentos ya establecidos y construcción de normas locales.\n\nY una cifra que preferimos poner sobre la mesa: una revisión que reunió casi cien años de investigación encontró que los inventarios de intereses aciertan la carrera que la persona finalmente elige alrededor de la mitad de las veces (Hanna y Rounds, Psychological Bulletin). La mitad. Eso significa dos cosas: que estos instrumentos sirven de verdad — mucho más que el azar entre cientos de carreras posibles — y que ninguno, incluido el nuestro, es una bola de cristal. Por eso Mirai entrega caminos para explorar y datos para decidir, no un veredicto.\n\nPublicaremos los avances de ese proceso en esta misma página. Mientras tanto, cada informe declara sus alcances: es orientación fundamentada para explorar, no un veredicto.",
   },
   cierre: {
     probar: "Probar la experiencia",

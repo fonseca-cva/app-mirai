@@ -68,7 +68,7 @@ export default function MetodologiaPage() {
       </section>
 
       {/* Sección 3 — Intereses — fondo coral */}
-      <section className="bg-coral/10 px-4 py-12 sm:px-8 sm:py-16">
+      <section id="intereses" className="bg-coral/10 px-4 py-12 sm:px-8 sm:py-16 scroll-mt-24">
         <article className="mx-auto w-full max-w-[680px]">
           <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full border border-coral text-sm font-semibold text-coral">
             01
@@ -82,11 +82,26 @@ export default function MetodologiaPage() {
         </article>
       </section>
 
-      {/* Sección 4 — Capacidades — fondo salvia */}
+      {/* Sección 4 — Por qué preguntamos — fondo papel */}
+      <section id="por-que-preguntamos" className="bg-papel px-4 py-12 sm:px-8 sm:py-16 scroll-mt-24">
+        <article className="mx-auto w-full max-w-[680px]">
+          <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full border border-coral text-sm font-semibold text-coral">
+            02
+          </div>
+          <h2 className="font-display text-2xl font-semibold text-tinta">{metodologia.porQuePreguntamos.titulo}</h2>
+          <div className="mt-4 space-y-4 text-base leading-relaxed text-tinta/80">
+            {metodologia.porQuePreguntamos.cuerpo.split("\n\n").map((parrafo, i) => (
+              <p key={i}>{parrafo}</p>
+            ))}
+          </div>
+        </article>
+      </section>
+
+      {/* Sección 5 — Capacidades — fondo salvia */}
       <section id="capacidades" className="bg-salvia/10 px-4 py-12 sm:px-8 sm:py-16 scroll-mt-24">
         <article className="mx-auto w-full max-w-[680px]">
           <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full border border-salvia text-sm font-semibold text-salvia">
-            02
+            03
           </div>
           <h2 className="font-display text-2xl font-semibold text-tinta">{metodologia.capacidades.titulo}</h2>
           <div className="mt-4 space-y-4 text-base leading-relaxed text-tinta/80">
@@ -97,11 +112,11 @@ export default function MetodologiaPage() {
         </article>
       </section>
 
-      {/* Sección 5 — Comprensión y expresión — fondo dorado */}
+      {/* Sección 6 — Comprensión y expresión — fondo dorado */}
       <section id="comprension-expresion" className="bg-dorado/10 px-4 py-12 sm:px-8 sm:py-16 scroll-mt-24">
         <article className="mx-auto w-full max-w-[680px]">
           <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full border border-dorado text-sm font-semibold text-dorado">
-            03
+            04
           </div>
           <h2 className="font-display text-2xl font-semibold text-tinta">{metodologia.comprensionExpresion.titulo}</h2>
           <div className="mt-4 space-y-4 text-base leading-relaxed text-tinta/80">
@@ -112,11 +127,11 @@ export default function MetodologiaPage() {
         </article>
       </section>
 
-      {/* Sección 6 — Datos del mercado — fondo teal */}
+      {/* Sección 7 — Datos del mercado — fondo teal */}
       <section id="datos-mercado" className="bg-teal/10 px-4 py-12 sm:px-8 sm:py-16 scroll-mt-24">
         <article className="mx-auto w-full max-w-[680px]">
           <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full border border-teal text-sm font-semibold text-teal">
-            04
+            05
           </div>
           <h2 className="font-display text-2xl font-semibold text-tinta">{metodologia.datosMercado.titulo}</h2>
           <div className="mt-4 space-y-4 text-base leading-relaxed text-tinta/80">
@@ -127,11 +142,11 @@ export default function MetodologiaPage() {
         </article>
       </section>
 
-      {/* Sección 7 — Lo que no hacemos — fondo papel */}
+      {/* Sección 8 — Lo que no hacemos — fondo papel */}
       <section id="lo-que-no-hacemos" className="bg-papel px-4 py-12 sm:px-8 sm:py-16 scroll-mt-24">
         <article className="mx-auto w-full max-w-[680px]">
           <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full border border-coral text-sm font-semibold text-coral">
-            05
+            06
           </div>
           <h2 className="font-display text-2xl font-semibold text-tinta">{metodologia.loQueNoHacemos.titulo}</h2>
           <ul className="mt-4 space-y-3">
@@ -145,11 +160,11 @@ export default function MetodologiaPage() {
         </article>
       </section>
 
-      {/* Sección 8 — Estado de desarrollo — fondo papel */}
+      {/* Sección 9 — Estado de desarrollo — fondo papel */}
       <section id="estado-desarrollo" className="bg-papel px-4 py-12 sm:px-8 sm:py-16 scroll-mt-24">
         <article className="mx-auto w-full max-w-[680px]">
           <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full border border-salvia text-sm font-semibold text-salvia">
-            06
+            07
           </div>
           <h2 className="font-display text-2xl font-semibold text-tinta">{metodologia.estadoDesarrollo.titulo}</h2>
           <div className="mt-4 space-y-4 text-base leading-relaxed text-tinta/80">
