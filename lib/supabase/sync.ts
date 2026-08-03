@@ -5,7 +5,7 @@
 // los datos pendientes se pierden (no hay service worker persistente en esta fase).
 
 import { supabase, asegurarSesionAnonima } from "@/lib/supabase/client";
-import type { SesionRow, RespuestaGustoRow, RespuestaCognitivoRow, RespuestaVerbalRow, ResultadoRow, CorreoInformeRow, TutorialEstadoRow, RespuestaDivergenteRow } from "@/lib/supabase/types";
+import type { SesionRow, RespuestaGustoRow, RespuestaCognitivoRow, RespuestaVerbalRow, ResultadoRow, CorreoInformeRow, TutorialEstadoRow, RespuestaDivergenteRow, RespuestaActividadRow, RespuestaAsignaturaRow, AspiracionRow } from "@/lib/supabase/types";
 
 const TIMEOUT_MS = 5000;
 
@@ -94,6 +94,45 @@ export async function updateEvaluacionVerbal(
   }
 }
 
+// ── Sync de actividades (Bloque A2 — pilar de intereses) ────────────
+// Los 24 ítems se guardan juntos al cerrarse el bloque.
+export async function syncRespuestasActividades(respuestas: RespuestaActividadRow[]): Promise<boolean> {
+  if (!supabase || respuestas.length === 0) return false;
+  const cliente = supabase;
+  try {
+    await conSesion(() => cliente.from("respuestas_actividades").insert(respuestas));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// ── Sync de asignaturas (Bloque A3 — pilar de intereses) ────────────
+// Los 10 ítems se guardan juntos al cerrarse el bloque.
+export async function syncRespuestasAsignaturas(respuestas: RespuestaAsignaturaRow[]): Promise<boolean> {
+  if (!supabase || respuestas.length === 0) return false;
+  const cliente = supabase;
+  try {
+    await conSesion(() => cliente.from("respuestas_asignaturas").insert(respuestas));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// ── Sync de aspiración (Bloque A4 — pilar de intereses) ─────────────
+// Una fila por sesión: upsert por session_id para ser idempotente.
+export async function syncAspiracion(aspiracion: AspiracionRow): Promise<boolean> {
+  if (!supabase) return false;
+  const cliente = supabase;
+  try {
+    await conSesion(() => cliente.from("aspiraciones").upsert(aspiracion, { onConflict: "session_id" }));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // ── Sync de divergente (EXPLORATORIO — NO REPORTAR en v1) ─────────
 // El bloque sincroniza los 3 objetos juntos al cerrarse.
 export async function syncRespuestasDivergente(respuestas: RespuestaDivergenteRow[]): Promise<boolean> {
@@ -149,7 +188,7 @@ export async function syncCorreoInforme(correo: CorreoInformeRow): Promise<boole
 // en el próximo bloque o al recargar la página.
 export interface TareaSync {
   id: string;
-  tipo: "sesion" | "gustos" | "cognitivo" | "verbal" | "divergente" | "resultado" | "correo" | "tutorial";
+  tipo: "sesion" | "gustos" | "cognitivo" | "verbal" | "divergente" | "actividades" | "asignaturas" | "aspiracion" | "resultado" | "correo" | "tutorial";
   payload: unknown;
 }
 
@@ -173,6 +212,15 @@ export async function procesarColaSync(cola: TareaSync[]): Promise<TareaSync[]> 
         break;
       case "divergente":
         ok = await syncRespuestasDivergente(tarea.payload as RespuestaDivergenteRow[]);
+        break;
+      case "actividades":
+        ok = await syncRespuestasActividades(tarea.payload as RespuestaActividadRow[]);
+        break;
+      case "asignaturas":
+        ok = await syncRespuestasAsignaturas(tarea.payload as RespuestaAsignaturaRow[]);
+        break;
+      case "aspiracion":
+        ok = await syncAspiracion(tarea.payload as AspiracionRow);
         break;
       case "resultado":
         ok = await syncResultados(tarea.payload as ResultadoRow);

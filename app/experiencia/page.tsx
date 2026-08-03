@@ -12,7 +12,10 @@ import { BloqueDivergente } from "@/components/experiencia/divergente/BloqueDive
 import { Informe } from "@/components/experiencia/Informe";
 import { useAudioAmbiente } from "@/components/experiencia/useAudioAmbiente";
 import { contextos } from "@/lib/data/contextos";
-import { calcularPuntajes } from "@/lib/logic/puntaje";
+import { BloqueActividades } from "@/components/experiencia/actividades/BloqueActividades";
+import { BloqueAsignaturas } from "@/components/experiencia/asignaturas/BloqueAsignaturas";
+import { PantallaAspiracion } from "@/components/experiencia/aspiracion/PantallaAspiracion";
+import { calcularPuntajesIntegrados } from "@/lib/logic/puntaje";
 import { experienciaAudioAmbiente, experienciaTarjeta } from "@/lib/config/textos";
 import { useExperienciaStore } from "@/lib/store/experiencia";
 
@@ -21,6 +24,9 @@ export default function ExperienciaPage() {
   const pausado = useExperienciaStore((s) => s.pausado);
   const sessionId = useExperienciaStore((s) => s.sessionId);
   const respuestasGustos = useExperienciaStore((s) => s.respuestasGustos);
+  const respuestasActividades = useExperienciaStore((s) => s.respuestasActividades);
+  const respuestasAsignaturas = useExperienciaStore((s) => s.respuestasAsignaturas);
+  const aspiracion = useExperienciaStore((s) => s.aspiracion);
   const audioActivado = useExperienciaStore((s) => s.audioActivado);
   const inicializarSesion = useExperienciaStore((s) => s.inicializarSesion);
   const irAPaso = useExperienciaStore((s) => s.irAPaso);
@@ -32,13 +38,23 @@ export default function ExperienciaPage() {
 
   const [muted, setMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const gustosSincronizados = useRef(false);
 
   useEffect(() => {
     inicializarSesion();
   }, [inicializarSesion]);
 
   const indice = respuestasGustos.length;
-  const top3 = useMemo(() => calcularPuntajes(respuestasGustos).slice(0, 3), [respuestasGustos]);
+  // Bloque Integración: el top3 del primer pliegue usa el puntaje integrado
+  // (45% contextos + 40% actividades/asignaturas + 15% aspiración), no solo A1.
+  const top3 = useMemo(
+    () =>
+      calcularPuntajesIntegrados(respuestasGustos, respuestasActividades, respuestasAsignaturas, aspiracion).slice(
+        0,
+        3
+      ),
+    [respuestasGustos, respuestasActividades, respuestasAsignaturas, aspiracion]
+  );
   const contextoActual = contextos[indice];
   const audioEfectivo = audioActivado && !muted;
   useAudioAmbiente(
@@ -49,8 +65,11 @@ export default function ExperienciaPage() {
 
   // Bloque A (gustos) completado: sync de la sesión + todas sus respuestas.
   // La sesión debe crearse primero (FK session_id → sesiones.id en la migración 00001).
+  // Guarda de ref: con el avance automático a actividades el paso ya no permanece
+  // en "gustos" al completarse, así que el disparo único va por la condición.
   useEffect(() => {
-    if (paso !== "gustos" || indice < contextos.length || !sessionId) return;
+    if (gustosSincronizados.current || !sessionId || indice < contextos.length) return;
+    gustosSincronizados.current = true;
     sincronizarBloque([
       {
         id: `sesion-${sessionId}`,
@@ -85,6 +104,10 @@ export default function ExperienciaPage() {
       ayudaAbierta,
       audioActivado: audioEfectivo,
     });
+    // Bloque Integración: al completar los 20 contextos se avanza directo a
+    // actividades; el "primer pliegue" (ResultadoParcial) se muestra al cerrar
+    // el pilar completo de intereses, tras asignaturas.
+    if (indice + 1 >= contextos.length) irAPaso("actividades");
   }
 
   if (paso === "intro") {
@@ -92,14 +115,16 @@ export default function ExperienciaPage() {
       <IntroExperiencia
         onEmpezar={(conAudio) => {
           activarAudio(conAudio);
-          irAPaso("gustos");
+          irAPaso("aspiracion");
         }}
       />
     );
   }
 
   // Pausa global (spec sección 6): válida en cualquier bloque con progreso que retomar
-  // (gustos, cognitivo, verbal). El informe es la pantalla final, no requiere pausa.
+  // (gustos, actividades, asignaturas, cognitivo, verbal). La aspiración y el
+  // resultado parcial son pantallas sin progreso (no tienen botón pausa) y el
+  // informe es la pantalla final.
   if (pausado && paso !== "informe") {
     return (
       <section className="flex min-h-screen flex-col items-center justify-center gap-4 px-4 text-center">
@@ -114,8 +139,20 @@ export default function ExperienciaPage() {
     );
   }
 
-  if (paso === "gustos" && indice >= contextos.length) {
+  if (paso === "actividades") {
+    return <BloqueActividades onCompletar={() => irAPaso("asignaturas")} onPausar={pausar} />;
+  }
+
+  if (paso === "asignaturas") {
+    return <BloqueAsignaturas onCompletar={() => irAPaso("resultadoParcial")} onPausar={pausar} />;
+  }
+
+  if (paso === "resultadoParcial") {
     return <ResultadoParcial top3={top3} onContinuar={() => irAPaso("cognitivo")} />;
+  }
+
+  if (paso === "aspiracion") {
+    return <PantallaAspiracion onContinuar={() => irAPaso("gustos")} />;
   }
 
   if (paso === "cognitivo") {

@@ -362,6 +362,49 @@ export const bloqueDivergente = {
   hecho: "¡Listo! Actividad completada.", // PENDIENTE PASADA DE COPY
 };
 
+// ── Bloque A2 — Actividades y pasatiempos (Tanda F, pilar de intereses) ──
+// Tarjetas rápidas: 24 ítems, una por pantalla, ~2 min el bloque.
+// Escala de 3 puntos idéntica al resto del instrumento (0/1/2).
+export const bloqueActividades = {
+  titulo: "Actividades y pasatiempos", // PENDIENTE PASADA DE COPY
+  bajada: "Responde rápido: ¿qué tanto te gusta hacer esto?", // PENDIENTE PASADA DE COPY
+  contadorDe: "de", // PENDIENTE PASADA DE COPY
+  botones: [
+    { valor: 0, label: "No me gusta" }, // PENDIENTE PASADA DE COPY
+    { valor: 1, label: "Indiferente" }, // PENDIENTE PASADA DE COPY
+    { valor: 2, label: "Me gusta" }, // PENDIENTE PASADA DE COPY
+  ] as const,
+  pausa: "Pausar", // PENDIENTE PASADA DE COPY
+  hecho: "¡Listo! Actividad completada.", // PENDIENTE PASADA DE COPY
+};
+
+// ── Bloque A3 — Asignaturas escolares (Tanda F, pilar de intereses) ──
+// Misma tarjeta rápida que A2: 10 asignaturas, una por pantalla, ~45s.
+// Los botones (No me gusta / Indiferente / Me gusta) se comparten con A2.
+export const bloqueAsignaturas = {
+  titulo: "Asignaturas del colegio", // PENDIENTE PASADA DE COPY
+  bajada: "Responde rápido: ¿qué tanto te gusta esta asignatura?", // PENDIENTE PASADA DE COPY
+  contadorDe: "de", // PENDIENTE PASADA DE COPY
+  pausa: "Pausar", // PENDIENTE PASADA DE COPY
+  hecho: "¡Listo! Última parte de intereses.", // PENDIENTE PASADA DE COPY
+};
+
+// ── Bloque A4 — Aspiración post 4° medio (Tanda F, pilar de intereses) ──
+// Una pregunta al inicio del flujo, antes del bloque de gustos. Detalle opcional.
+export const bloqueAspiracion = {
+  titulo: "Antes de partir, una pregunta", // PENDIENTE PASADA DE COPY
+  pregunta: "¿Qué te gustaría hacer después de 4° medio?", // PENDIENTE PASADA DE COPY
+  opciones: [
+    { valor: "universidad", label: "Estudiar en la universidad" }, // PENDIENTE PASADA DE COPY
+    { valor: "tecnico", label: "Estudiar una carrera técnica o profesional" }, // PENDIENTE PASADA DE COPY
+    { valor: "trabajar", label: "Trabajar" }, // PENDIENTE PASADA DE COPY
+    { valor: "no_se", label: "Aún no lo sé" }, // PENDIENTE PASADA DE COPY
+  ] as const,
+  detalleLabel: "¿Sabes qué carrera o área te gustaría? (opcional)", // PENDIENTE PASADA DE COPY
+  detallePlaceholder: "Por ejemplo: medicina, electricidad, diseño…", // PENDIENTE PASADA DE COPY
+  continuar: "Continuar", // PENDIENTE PASADA DE COPY
+};
+
 // ── Transiciones entre bloques (sección 1) ─────────────────────────
 export const transiciones = {
   pliegues: [
@@ -394,6 +437,14 @@ export const informe = {
     bajo: "Área a desarrollar", // PENDIENTE PASADA DE COPY
   },
   seccionCaminos: "Caminos para explorar", // PENDIENTE PASADA DE COPY
+  // Bloque Integración: de dónde sale el perfil de intereses (pesos 45/40/15).
+  seccionConvergencia: "De dónde sale este perfil", // PENDIENTE PASADA DE COPY
+  textoConvergencia: "Combinamos tres fuentes, con más peso en lo que observas y haces:", // PENDIENTE PASADA DE COPY
+  fuenteGustos: "Escenas de trabajo a las que reaccionaste (45%)", // PENDIENTE PASADA DE COPY
+  fuenteActividades: "Actividades que te gusta hacer (20%)", // PENDIENTE PASADA DE COPY
+  fuenteAsignaturas: "Asignaturas que te gustan (20%)", // PENDIENTE PASADA DE COPY
+  fuenteAspiracion: "Lo que te gustaría hacer después de 4° medio (15%)", // PENDIENTE PASADA DE COPY
+  elegisteAspiracion: "Elegiste:", // PENDIENTE PASADA DE COPY
   cierre:
     "Este es tu primer mapa, no tu destino. Las carreras de hoy son un punto de partida para explorar; la versión profunda agrega datos de empleo e ingresos reales y contenido para recorrer cada camino.", // PENDIENTE PASADA DE COPY
   correoOpcional: "¿Quieres recibir tu informe por correo?", // PENDIENTE PASADA DE COPY

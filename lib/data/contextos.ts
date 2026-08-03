@@ -1,5 +1,7 @@
 // CONTENIDO PROVISORIO — pendiente de firma metodológica
-// 24 contextos laborales, 8 dimensiones x 3. Sección 7.3 de la spec.
+// 20 contextos laborales (recorte de 24 acordado con Camilo 2026-08-03: 1 menos en
+// cie/cre/tec/soc, las de mayor cobertura total junto a actividades y asignaturas).
+// Sección 7.3 de la spec.
 // ITERACIÓN 2 (Bloque A): cada contexto separa "escena" (sensorial, qué se ve/oye/siente)
 // de "tarea" (qué hace la gente ahí un lunes 9 AM) + 3 bullets para el expandible
 // "¿Qué se hace aquí?" (tareas típicas, con quién se trabaja, qué se produce).
@@ -72,21 +74,6 @@ export const contextos: Contexto[] = [
     icono: "tec",
     escenaId: "taller-mecanico",
   },
-  {
-    id: "tec-03",
-    dimension: "tec",
-    nombre: "Electricista industrial",
-    escena: "Tableros eléctricos, cables por todos lados, el zumbido constante de la planta.",
-    tarea: "Revisas circuitos en una planta que no puede detenerse. Un error de cálculo corta el turno completo.",
-    bullets: [
-      "Instala y repara sistemas eléctricos de media y baja tensión en plantas.",
-      "Coordina con jefes de turno para intervenir sin frenar la producción.",
-      "Mantiene la planta funcionando: cada corte no planificado cuesta caro.",
-    ],
-    icono: "tec",
-    escenaId: "electricista-industrial",
-  },
-
   // cie — Científico-Analítico
   {
     id: "cie-01",
@@ -116,21 +103,6 @@ export const contextos: Contexto[] = [
     icono: "cie",
     escenaId: "investigacion-postgrado",
   },
-  {
-    id: "cie-03",
-    dimension: "cie",
-    nombre: "Control de calidad en planta de alimentos",
-    escena: "Cofia, mascarilla, el frío de la cámara de refrigeración y una planilla que no puede fallar.",
-    tarea: "Revisas si un lote cumple la norma o se bota. La decisión es tuya y hay plata real de por medio.",
-    bullets: [
-      "Verifica que cada lote cumpla normas sanitarias antes de salir a la venta.",
-      "Reporta directo a jefatura de planta y a veces a fiscalización externa.",
-      "Evita que un producto en mal estado llegue a un supermercado.",
-    ],
-    icono: "cie",
-    escenaId: "control-calidad-alimentos",
-  },
-
   // cre — Creativo
   {
     id: "cre-01",
@@ -145,20 +117,6 @@ export const contextos: Contexto[] = [
     ],
     icono: "cre",
     escenaId: "estudio-branding",
-  },
-  {
-    id: "cre-02",
-    dimension: "cre",
-    nombre: "Asistente de rodaje audiovisual",
-    escena: "Cables, luces, gente corriendo de un lado a otro y un director que grita '¡silencio!'.",
-    tarea: "La luz se va en 40 minutos y falta una escena. Todos miran hacia ti para resolver.",
-    bullets: [
-      "Apoya montaje de set, cámara y luces bajo presión de tiempo real.",
-      "Coordina con el equipo técnico y con actores que también esperan indicaciones.",
-      "Ayuda a producir la escena que el espectador verá terminada, sin ver el caos detrás.",
-    ],
-    icono: "cre",
-    escenaId: "rodaje-audiovisual",
   },
   {
     id: "cre-03",
@@ -204,21 +162,6 @@ export const contextos: Contexto[] = [
     icono: "soc",
     escenaId: "oficina-municipal",
   },
-  {
-    id: "soc-03",
-    dimension: "soc",
-    nombre: "Recursos Humanos en empresa mediana",
-    escena: "Una oficina con la puerta cerrada, dos personas esperando turno para hablar contigo.",
-    tarea: "Median dos conflictos de equipo en la misma semana. No hay manual que cubra todos los casos.",
-    bullets: [
-      "Media conflictos, gestiona contratación y acompaña el clima laboral.",
-      "Trabaja con jefaturas de todas las áreas y con cada trabajador por separado.",
-      "Sostiene que la empresa funcione como equipo, no solo como organigrama.",
-    ],
-    icono: "soc",
-    escenaId: "oficina-rrhh",
-  },
-
   // sal — Salud y Cuidado
   {
     id: "sal-01",

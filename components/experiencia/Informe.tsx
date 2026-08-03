@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
-import { informe, lecturasPorDimension } from "@/lib/config/textos";
+import { informe, lecturasPorDimension, bloqueAspiracion } from "@/lib/config/textos";
 import { useExperienciaStore } from "@/lib/store/experiencia";
-import { calcularPuntajes } from "@/lib/logic/puntaje";
+import { calcularPuntajesIntegrados } from "@/lib/logic/puntaje";
 import { calcularPuntajesCognitivo } from "@/lib/logic/puntajeCognitivo";
 import { recomendarCarreras } from "@/lib/logic/matching";
 import { contextos } from "@/lib/data/contextos";
@@ -30,12 +30,20 @@ export function Informe({ onVolver }: Props) {
 
   const sessionId = useExperienciaStore((s) => s.sessionId);
   const respuestasGustos = useExperienciaStore((s) => s.respuestasGustos);
+  const respuestasActividades = useExperienciaStore((s) => s.respuestasActividades);
+  const respuestasAsignaturas = useExperienciaStore((s) => s.respuestasAsignaturas);
+  const aspiracion = useExperienciaStore((s) => s.aspiracion);
   const respuestasCognitivo = useExperienciaStore((s) => s.respuestasCognitivo);
   const respuestasVerbal = useExperienciaStore((s) => s.respuestasVerbal);
   const sincronizarBloque = useExperienciaStore((s) => s.sincronizarBloque);
   const resultadoSincronizado = useRef(false);
 
-  const puntajesDimension = useMemo(() => calcularPuntajes(respuestasGustos), [respuestasGustos]);
+  // Bloque Integración: el perfil de intereses del informe usa el puntaje
+  // integrado (45% contextos + 40% actividades/asignaturas + 15% aspiración).
+  const puntajesDimension = useMemo(
+    () => calcularPuntajesIntegrados(respuestasGustos, respuestasActividades, respuestasAsignaturas, aspiracion),
+    [respuestasGustos, respuestasActividades, respuestasAsignaturas, aspiracion]
+  );
   const top3 = puntajesDimension.slice(0, 3);
 
   // Puntaje verbal
@@ -139,6 +147,26 @@ export function Informe({ onVolver }: Props) {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* 1.5 Convergencia: de dónde sale el perfil de intereses (45/40/15) */}
+      <section className="mt-8 rounded-2xl bg-papel-sombra/40 p-4">
+        <h3 className="font-display text-base font-semibold">{informe.seccionConvergencia}</h3>
+        <p className="mt-1 text-sm text-tinta/60">{informe.textoConvergencia}</p>
+        <ul className="mt-3 space-y-1 text-sm text-tinta/80">
+          <li>{informe.fuenteGustos}</li>
+          <li>{informe.fuenteActividades}</li>
+          <li>{informe.fuenteAsignaturas}</li>
+          <li>{informe.fuenteAspiracion}</li>
+        </ul>
+        {aspiracion && (
+          <p className="mt-2 text-sm text-tinta/70">
+            {informe.elegisteAspiracion}{" "}
+            <span className="font-medium text-tinta">
+              {bloqueAspiracion.opciones.find((o) => o.valor === aspiracion.opcion)?.label ?? aspiracion.opcion}
+            </span>
+          </p>
+        )}
       </section>
 
       {/* 2. Capacidades */}

@@ -1,12 +1,30 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Respuesta as RespuestaGustos } from "@/lib/logic/puntaje";
+import type { RespuestaActividad, RespuestaAsignatura, Aspiracion } from "@/lib/logic/puntaje";
+import type { OpcionAspiracion } from "@/lib/data/aspiracion";
 import { obtenerOCrearSessionId } from "@/lib/store/sesion";
 import { procesarColaSync, type TareaSync } from "@/lib/supabase/sync";
 
+// Bloque Integración: los tipos de respuesta del pilar de intereses viven en
+// puntaje.ts (calcularPuntajesIntegrados los consume) y en data/aspiracion.ts
+// (unión cerrada del CHECK de la migración 00011). Se re-exportan acá para no
+// romper los imports de los componentes.
 export type { TareaSync } from "@/lib/supabase/sync";
+export type { RespuestaActividad, RespuestaAsignatura, Aspiracion } from "@/lib/logic/puntaje";
+export type { OpcionAspiracion } from "@/lib/data/aspiracion";
 
-export type PasoExperiencia = "intro" | "gustos" | "cognitivo" | "verbal" | "divergente" | "informe";
+export type PasoExperiencia =
+  | "intro"
+  | "aspiracion"
+  | "gustos"
+  | "actividades"
+  | "asignaturas"
+  | "resultadoParcial"
+  | "cognitivo"
+  | "verbal"
+  | "divergente"
+  | "informe";
 
 export interface RespuestaCognitivo {
   juego: "matrices" | "series" | "pliegues" | "secuencias";
@@ -43,6 +61,9 @@ interface EstadoExperiencia {
   respuestasCognitivo: RespuestaCognitivo[];
   respuestasVerbal: RespuestaVerbal[];
   respuestasDivergente: RespuestaDivergente[];
+  respuestasActividades: RespuestaActividad[];
+  respuestasAsignaturas: RespuestaAsignatura[];
+  aspiracion: Aspiracion | null;
   colaSync: TareaSync[];
 
   inicializarSesion: () => void;
@@ -54,6 +75,9 @@ interface EstadoExperiencia {
   agregarRespuestaCognitivo: (respuesta: RespuestaCognitivo) => void;
   agregarRespuestaVerbal: (respuesta: RespuestaVerbal) => void;
   agregarRespuestaDivergente: (respuesta: RespuestaDivergente) => void;
+  agregarRespuestaActividad: (respuesta: RespuestaActividad) => void;
+  agregarRespuestaAsignatura: (respuesta: RespuestaAsignatura) => void;
+  setAspiracion: (aspiracion: Aspiracion) => void;
   // Encola las tareas nuevas y reintenta toda la cola (incluida la pendiente de bloques
   // anteriores) contra Supabase. No es crítico que falle: lo que no se sincroniza queda
   // en colaSync para el próximo bloque completado.
@@ -71,6 +95,9 @@ export const useExperienciaStore = create<EstadoExperiencia>()(
       respuestasCognitivo: [],
       respuestasVerbal: [],
       respuestasDivergente: [],
+      respuestasActividades: [],
+      respuestasAsignaturas: [],
+      aspiracion: null,
       colaSync: [],
 
       inicializarSesion: () => set({ sessionId: obtenerOCrearSessionId() }),
@@ -87,6 +114,11 @@ export const useExperienciaStore = create<EstadoExperiencia>()(
         set((estado) => ({ respuestasVerbal: [...estado.respuestasVerbal, respuesta] })),
       agregarRespuestaDivergente: (respuesta) =>
         set((estado) => ({ respuestasDivergente: [...estado.respuestasDivergente, respuesta] })),
+      agregarRespuestaActividad: (respuesta) =>
+        set((estado) => ({ respuestasActividades: [...estado.respuestasActividades, respuesta] })),
+      agregarRespuestaAsignatura: (respuesta) =>
+        set((estado) => ({ respuestasAsignaturas: [...estado.respuestasAsignaturas, respuesta] })),
+      setAspiracion: (aspiracion) => set({ aspiracion }),
 
       sincronizarBloque: async (tareas) => {
         set((estado) => ({ colaSync: [...estado.colaSync, ...tareas] }));
@@ -107,6 +139,9 @@ export const useExperienciaStore = create<EstadoExperiencia>()(
         respuestasCognitivo: estado.respuestasCognitivo,
         respuestasVerbal: estado.respuestasVerbal,
         respuestasDivergente: estado.respuestasDivergente,
+        respuestasActividades: estado.respuestasActividades,
+        respuestasAsignaturas: estado.respuestasAsignaturas,
+        aspiracion: estado.aspiracion,
       }),
     }
   )

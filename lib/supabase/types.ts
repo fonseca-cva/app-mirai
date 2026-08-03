@@ -51,6 +51,39 @@ export interface RespuestaVerbalRow {
   user_id?: string;
 }
 
+// Tabla respuestas_asignaturas (migración 00011) — Bloque A3 del pilar de intereses.
+// user_id es opcional porque la columna tiene DEFAULT auth.uid(): el cliente no lo envía.
+export interface RespuestaAsignaturaRow {
+  id?: number;
+  session_id: string;
+  asignatura_id: string;
+  valor: 0 | 1 | 2;
+  creado_en?: string;
+  user_id?: string;
+}
+
+// Tabla aspiraciones (migración 00011) — Bloque A4 del pilar de intereses.
+// Una fila por sesión (UNIQUE session_id): se hace upsert por session_id.
+export interface AspiracionRow {
+  id?: number;
+  session_id: string;
+  opcion: "universidad" | "tecnico" | "trabajar" | "no_se";
+  detalle: string | null;
+  creado_en?: string;
+  user_id?: string;
+}
+
+// Tabla respuestas_actividades (migración 00010) — Bloque A2 del pilar de intereses.
+// user_id es opcional porque la columna tiene DEFAULT auth.uid(): el cliente no lo envía.
+export interface RespuestaActividadRow {
+  id?: number;
+  session_id: string;
+  actividad_id: string;
+  valor: 0 | 1 | 2;
+  creado_en?: string;
+  user_id?: string;
+}
+
 // Tabla respuestas_divergente (migración 00008) — bloque EXPLORATORIO (NO REPORTAR en v1).
 // user_id es opcional porque la columna tiene DEFAULT auth.uid(): el cliente no lo envía.
 export interface RespuestaDivergenteRow {
