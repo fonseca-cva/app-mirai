@@ -204,35 +204,61 @@ export const bloqueMatrices = {
   },
 };
 
+export const bloqueSeries = {
+  titulo: "Números y letras en orden", // PENDIENTE PASADA DE COPY
+  fraseFuerza: "Este juego mira cómo encuentras patrones en secuencias.", // PENDIENTE PASADA DE COPY
+  instrucciones: "Mira la serie. Sigue la regla y toca lo que sigue.", // PENDIENTE PASADA DE COPY
+  practicaTitulo: "Un ejemplo primero", // PENDIENTE PASADA DE COPY
+  practicaEtiqueta: "Práctica (no puntúa)", // PENDIENTE PASADA DE COPY
+  comenzarCta: "Empezar los desafíos de verdad", // PENDIENTE PASADA DE COPY
+  huecoVacioAria: "Espacio vacío a completar", // PENDIENTE PASADA DE COPY
+  tutorial: {
+    demoEtiqueta: "Así se juega",
+    demoTitulo: "Mira cómo sigue la serie",
+    demoSaltar: "Ya lo conozco",
+    propositoCta: "Ver cómo funciona",
+    demoContinuarCta: "Ya entendí, quiero practicar",
+    practicaAcierto: "Eso es. Así funciona.",
+    practicaErrorPista: (texto: string) => `Fíjate en la regla: ${texto}`,
+    practicaFalloMensaje: "No importa, es práctica. Mira por qué.",
+    practicaFeedback: "La serie sigue una regla fija de un elemento al siguiente. El elemento que falta debe seguir esa misma regla.",
+    transicion: "Listo. Ahora van los de verdad: 8 desafíos, sin apuro.",
+    ayudaResumen: [
+      "Mira la serie de números o letras.",
+      "Encuentra la regla que va de un elemento al siguiente.",
+      "Toca la alternativa que sigue esa regla.",
+    ],
+  },
+};
+
 export const bloqueRotacion = {
   titulo: "Pliegues en el espacio", // PENDIENTE PASADA DE COPY
-  fraseFuerza: "Este juego mira cómo giras figuras en tu cabeza.", // ITERACIÓN 2: frase de fortaleza
-  instrucciones: "Mira la pieza de referencia. Luego toca la alternativa que muestra cómo queda al girarla o desplegarla.", // ITERACIÓN 2: reescrito
+  fraseFuerza: "Este juego mira cómo visualizas lo que pasa cuando se dobla un papel.",
+  instrucciones: "Mira cómo se dobla y se perfora el papel. Luego toca la alternativa que muestra cómo queda al desplegarlo.",
   practicaEtiqueta: "Práctica (no puntúa)", // PENDIENTE PASADA DE COPY
   comenzarCta: "Empezar los desafíos de verdad", // ITERACIÓN 3
   // ITERACIÓN 2 — tutorial
   tutorial: {
     demoEtiqueta: "Así se juega",
-    demoTitulo: "Mira cómo la pieza gira sin cambiar de forma",
+    demoTitulo: "Mira cómo se dobla, se perfora y se despliega el papel",
     demoSaltar: "Ya lo conozco",
     // ITERACIÓN 3
     propositoCta: "Ver cómo funciona",
     demoContinuarCta: "Ya entendí, quiero practicar",
     practicaAcierto: "Eso es. Así funciona.",
-    practicaErrorPista: (angulo: number) => `La pieza gira ${angulo}° manteniendo su forma.`,
     practicaFalloMensaje: "No importa, es práctica. Mira por qué.",
-    practicaFeedback: "La pieza rota pero no se deforma. Compara la orientación de cada alternativa con la referencia.",
+    practicaFeedback: "La perforación se refleja al otro lado del pliegue. Compara cada alternativa con la secuencia de doblado.",
     // Consigna fija para ítems de tipo "plegado" — Anexo 2 al bloqueante: sin esta narrativa
     // explícita, el ítem mide familiaridad previa con el ejercicio, no razonamiento espacial.
     consignaPlegado: "El papel se dobla por la línea, se perfora doblado, y luego se abre. ¿Cómo queda?",
     plegadoPanelDoblez: "1. Se dobla por la línea",
     plegadoPanelPerforado: "2. Se perfora doblado — atraviesa todas las capas",
     plegadoPanelPregunta: "3. ¿Cómo queda al desplegarlo?",
-    transicion: "Listo. Ahora van los de verdad: 10 desafíos, sin apuro.",
+    transicion: "Listo. Ahora van los de verdad: 7 desafíos, sin apuro.",
     ayudaResumen: [
-      "Mira la pieza de referencia (arriba).",
-      "Imáginala girando en tu cabeza.",
-      "Toca la alternativa que coincide con la pieza ya girada o desplegada.",
+      "Mira cómo se dobla y se perfora el papel.",
+      "Imagina cómo queda al desplegarlo.",
+      "Toca la alternativa que coincide con el papel ya desplegado.",
     ],
   },
 };
@@ -305,11 +331,35 @@ export const bloqueVerbal = {
     etiqueta: "Tu postura", // PENDIENTE PASADA DE COPY
     placeholder: "Escribe tu argumento acá...", // PENDIENTE PASADA DE COPY
     minimoCaracteres: 120,
+    siguienteCta: "Siguiente", // PENDIENTE PASADA DE COPY
+  },
+  expresion: {
+    titulo: "Expresión escrita", // PENDIENTE PASADA DE COPY
+    instrucciones: "Lee la consigna y escribe con libertad. Desarrolla tu idea: no hay respuesta correcta ni incorrecta.", // PENDIENTE PASADA DE COPY
+    etiqueta: "Tu texto", // PENDIENTE PASADA DE COPY
+    placeholder: "Escribe tu texto acá...", // PENDIENTE PASADA DE COPY
+    minimoCaracteres: 120,
     siguienteCta: "Terminar", // PENDIENTE PASADA DE COPY
   },
   evaluando: "Evaluando tu respuesta...", // PENDIENTE PASADA DE COPY
   error: "No pudimos evaluar esta respuesta. Puedes seguir igual.", // PENDIENTE PASADA DE COPY
   reintentar: "Reintentar", // PENDIENTE PASADA DE COPY
+};
+
+// ── Bloque exploratorio — Pensamiento divergente (Tanda D) ────────
+// EXPLORATORIO: no alimenta informe ni matching en v1 (ver COMMENT de respuestas_divergente).
+export const bloqueDivergente = {
+  titulo: "Pensamiento divergente", // PENDIENTE PASADA DE COPY
+  bajada: "Para cada objeto, escribe la mayor cantidad de usos distintos que se te ocurran. Uno por línea.", // PENDIENTE PASADA DE COPY
+  avisoExploratorio: "Esto no cuenta para tu informe: nos ayuda a mejorar el instrumento.", // PENDIENTE PASADA DE COPY
+  objetoEtiqueta: "Objeto", // PENDIENTE PASADA DE COPY
+  de: "de", // PENDIENTE PASADA DE COPY
+  minimo: "Mínimo", // PENDIENTE PASADA DE COPY
+  contadorIdeas: "ideas", // PENDIENTE PASADA DE COPY
+  placeholder: "Escribe un uso por línea...", // PENDIENTE PASADA DE COPY
+  siguienteCta: "Siguiente objeto", // PENDIENTE PASADA DE COPY
+  terminarCta: "Terminar", // PENDIENTE PASADA DE COPY
+  hecho: "¡Listo! Actividad completada.", // PENDIENTE PASADA DE COPY
 };
 
 // ── Transiciones entre bloques (sección 1) ─────────────────────────
@@ -326,7 +376,7 @@ export const transiciones = {
 export const informe = {
   titulo: "Tu mapa inicial", // PENDIENTE PASADA DE COPY
   subtitulo: "Esto es lo que vimos hoy. No es un veredicto, es un punto de partida.", // PENDIENTE PASADA DE COPY
-  saltarAnimacion: "Saltar animación", // PENDIENTE PASADA DE COPY
+  saltarAnimacion: "Continuar", // PENDIENTE PASADA DE COPY
   seccionIntereses: "Tu perfil de intereses", // PENDIENTE PASADA DE COPY
   etiquetaIntereses: "Top dimensiones", // PENDIENTE PASADA DE COPY
   seccionCapacidades: "Tus capacidades", // PENDIENTE PASADA DE COPY
@@ -345,7 +395,7 @@ export const informe = {
   },
   seccionCaminos: "Caminos para explorar", // PENDIENTE PASADA DE COPY
   cierre:
-    "Este es tu primer mapa, no tu destino. La versión profunda — carreras concretas, datos de empleo e ingresos reales, y contenido para explorar cada camino — viene pronto.", // PENDIENTE PASADA DE COPY
+    "Este es tu primer mapa, no tu destino. Las carreras de hoy son un punto de partida para explorar; la versión profunda agrega datos de empleo e ingresos reales y contenido para recorrer cada camino.", // PENDIENTE PASADA DE COPY
   correoOpcional: "¿Quieres recibir tu informe por correo?", // PENDIENTE PASADA DE COPY
   correoPlaceholder: "tu@correo.cl", // PENDIENTE PASADA DE COPY
   correoEnviar: "Enviar", // PENDIENTE PASADA DE COPY

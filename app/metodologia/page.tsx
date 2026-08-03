@@ -3,6 +3,7 @@ import Link from "next/link";
 import { IndiceMetodologia } from "@/components/metodologia/IndiceMetodologia";
 import { MetodologiaHero } from "@/components/metodologia/MetodologiaHero";
 import { TresPilaresCirculos } from "@/components/metodologia/TresPilaresCirculos";
+import { DiagramaTresPilares } from "@/components/metodologia/DiagramaTresPilares";
 import { SeccionVisual } from "@/components/metodologia/SeccionVisual";
 import { Header } from "@/components/landing/Header";
 import { metodologia } from "@/lib/config/textos";
@@ -61,6 +62,7 @@ export default function MetodologiaPage() {
               {metodologia.tresPilares.cuerpo.split("\n\n")[0]}
             </p>
             <TresPilaresCirculos />
+            <DiagramaTresPilares />
           </section>
         </article>
       </section>
@@ -68,6 +70,9 @@ export default function MetodologiaPage() {
       {/* Sección 3 — Intereses — fondo coral */}
       <section className="bg-coral/10 px-4 py-12 sm:px-8 sm:py-16">
         <article className="mx-auto w-full max-w-[680px]">
+          <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full border border-coral text-sm font-semibold text-coral">
+            01
+          </div>
           <h2 className="font-display text-2xl font-semibold text-tinta">{metodologia.intereses.titulo}</h2>
           <div className="mt-4 space-y-4 text-base leading-relaxed text-tinta/80">
             {metodologia.intereses.cuerpo.split("\n\n").map((parrafo, i) => (
@@ -80,6 +85,9 @@ export default function MetodologiaPage() {
       {/* Sección 4 — Capacidades — fondo salvia */}
       <section id="capacidades" className="bg-salvia/10 px-4 py-12 sm:px-8 sm:py-16 scroll-mt-24">
         <article className="mx-auto w-full max-w-[680px]">
+          <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full border border-salvia text-sm font-semibold text-salvia">
+            02
+          </div>
           <h2 className="font-display text-2xl font-semibold text-tinta">{metodologia.capacidades.titulo}</h2>
           <div className="mt-4 space-y-4 text-base leading-relaxed text-tinta/80">
             {metodologia.capacidades.cuerpo.split("\n\n").map((parrafo, i) => (
@@ -92,6 +100,9 @@ export default function MetodologiaPage() {
       {/* Sección 5 — Comprensión y expresión — fondo dorado */}
       <section id="comprension-expresion" className="bg-dorado/10 px-4 py-12 sm:px-8 sm:py-16 scroll-mt-24">
         <article className="mx-auto w-full max-w-[680px]">
+          <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full border border-dorado text-sm font-semibold text-dorado">
+            03
+          </div>
           <h2 className="font-display text-2xl font-semibold text-tinta">{metodologia.comprensionExpresion.titulo}</h2>
           <div className="mt-4 space-y-4 text-base leading-relaxed text-tinta/80">
             {metodologia.comprensionExpresion.cuerpo.split("\n\n").map((parrafo, i) => (
@@ -104,6 +115,9 @@ export default function MetodologiaPage() {
       {/* Sección 6 — Datos del mercado — fondo teal */}
       <section id="datos-mercado" className="bg-teal/10 px-4 py-12 sm:px-8 sm:py-16 scroll-mt-24">
         <article className="mx-auto w-full max-w-[680px]">
+          <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full border border-teal text-sm font-semibold text-teal">
+            04
+          </div>
           <h2 className="font-display text-2xl font-semibold text-tinta">{metodologia.datosMercado.titulo}</h2>
           <div className="mt-4 space-y-4 text-base leading-relaxed text-tinta/80">
             {metodologia.datosMercado.cuerpo.split("\n\n").map((parrafo, i) => (
@@ -116,6 +130,9 @@ export default function MetodologiaPage() {
       {/* Sección 7 — Lo que no hacemos — fondo papel */}
       <section id="lo-que-no-hacemos" className="bg-papel px-4 py-12 sm:px-8 sm:py-16 scroll-mt-24">
         <article className="mx-auto w-full max-w-[680px]">
+          <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full border border-coral text-sm font-semibold text-coral">
+            05
+          </div>
           <h2 className="font-display text-2xl font-semibold text-tinta">{metodologia.loQueNoHacemos.titulo}</h2>
           <ul className="mt-4 space-y-3">
             {metodologia.loQueNoHacemos.items.map((item) => (
@@ -131,6 +148,9 @@ export default function MetodologiaPage() {
       {/* Sección 8 — Estado de desarrollo — fondo papel */}
       <section id="estado-desarrollo" className="bg-papel px-4 py-12 sm:px-8 sm:py-16 scroll-mt-24">
         <article className="mx-auto w-full max-w-[680px]">
+          <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full border border-salvia text-sm font-semibold text-salvia">
+            06
+          </div>
           <h2 className="font-display text-2xl font-semibold text-tinta">{metodologia.estadoDesarrollo.titulo}</h2>
           <div className="mt-4 space-y-4 text-base leading-relaxed text-tinta/80">
             {metodologia.estadoDesarrollo.cuerpo.split("\n\n").map((parrafo, i) => (

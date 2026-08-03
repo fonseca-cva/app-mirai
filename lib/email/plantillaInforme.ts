@@ -2,15 +2,15 @@
 // Camilo: HTML simple y liviano, texto plano como fallback, sin imágenes pesadas ni trackers.
 
 import type { PerfilResultado } from "@/lib/supabase/types";
-import { areasCarreras } from "@/lib/data/areas_carreras";
+import { carreraPorId } from "@/lib/data/carreras";
 
-function nombreArea(id: string): string {
-  return areasCarreras.find((a) => a.id === id)?.nombre ?? id;
+function nombreCarrera(id: string): string {
+  return carreraPorId(id)?.nombre ?? id;
 }
 
 export function construirCorreoInforme(perfil: PerfilResultado): { subject: string; html: string; text: string } {
   const top3 = perfil.dimensionTop3.map((d) => `${d.etiqueta} (${d.puntaje}%)`);
-  const areas = perfil.areasCarreras.map(nombreArea);
+  const areas = perfil.carrerasRecomendadas.map(nombreCarrera);
 
   const subject = "Tu informe vocacional Mirai";
 

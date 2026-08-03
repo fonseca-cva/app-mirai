@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { bloqueVerbal, juegosCognitivos } from "@/lib/config/textos";
-import { TEXTOS_COMPRENSION, DILEMAS_ARGUMENTACION } from "@/lib/config/rubricas";
+import { TEXTOS_COMPRENSION, DILEMAS_ARGUMENTACION, CONSIGNAS_EXPRESION } from "@/lib/config/rubricas";
 import { useExperienciaStore, type RespuestaVerbal } from "@/lib/store/experiencia";
 import type { RespuestaVerbalRow } from "@/lib/supabase/types";
 
@@ -11,7 +11,7 @@ interface Props {
   onPausar: () => void;
 }
 
-type Tarea = "comprension" | "argumentacion";
+type Tarea = "comprension" | "argumentacion" | "expresion";
 
 export function BloqueVerbal({ onCompletar, onPausar }: Props) {
   const [tarea, setTarea] = useState<Tarea>("comprension");
@@ -23,13 +23,24 @@ export function BloqueVerbal({ onCompletar, onPausar }: Props) {
   const agregarRespuestaVerbal = useExperienciaStore((s) => s.agregarRespuestaVerbal);
   const sincronizarBloque = useExperienciaStore((s) => s.sincronizarBloque);
 
-  // Índices determinísticos para textos/dilemas basados en sessionId
+  // Índices determinísticos para textos/dilemas/consignas basados en sessionId
   const indiceTexto = sessionId ? sessionId.charCodeAt(0) % TEXTOS_COMPRENSION.length : 0;
   const indiceDilema = sessionId ? sessionId.charCodeAt(1) % DILEMAS_ARGUMENTACION.length : 0;
+  const indiceExpresion = sessionId ? sessionId.charCodeAt(2) % CONSIGNAS_EXPRESION.length : 0;
 
-  const textoBase = tarea === "comprension" ? TEXTOS_COMPRENSION[indiceTexto] : DILEMAS_ARGUMENTACION[indiceDilema];
+  const textoBase =
+    tarea === "comprension"
+      ? TEXTOS_COMPRENSION[indiceTexto]
+      : tarea === "argumentacion"
+        ? DILEMAS_ARGUMENTACION[indiceDilema]
+        : CONSIGNAS_EXPRESION[indiceExpresion];
 
-  const config = tarea === "comprension" ? bloqueVerbal.comprension : bloqueVerbal.argumentacion;
+  const config =
+    tarea === "comprension"
+      ? bloqueVerbal.comprension
+      : tarea === "argumentacion"
+        ? bloqueVerbal.argumentacion
+        : bloqueVerbal.expresion;
   const caracteresMinimos = config.minimoCaracteres;
 
   function evaluarLocalmente(textoIngresado: string): RespuestaVerbal {
@@ -69,6 +80,7 @@ export function BloqueVerbal({ onCompletar, onPausar }: Props) {
           texto: texto.trim(),
           indiceTexto,
           indiceDilema,
+          indiceExpresion,
         }),
       });
 
@@ -97,10 +109,12 @@ export function BloqueVerbal({ onCompletar, onPausar }: Props) {
 
       if (tarea === "comprension") {
         setTarea("argumentacion");
+      } else if (tarea === "argumentacion") {
+        setTarea("expresion");
       } else {
         setHecho(true);
 
-        // Bloque C (verbal) completado: sync de las 2 respuestas (comprensión + argumentación).
+        // Bloque C (verbal) completado: sync de las 3 respuestas (comprensión + argumentación + expresión).
         if (sessionId) {
           const respuestas = useExperienciaStore.getState().respuestasVerbal;
           sincronizarBloque(
@@ -120,7 +134,7 @@ export function BloqueVerbal({ onCompletar, onPausar }: Props) {
 
       }
     }
-  }, [texto, tarea, sessionId, indiceTexto, indiceDilema, agregarRespuestaVerbal, sincronizarBloque, caracteresMinimos]);
+  }, [texto, tarea, sessionId, indiceTexto, indiceDilema, indiceExpresion, agregarRespuestaVerbal, sincronizarBloque, caracteresMinimos]);
 
   if (hecho) {
     return (

@@ -1,31 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { generarItemRotacionMental, generarItemPlegado, combinacionesReflejo } from "@/lib/logic/rotacion";
-import { esEspejada, transformarPieza } from "@/lib/logic/piezaOrigami";
-
-describe("generarItemRotacionMental", () => {
-  it("la alternativa correcta nunca está espejada; los distractores siempre lo están", () => {
-    const item = generarItemRotacionMental("rot-test", "media", 20, 140, [90, 180, 270]);
-    const correcta = item.alternativas[item.indiceCorrecto];
-
-    expect(correcta.espejada).toBe(false);
-    expect(esEspejada(transformarPieza(correcta.anguloDeg, correcta.espejada))).toBe(false);
-
-    item.alternativas
-      .filter((_, i) => i !== item.indiceCorrecto)
-      .forEach((alt) => {
-        expect(alt.espejada).toBe(true);
-        expect(esEspejada(transformarPieza(alt.anguloDeg, alt.espejada))).toBe(true);
-      });
-  });
-
-  it("tiene 4 alternativas y es determinístico por id", () => {
-    const a = generarItemRotacionMental("rot-01", "facil", 0, 90, [90, 180, 270]);
-    const b = generarItemRotacionMental("rot-01", "facil", 0, 90, [90, 180, 270]);
-    expect(a.alternativas).toHaveLength(4);
-    expect(a).toEqual(b);
-  });
-});
-
+import { generarItemPlegado, combinacionesReflejo } from "@/lib/logic/rotacion";
 describe("generarItemPlegado", () => {
   it("1 pliegue vertical, 1 punto: la correcta contiene el punto y su reflejo", () => {
     const item = generarItemPlegado("ple-test", "media", ["vertical"], [{ x: 0.8, y: 0.3 }], 0.2);

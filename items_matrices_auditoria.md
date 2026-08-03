@@ -1,10 +1,33 @@
-# Auditoría — Ítems de Matrices (12 reales + 2 de práctica)
+# Auditoría — Ítems de Matrices (10 reales + 2 de práctica)
 
 Generado tras el bloqueante de calidad de ítems cognitivos. Cubre los puntos 3, 4 y 5 del bloqueante.
 
+## Retiro Tanda C (rebalance de batería, 12 → 10 ítems)
+
+Se retiraron **mat-06** y **mat-09**, ambos de dificultad **media**, para bajar la batería de
+12 a 10 ítems sin alterar los extremos de la rampa (4 fáciles / 3 difíciles se mantienen).
+Se eligieron estos dos porque eran los más redundantes con otros ítems media que se
+conservan: mat-06 combinaba `rotacionDeg` + `relleno`, combinación ya cubierta en espíritu
+por mat-05 (`rotacionDeg` + `pliegues`) y mat-08 (`lados` + `rotacionDeg`); mat-09 combinaba
+`lados` + `pliegues` con `pliegues` constante entre filas (patrón menos exigente que el
+"pico" 1-2-1 que usa mat-07 para la misma combinación de atributos). Con el retiro, las 3
+medias que quedan (mat-05, mat-07, mat-08) cubren entre sí las 4 combinaciones de atributos
+originales sin duplicar ninguna. Sus definiciones y secciones de auditoría se conservan
+abajo, tachadas, por trazabilidad — no se usan en `itemsMatrices`.
+
+### ~~mat-06 (retirado)~~
+
+- **Reglas**: (1) rotación +45° con partida por fila 45°/0°/315°; (2) relleno checkerboard con partida por fila 0/1/0.
+- **Motivo del retiro**: dificultad media redundante con mat-05/mat-08; ver nota arriba.
+
+### ~~mat-09 (retirado)~~
+
+- **Reglas**: (1) lados +1 con partida por fila 4/5/3; (2) pliegues +1 constante entre filas (1,2,3).
+- **Motivo del retiro**: dificultad media redundante con mat-07 (misma pareja de atributos, patrón menos exigente); ver nota arriba.
+
 ## Invariantes verificadas automáticamente (no repetidas ítem por ítem)
 
-Estas propiedades se verifican para los 14 ítems (12 reales + 2 práctica) por tests en CI, no a mano:
+Estas propiedades se verifican para los 12 ítems (10 reales + 2 práctica) por tests en CI, no a mano:
 
 - **`lib/data/matrices.test.ts` → "cada celda de la grilla es derivable de las reglas declaradas (fila y columna)"**: cada una de las 9 celdas de cada ítem se recalcula desde las `reglas` declaradas y debe coincidir exactamente con lo mostrado. Esto es lo que habría detectado el bug de Evidencia 1 (tablero hardcodeado sin relación con ninguna regla): aquí es estructuralmente imposible, porque la grilla completa (no solo la respuesta) se construye siempre `regla → figuras`.
 - **`lib/data/matrices.test.ts` → "ninguna alternativa colisiona visualmente con otra"**: verifica que ninguna pareja de alternativas comparta lados+relleno+pliegues con una rotación congruente módulo la simetría del polígono (p.ej. dos cuadrados a 90° de diferencia son geométricamente el mismo cuadrado). Este test **encontró un bug real** durante la auditoría (ver "Hallazgo" más abajo).
@@ -86,19 +109,6 @@ Al escribir el test de no-colisión visual (criterio 4), se detectó que **el ge
 - **`pliegues` es una de las 2 reglas controladas** — marcado para veto/confirmación de Camilo.
 - **Criterios 3/4**: cumple.
 
-## mat-06 (media, 2 reglas)
-
-- **Reglas**: (1) la rotación aumenta 45° hacia la derecha, con distinto punto de partida por fila (45°, 0°, 315°); (2) el relleno alterna sólido/contorno hacia la derecha, con distinto punto de partida por fila (checkerboard con fase 0,1,0 por fila).
-- **Verificación por fila**: rotación — fila0=45,90,135 / fila1=0,45,90 / fila2=315,0,45 (paso 45 constante). Relleno — fila0=sólido,contorno,sólido / fila1=contorno,sólido,contorno / fila2=sólido,contorno,sólido (alterna constante).
-- **Verificación por columna**: rotación con paso constante de -45° entre filas en cada columna (45→0→315, etc.); relleno checkerboard también coherente por columna.
-- **Respuesta correcta**: cuadrado, rotado 45°, sólido, 1 capa.
-- **Distractores**:
-  1. Cuadrado a 45° sólido con 2 capas — cambia `pliegues`.
-  2. Cuadrado a 90° sólido — 45° de rotación de más.
-  3. Cuadrado a 45° en contorno — cambia `relleno`.
-  4. Pentágono a 45° sólido — cambia el tipo de figura.
-- **Criterios 3/4**: cumple. Sin `pliegues` como regla controlada.
-
 ## mat-07 (media, 2 reglas)
 
 - **Reglas**: (1) el número de capas sube y baja en "pico" por fila (1,2,1 en la primera columna), aumentando 1 hacia la derecha con tope en 3; (2) el relleno alterna sólido/contorno hacia la derecha, con distinto punto de partida por fila.
@@ -125,20 +135,6 @@ Al escribir el test de no-colisión visual (criterio 4), se detectó que **el ge
   3. Hexágono a 270° en contorno — cambia `relleno`.
   4. Hexágono a 270° con 2 capas — cambia `pliegues`.
 - **Criterios 3/4**: cumple. Sin `pliegues` como regla controlada.
-
-## mat-09 (media, 2 reglas)
-
-- **Reglas**: (1) el número de lados sube 1 hacia la derecha, con distinto punto de partida por fila (4,5,3 — cada fila explora el patrón desde un punto distinto, sin relación aritmética entre filas); (2) el número de capas sube 1 hacia la derecha, igual en las 3 filas.
-- **Verificación por fila**: lados — fila0=4,5,6 / fila1=5,6,7 / fila2=3,4,5 (paso +1 en las 3). Pliegues — las 3 filas idénticas: 1,2,3.
-- **Verificación por columna**: pliegues constante por columna (col0 siempre 1, col1 siempre 2, col2 siempre 3). Lados no sigue un patrón aritmético entre filas (por diseño, cada fila es un punto de partida independiente), pero cada fila es individualmente verificable.
-- **Respuesta correcta**: pentágono (5 lados), sin rotar, sólido, 3 capas.
-- **Distractores**:
-  1. Pentágono con 2 capas — una capa de menos.
-  2. Pentágono rotado 90° — rotado cuando no debería.
-  3. Pentágono en contorno — cambia `relleno`.
-  4. Hexágono (6 lados) con 3 capas — cambia el tipo de figura.
-- **`pliegues` es una de las 2 reglas controladas** — marcado para veto/confirmación de Camilo.
-- **Criterios 3/4**: cumple.
 
 ## mat-10 (difícil, 3 reglas)
 

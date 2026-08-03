@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { itemsRotacion, itemPracticaRotacion, itemPracticaPlegado } from "@/lib/data/rotacion";
-import { esEspejada, transformarPieza } from "@/lib/logic/piezaOrigami";
+import { itemsRotacion, itemPracticaPlegado, itemPracticaPlegado2 } from "@/lib/data/rotacion";
 import { combinacionesReflejo, type Eje, type Punto, type ItemPlegado } from "@/lib/logic/rotacion";
 
 const itemsPlegado = itemsRotacion.filter((i): i is ItemPlegado => i.tipo === "plegado");
@@ -9,16 +8,16 @@ function puntosStr(puntos: Punto[]): string {
   return puntos.map((p) => `(${p.x.toFixed(2)},${p.y.toFixed(2)})`).sort().join(" ");
 }
 
-describe("itemsRotacion (ahora 10 ítems de plegado)", () => {
-  it("tiene 10 ítems, todos de tipo plegado, con rampa 4/4/2", () => {
-    expect(itemsRotacion).toHaveLength(10);
+describe("itemsRotacion (ahora 7 ítems de plegado)", () => {
+  it("tiene 7 ítems, todos de tipo plegado, con rampa 3/3/1", () => {
+    expect(itemsRotacion).toHaveLength(7);
     itemsRotacion.forEach((item) => {
       expect(item.tipo, `${item.id} debe ser plegado`).toBe("plegado");
     });
 
-    expect(itemsRotacion.filter((i) => i.dificultad === "facil")).toHaveLength(4);
-    expect(itemsRotacion.filter((i) => i.dificultad === "media")).toHaveLength(4);
-    expect(itemsRotacion.filter((i) => i.dificultad === "dificil")).toHaveLength(2);
+    expect(itemsRotacion.filter((i) => i.dificultad === "facil")).toHaveLength(3);
+    expect(itemsRotacion.filter((i) => i.dificultad === "media")).toHaveLength(3);
+    expect(itemsRotacion.filter((i) => i.dificultad === "dificil")).toHaveLength(1);
   });
 
   it("cada ítem tiene exactamente 4 alternativas únicas y un índice correcto válido", () => {
@@ -124,37 +123,38 @@ describe("itemsRotacion (ahora 10 ítems de plegado)", () => {
   });
 });
 
-describe("itemPracticaRotacion", () => {
-  it("la correcta nunca está espejada; los distractores sí", () => {
-    if (itemPracticaRotacion.tipo !== "rotacion") return;
-    itemPracticaRotacion.alternativas.forEach((alt, i) => {
-      const espejadaReal = esEspejada(transformarPieza(alt.anguloDeg, alt.espejada));
-      if (i === itemPracticaRotacion.indiceCorrecto) {
-        expect(espejadaReal).toBe(false);
-      } else {
-        expect(espejadaReal).toBe(true);
-      }
-    });
-  });
-});
+describe("prácticas de plegado (2, ambas escritas a mano)", () => {
+  const practicas = [itemPracticaPlegado, itemPracticaPlegado2] as const;
 
-describe("itemPracticaPlegado", () => {
-  it("la alternativa correcta refleja el punto sobre el eje vertical (1 pliegue, 1 punto)", () => {
-    if (itemPracticaPlegado.tipo !== "plegado") return;
-    const reflejarVertical = (p: Punto) => ({ x: 1 - p.x, y: p.y });
-    itemPracticaPlegado.alternativas.forEach((alt, i) => {
-      const reflejoEsperado = reflejarVertical(itemPracticaPlegado.puntos[0]);
-      const correctaReflejada = i === itemPracticaPlegado.indiceCorrecto;
-      const tieneReflejo = alt.puntos.some(
-        (p) => Math.abs(p.x - reflejoEsperado.x) < 1e-9 && Math.abs(p.y - reflejoEsperado.y) < 1e-9
-      );
-      expect(tieneReflejo, `alternativa ${i} ${correctaReflejada ? "debe" : "no debe"} contener el reflejo`).toBe(correctaReflejada);
-    });
+  it("ambas son de tipo plegado y tienen 4 alternativas únicas", () => {
+    for (const p of practicas) {
+      expect(p.tipo).toBe("plegado");
+      expect(p.alternativas).toHaveLength(4);
+      const claves = p.alternativas.map((a) => puntosStr(a.puntos));
+      expect(new Set(claves).size).toBe(4);
+    }
   });
 
-  it("tiene 4 alternativas únicas", () => {
-    if (itemPracticaPlegado.tipo !== "plegado") return;
-    const claves = itemPracticaPlegado.alternativas.map((a) => puntosStr(a.puntos));
-    expect(new Set(claves).size).toBe(4);
+  it("la alternativa correcta refleja el punto sobre el eje del pliegue", () => {
+    const reflejar = (p: Punto, eje: Eje) => (eje === "vertical" ? { x: 1 - p.x, y: p.y } : { x: p.x, y: 1 - p.y });
+    for (const p of practicas) {
+      const eje = p.pliegues[0]!;
+      const reflejoEsperado = reflejar(p.puntos[0], eje);
+      p.alternativas.forEach((alt, i) => {
+        const esCorrecta = i === p.indiceCorrecto;
+        const tieneReflejo = alt.puntos.some(
+          (pt) => Math.abs(pt.x - reflejoEsperado.x) < 1e-9 && Math.abs(pt.y - reflejoEsperado.y) < 1e-9
+        );
+        expect(tieneReflejo, `${p.id} alternativa ${i} ${esCorrecta ? "debe" : "no debe"} contener el reflejo`).toBe(esCorrecta);
+      });
+    }
+  });
+
+  it("ninguna práctica usa rotación mental (sin ángulos ni espejados)", () => {
+    for (const p of practicas) {
+      expect(p.tipo).toBe("plegado");
+      expect("anguloReferencia" in p).toBe(false);
+      expect("anguloDeg" in p.alternativas[0]).toBe(false);
+    }
   });
 });

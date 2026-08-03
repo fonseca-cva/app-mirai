@@ -5,11 +5,10 @@ import { informe, lecturasPorDimension } from "@/lib/config/textos";
 import { useExperienciaStore } from "@/lib/store/experiencia";
 import { calcularPuntajes } from "@/lib/logic/puntaje";
 import { calcularPuntajesCognitivo } from "@/lib/logic/puntajeCognitivo";
-import { recomendarAreas } from "@/lib/logic/matching";
+import { recomendarCarreras } from "@/lib/logic/matching";
 import { contextos } from "@/lib/data/contextos";
 import { GruaOrigami } from "@/components/origami/GruaOrigami";
 import { obtenerAccessToken } from "@/lib/supabase/client";
-import type { AreaRecomendada } from "@/lib/logic/matching";
 
 // --- Helper para convertir puntaje numérico a etiqueta de capacidad ---
 function etiquetaCapacidad(puntaje: number): string {
@@ -50,15 +49,15 @@ export function Informe({ onVolver }: Props) {
 
   // Puntajes cognitivos
   const correctasMatrices = respuestasCognitivo.filter((r) => r.juego === "matrices" && r.correcto).length;
-  const correctasRotacion = respuestasCognitivo.filter((r) => r.juego === "rotacion" && r.correcto).length;
+  const correctasRotacion = respuestasCognitivo.filter((r) => r.juego === "pliegues" && r.correcto).length;
   const secuencias = respuestasCognitivo.filter((r) => r.juego === "secuencias");
   const largoMaximo = Math.max(...secuencias.map((r) => r.nivel), 0);
 
   const puntajesCognitivo = calcularPuntajesCognitivo(correctasMatrices, correctasRotacion, largoMaximo, puntajeComunicacion);
 
-  // Áreas recomendadas
-  const areasRecomendadas = useMemo(
-    () => recomendarAreas(puntajesDimension, puntajesCognitivo),
+  // Carreras recomendadas (matching v2 sobre carreras curadas)
+  const carrerasRecomendadas = useMemo(
+    () => recomendarCarreras(puntajesDimension, puntajesCognitivo),
     [puntajesDimension, puntajesCognitivo]
   );
 
@@ -71,10 +70,10 @@ export function Informe({ onVolver }: Props) {
         memoria: puntajesCognitivo.memoria,
         comunicacion: puntajeComunicacion,
       },
-      areasCarreras: areasRecomendadas.map((a) => a.area.id),
+      carrerasRecomendadas: carrerasRecomendadas.map((c) => c.carrera.id),
       generado_en: new Date().toISOString(),
     }),
-    [top3, puntajesCognitivo, puntajeComunicacion, areasRecomendadas]
+    [top3, puntajesCognitivo, puntajeComunicacion, carrerasRecomendadas]
   );
 
   // Bloque D (informe) generado: sync del perfil de resultados, una sola vez por sesión.
@@ -179,13 +178,15 @@ export function Informe({ onVolver }: Props) {
       <section className="mt-12">
         <h2 className="font-display text-xl font-semibold">{informe.seccionCaminos}</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
-          {areasRecomendadas.map((area) => (
+          {carrerasRecomendadas.map((rec) => (
             <div
-              key={area.area.id}
+              key={rec.carrera.id}
               className="rounded-[14px] border border-tinta/10 bg-blanco-papel p-4 transition hover:border-tinta/20"
             >
-              <h3 className="font-display text-lg font-medium text-tinta">{area.area.nombre}</h3>
-              <p className="mt-1 text-sm text-tinta/60">{area.area.descripcion}</p>
+              <h3 className="font-display text-lg font-medium text-tinta">{rec.carrera.nombre}</h3>
+              {rec.carrera.notaHonesta && (
+                <p className="mt-1 text-sm text-tinta/60">{rec.carrera.notaHonesta}</p>
+              )}
             </div>
           ))}
         </div>

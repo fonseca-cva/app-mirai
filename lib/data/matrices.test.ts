@@ -4,10 +4,10 @@ import { calcularCelda } from "@/lib/logic/matrices";
 import { figurasColisionanVisualmente } from "@/lib/logic/figuraOrigami";
 
 describe("itemsMatrices", () => {
-  it("tiene 12 ítems con la rampa de dificultad 4 fáciles / 5 medias / 3 difíciles", () => {
-    expect(itemsMatrices).toHaveLength(12);
+  it("tiene 10 ítems con la rampa de dificultad 4 fáciles / 3 medias / 3 difíciles", () => {
+    expect(itemsMatrices).toHaveLength(10);
     expect(itemsMatrices.filter((i) => i.dificultad === "facil")).toHaveLength(4);
-    expect(itemsMatrices.filter((i) => i.dificultad === "media")).toHaveLength(5);
+    expect(itemsMatrices.filter((i) => i.dificultad === "media")).toHaveLength(3);
     expect(itemsMatrices.filter((i) => i.dificultad === "dificil")).toHaveLength(3);
   });
 

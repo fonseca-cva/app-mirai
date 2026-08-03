@@ -46,7 +46,7 @@ export default function PrivacidadPage() {
           </li>
           <li>
             <strong>Respuestas de los mini-juegos cognitivos:</strong> tus
-            resultados en los ejercicios de patrones, rotación espacial y memoria.
+            resultados en los ejercicios de patrones, plegado de papel y memoria.
           </li>
           <li>
             <strong>Respuestas del bloque verbal:</strong> tus explicaciones y

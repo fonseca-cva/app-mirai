@@ -1,6 +1,8 @@
 // CONTENIDO PROVISORIO — pendiente de firma metodológica.
-// 12 ítems de matrices 3x3 (sección 3.1 de la spec). Rampa de dificultad:
-// 4 fáciles (1 regla), 5 medias (2 reglas), 3 difíciles (3 reglas).
+// 10 ítems de matrices 3x3 (sección 3.1 de la spec). Rampa de dificultad tras el rebalance
+// de Tanda C (ver items_matrices_auditoria.md): 4 fáciles (1 regla), 3 medias (2 reglas),
+// 3 difíciles (3 reglas). Se retiraron mat-06 y mat-09 (ambos de dificultad media) para
+// bajar de 12 a 10 ítems sin tocar los extremos fácil/difícil de la rampa.
 import { generarItemMatriz, type ItemMatriz, type Regla } from "@/lib/logic/matrices";
 
 interface DefinicionItem {
@@ -43,14 +45,6 @@ const DEFINICIONES: DefinicionItem[] = [
     ],
   },
   {
-    id: "mat-06",
-    dificultad: "media",
-    reglas: [
-      { atributo: "rotacionDeg", baseFila: [45, 0, 315], pasoColumna: 45 },
-      { atributo: "relleno", baseFila: [0, 1, 0], pasoColumna: 1 },
-    ],
-  },
-  {
     id: "mat-07",
     dificultad: "media",
     reglas: [
@@ -66,15 +60,6 @@ const DEFINICIONES: DefinicionItem[] = [
       { atributo: "rotacionDeg", baseFila: [0, 45, 90], pasoColumna: 90 },
     ],
   },
-  {
-    id: "mat-09",
-    dificultad: "media",
-    reglas: [
-      { atributo: "lados", baseFila: [4, 5, 3], pasoColumna: 1 },
-      { atributo: "pliegues", baseFila: [1, 1, 1], pasoColumna: 1 },
-    ],
-  },
-
   // -- Difíciles: 3 reglas --
   {
     id: "mat-10",

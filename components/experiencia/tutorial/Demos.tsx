@@ -16,10 +16,6 @@ const ANIM_STYLES = `
   0% { opacity: 0; transform: translateY(8px); }
   100% { opacity: 1; transform: translateY(0); }
 }
-@keyframes mirai-girar {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
 @keyframes mirai-aparecer {
   0% { opacity: 0; }
   100% { opacity: 1; }
@@ -185,19 +181,20 @@ export function DemoMatrices({ onCicloCompletado }: Props) {
   );
 }
 
-// ── Demo: Rotación ──────────────────────────────────────────────────
+// ── Demo: Series ────────────────────────────────────────────────────
+// Serie fija de referencia (no se genera): +3 cada paso. Regla verificable por cálculo
+// directo, distinta de la de matrices (que es geométrica) — acá es texto/números.
 
-const PASOS_ROTACION = [
-  { paso: 1, enMs: 800 },
-  { paso: 2, enMs: 2000 },
-  { paso: 3, enMs: 3200 },
-  { paso: 4, enMs: 4500 },
-  { paso: 5, enMs: 5800 },
-  { paso: 6, enMs: 7000 },
+const PASOS_SERIES = [
+  { paso: 1, enMs: 1000 },
+  { paso: 2, enMs: 2500 },
+  { paso: 3, enMs: 4000 },
+  { paso: 4, enMs: 5500 },
+  { paso: 5, enMs: 7000 },
 ];
-const FIN_CICLO_ROTACION_MS = 8500;
+const FIN_CICLO_SERIES_MS = 8500;
 
-export function DemoRotacion({ onCicloCompletado }: Props) {
+export function DemoSeries({ onCicloCompletado }: Props) {
   const reduced = useReducedMotion();
   const [paso, setPaso] = useState(0);
 
@@ -208,14 +205,14 @@ export function DemoRotacion({ onCicloCompletado }: Props) {
 
     function ejecutarCiclo() {
       setPaso(0);
-      PASOS_ROTACION.forEach(({ paso: p, enMs }) => {
+      PASOS_SERIES.forEach(({ paso: p, enMs }) => {
         timers.push(setTimeout(() => { if (!cancelado) setPaso(p); }, enMs));
       });
       timers.push(setTimeout(() => {
         if (cancelado) return;
         onCicloCompletado?.();
         timers.push(setTimeout(ejecutarCiclo, PAUSA_CICLO_MS));
-      }, FIN_CICLO_ROTACION_MS));
+      }, FIN_CICLO_SERIES_MS));
     }
 
     ejecutarCiclo();
@@ -226,76 +223,71 @@ export function DemoRotacion({ onCicloCompletado }: Props) {
     return (
       <FramesEstaticos
         frames={[
-          { titulo: "Paso 1: Mira la pieza", texto: "Una figura asimétrica de papel aparece como referencia." },
-          { titulo: "Paso 2: Gírala en tu cabeza", texto: "Imagina la figura rotando hasta quedar en otra orientación." },
-          { titulo: "Paso 3: Encuentra la coincidencia", texto: "Entre 4 alternativas, elige la que muestra la pieza ya rotada." },
+          { titulo: "Paso 1: Mira la serie", texto: "Una fila de fichas con números, en orden, con un hueco al final." },
+          { titulo: "Paso 2: Encuentra la regla", texto: "Compara cada ficha con la anterior: ¿suma, resta o multiplica siempre lo mismo?" },
+          { titulo: "Paso 3: Elige lo que sigue", texto: "Si la serie sube de 3 en 3 (2, 5, 8, 11...), lo que falta es 14." },
         ]}
       />
     );
   }
 
+  const ELEMENTOS = ["2", "5", "8", "11", "?"];
+  const ALTERNATIVAS = ["12", "13", "14", "15", "10"];
+  const INDICE_CORRECTO = 2;
+
+  const ficha = (i: number, contenido: string, activo: boolean) => (
+    <div
+      key={i}
+      className={`flex h-16 w-16 items-center justify-center rounded-[10px] border-2 font-display text-lg font-semibold tracking-tight transition-all duration-700 sm:h-20 sm:w-20 ${
+        activo
+          ? "border-coral bg-coral/10 shadow-lg"
+          : i === ELEMENTOS.length - 1
+            ? "border-dashed border-tinta/30 bg-blanco-papel/70 text-tinta/40"
+            : "border-transparent bg-blanco-papel/70"
+      }`}
+      style={activo ? { animation: "mirai-pulso 1s ease-in-out infinite" } : undefined}
+    >
+      {contenido}
+    </div>
+  );
+
   return (
     <div className="flex flex-col items-center gap-4">
       <style>{ANIM_STYLES}</style>
       <p className="text-sm font-medium text-teal-profundo">
-        {paso === 0 ? "Mira la pieza de referencia..." : paso <= 3 ? "Gírala en tu cabeza" : paso <= 5 ? "¿Cuál coincide?" : "✓ La pieza gira 90° sin cambiar de forma"}
+        {paso === 0
+          ? "Mira la serie..."
+          : paso <= 3
+            ? "Observa cómo cambia cada número"
+            : paso === 4
+              ? "¿Cuál sigue la regla?"
+              : "✓ Cada número suma 3 al anterior"}
       </p>
 
-      <div className="flex items-center justify-center gap-8">
-        {/* Pieza de referencia */}
-        <div className="flex flex-col items-center gap-2">
-          <div className="text-xs text-tinta/50">Referencia</div>
-          <svg width={80} height={80} viewBox="0 0 80 80">
-            <polygon
-              points="40,10 65,20 60,55 30,65 15,40"
-              fill="var(--color-teal-medio)"
-              stroke="var(--color-teal-profundo)"
-              strokeWidth={2}
-              strokeLinejoin="round"
-              style={
-                paso >= 2 && paso <= 4
-                  ? { transformOrigin: "40px 40px", animation: "mirai-girar 2s ease-in-out infinite" }
-                  : paso >= 5
-                    ? { transformOrigin: "40px 40px", transform: "rotate(90deg)" }
-                    : undefined
-              }
-            />
-          </svg>
-        </div>
-
-        {paso >= 3 && (
-          <>
-            <svg width={24} height={24} viewBox="0 0 24 24" style={{ animation: "mirai-flecha 1.5s ease-in-out infinite" }}>
-              <path d="M5 12h14M13 5l7 7-7 7" fill="none" stroke="var(--color-coral)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-
-            {/* Alternativas */}
-            <div className="flex gap-2">
-              {[0, 90, 180, 270].map((ang, i) => (
-                <div
-                  key={i}
-                  className={`flex h-14 w-14 items-center justify-center rounded-[10px] border transition-all ${
-                    paso >= 5 && i === 1
-                      ? "border-teal-profundo bg-teal-profundo/10"
-                      : "border-tinta/15 bg-blanco-papel/70"
-                  } ${i === 0 ? "opacity-40" : ""}`}
-                >
-                  <svg width={40} height={40} viewBox="0 0 80 80">
-                    <polygon
-                      points="40,10 65,20 60,55 30,65 15,40"
-                      fill="var(--color-teal-medio)"
-                      stroke="var(--color-teal-profundo)"
-                      strokeWidth={2}
-                      strokeLinejoin="round"
-                      style={{ transformOrigin: "40px 40px", transform: `rotate(${ang}deg)` }}
-                    />
-                  </svg>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
+      <div className="flex items-center justify-center gap-2 rounded-[14px] bg-gris-papel/60 p-3">
+        {ELEMENTOS.map((s, i) => {
+          const activo = paso > i && paso <= 4 && i !== ELEMENTOS.length - 1;
+          const resaltado = paso === 5 && i === ELEMENTOS.length - 1;
+          return ficha(i, s, activo || resaltado);
+        })}
       </div>
+
+      {paso >= 4 && (
+        <div className="flex gap-2">
+          {ALTERNATIVAS.map((s, i) => (
+            <div
+              key={i}
+              className={`flex h-12 w-12 items-center justify-center rounded-[10px] border font-display text-sm font-medium tracking-tight transition-all sm:h-14 sm:w-14 ${
+                paso === 5 && i === INDICE_CORRECTO
+                  ? "border-teal-profundo bg-teal-profundo/10"
+                  : "border-tinta/15 bg-blanco-papel/70"
+              }`}
+            >
+              {s}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

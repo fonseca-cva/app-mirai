@@ -1,94 +1,96 @@
-// Reglas de matching v1: función pura que recomienda áreas de carreras basada en
-// intereses (gustos) y capacidades (cognitivo). Sin side effects, testeable.
-// // PENDIENTE FIRMA METODOLÓGICA: pesos (55% intereses / 45% capacidades) y mapeos
-// son provisorios. Se calibrarán con datos reales en Fase 3.
+// Reglas de matching v2 (Tanda E): recomienda carreras curadas (lib/data/carreras.ts)
+// en vez de las 10 áreas provisorias de v1. Función pura, sin side effects, testeable.
+//
+// Componentes por carrera:
+//   - Intereses: 8 dimensiones ponderadas por el mapeo de área de la carrera
+//     (principal con peso implícito 1 - Σsecundarias; secundarias con su peso).
+//   - Capacidades: perfil cognitivo de la carrera (5 pesos, suma 1.0) × puntajes
+//     del estudiante. 'numerico' usa el puntaje medido de 'patrones': la batería
+//     actual no separa un constructo numérico (reparto numerico/patrones del
+//     Tanda A es solo de datos, PENDIENTE REVALIDACIÓN).
+//
+// PENDIENTE FIRMA METODOLÓGICA: el peso compuesto (55% intereses / 45% capacidades)
+// es provisorio y se calibrará con datos reales en Fase 3.
 
 import type { PuntajeDimension } from "@/lib/logic/puntaje";
 import type { PuntajesCognitivo } from "@/lib/logic/puntajeCognitivo";
-import { areasCarreras, type AreaCarrera } from "@/lib/data/areas_carreras";
-import { dimensiones, type DimensionCodigo } from "@/lib/data/contextos";
+import { carreras, type Carrera } from "@/lib/data/carreras";
+import type { DimensionCodigo } from "@/lib/data/contextos";
 
-// Puntaje normalizado de una dimensión (0-100) desde intereses.
-function dimensionScore(codigo: DimensionCodigo, puntajes: PuntajeDimension[]): number {
+const PESO_INTERESES_DEFECTO = 0.55;
+const PESO_CAPACIDADES_DEFECTO = 0.45;
+
+function puntajeDimension(codigo: DimensionCodigo, puntajes: PuntajeDimension[]): number {
   return puntajes.find((p) => p.dimension === codigo)?.puntaje ?? 0;
 }
 
-// Peso por área: suma ponderada de sus dimensiones desde intereses.
-function pesoIntereses(area: AreaCarrera, puntajesDimension: PuntajeDimension[]): number {
-  if (area.dimensiones.length === 0) return 0;
-  const suma = area.dimensiones.reduce((acc, dim) => acc + dimensionScore(dim, puntajesDimension), 0);
-  return suma / area.dimensiones.length;
+// Ajuste por intereses: suma ponderada de las dimensiones del área de la carrera.
+// El peso de la dimensión principal es implícito: 1 - Σ(secundarias). Los pesos
+// del área suman 1.0 (validado en lib/data/carreras.test.ts).
+function pesoIntereses(carrera: Carrera, puntajesDimension: PuntajeDimension[]): number {
+  const secundarias = carrera.area.secundarias ?? [];
+  let pesoPrincipal = 1;
+  for (const s of secundarias) pesoPrincipal -= s.peso;
+
+  let total = pesoPrincipal * puntajeDimension(carrera.area.principal, puntajesDimension);
+  for (const s of secundarias) {
+    total += s.peso * puntajeDimension(s.codigo, puntajesDimension);
+  }
+  return Math.round(total);
 }
 
-// Peso por capacidades: mapeo área → capacidad relevante.
-// // PENDIENTE FIRMA METODOLÓGICA: este mapeo es provisorio.
-const CAPACIDAD_POR_AREA: Record<string, keyof PuntajesCognitivo> = {
-  "construccion-obra": "espacial",
-  "ciencia-laboratorio": "patrones",
-  "arte-diseno": "espacial",
-  "educacion-social": "comunicacion",
-  "salud-bienestar": "memoria",
-  "gestion-empresa": "memoria",
-  "datos-tecnologia": "patrones",
-  "naturaleza-medioambiente": "espacial",
-  "ingenieria-tecnica": "patrones",
-  "servicio-atencion": "comunicacion",
-} as const;
-
-function pesoCapacidades(area: AreaCarrera, puntajesCognitivo: PuntajesCognitivo): number {
-  const capacidad = CAPACIDAD_POR_AREA[area.id];
-  if (!capacidad) return 0;
-  return puntajesCognitivo[capacidad];
+// Ajuste por capacidades: perfil cognitivo de la carrera (5 pesos, suma 1.0) por
+// los puntajes medidos del estudiante. 'numerico' comparte el puntaje de 'patrones'
+// (la batería no lo separa aún; ver cabecera del módulo).
+function pesoCapacidades(carrera: Carrera, puntajesCognitivo: PuntajesCognitivo): number {
+  const { patrones, numerico, espacial, memoria, comunicacion } = carrera.perfilCognitivo;
+  const total =
+    (patrones ?? 0) * puntajesCognitivo.patrones +
+    (numerico ?? 0) * puntajesCognitivo.patrones +
+    (espacial ?? 0) * puntajesCognitivo.espacial +
+    (memoria ?? 0) * puntajesCognitivo.memoria +
+    (comunicacion ?? 0) * puntajesCognitivo.comunicacion;
+  return Math.round(total);
 }
 
-export interface AreaRecomendada {
-  area: AreaCarrera;
+export interface CarreraRecomendada {
+  carrera: Carrera;
   puntajeCompuesto: number; // 0-100
-  pesoIntereses: number;
-  pesoCapacidades: number;
+  pesoIntereses: number; // 0-100
+  pesoCapacidades: number; // 0-100
 }
 
-// Matching v1: 55% intereses / 45% capacidades.
-// Devuelve las 3 áreas mejor rankeadas con puntaje compuesto.
-export function recomendarAreas(
-  puntajesDimension: PuntajeDimension[],
-  puntajesCognitivo: PuntajesCognitivo
-): AreaRecomendada[] {
-  const PESO_INTERESES = 0.55;
-  const PESO_CAPACIDADES = 0.45;
+export interface OpcionesMatching {
+  limite?: number; // cuántas carreras devolver (default 3)
+  pesoIntereses?: number; // 0-1, default 0.55 (calibración Fase 3)
+}
 
-  const puntajes: AreaRecomendada[] = areasCarreras.map((area) => {
-    const pi = pesoIntereses(area, puntajesDimension);
-    const pc = pesoCapacidades(area, puntajesCognitivo);
+// Matching v2: puntaje compuesto por carrera (55% intereses / 45% capacidades por
+// defecto), ordenado descendente con desempate alfabético determinista.
+export function recomendarCarreras(
+  puntajesDimension: PuntajeDimension[],
+  puntajesCognitivo: PuntajesCognitivo,
+  opciones: OpcionesMatching = {}
+): CarreraRecomendada[] {
+  const limite = opciones.limite ?? 3;
+  const pesoInteresesGlobal = opciones.pesoIntereses ?? PESO_INTERESES_DEFECTO;
+  const pesoCapacidadesGlobal = 1 - pesoInteresesGlobal;
+
+  const resultado: CarreraRecomendada[] = carreras.map((carrera) => {
+    const pi = pesoIntereses(carrera, puntajesDimension);
+    const pc = pesoCapacidades(carrera, puntajesCognitivo);
     return {
-      area,
+      carrera,
       pesoIntereses: pi,
       pesoCapacidades: pc,
-      puntajeCompuesto: Math.round(pi * PESO_INTERESES + pc * PESO_CAPACIDADES),
+      puntajeCompuesto: Math.round(pi * pesoInteresesGlobal + pc * pesoCapacidadesGlobal),
     };
   });
 
-  puntajes.sort((a, b) => b.puntajeCompuesto - a.puntajeCompuesto);
-  return puntajes.slice(0, 3);
-}
+  resultado.sort((a, b) => {
+    if (b.puntajeCompuesto !== a.puntajeCompuesto) return b.puntajeCompuesto - a.puntajeCompuesto;
+    return a.carrera.nombre.localeCompare(b.carrera.nombre, "es");
+  });
 
-// Perfil completo: top 3 áreas + puntajes de cada bloque para el informe.
-export interface PerfilCompleto {
-  top3Dimensiones: PuntajeDimension[];
-  puntajesCognitivo: PuntajesCognitivo;
-  areasRecomendadas: AreaRecomendada[];
-  puntajeVerbal: number | null; // null si no se completó la evaluación verbal
-}
-
-export function generarPerfil(
-  puntajesDimension: PuntajeDimension[],
-  puntajesCognitivo: PuntajesCognitivo,
-  puntajeVerbal: number | null
-): PerfilCompleto {
-  return {
-    top3Dimensiones: puntajesDimension.slice(0, 3),
-    puntajesCognitivo,
-    areasRecomendadas: recomendarAreas(puntajesDimension, puntajesCognitivo),
-    puntajeVerbal,
-  };
+  return resultado.slice(0, limite);
 }

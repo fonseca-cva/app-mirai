@@ -6,10 +6,10 @@ import { procesarColaSync, type TareaSync } from "@/lib/supabase/sync";
 
 export type { TareaSync } from "@/lib/supabase/sync";
 
-export type PasoExperiencia = "intro" | "gustos" | "cognitivo" | "verbal" | "informe";
+export type PasoExperiencia = "intro" | "gustos" | "cognitivo" | "verbal" | "divergente" | "informe";
 
 export interface RespuestaCognitivo {
-  juego: "matrices" | "rotacion" | "secuencias";
+  juego: "matrices" | "series" | "pliegues" | "secuencias";
   itemId: string;
   correcto: boolean;
   nivel: number;
@@ -20,10 +20,16 @@ export interface RespuestaCognitivo {
 }
 
 export interface RespuestaVerbal {
-  tarea: "comprension" | "argumentacion";
+  tarea: "comprension" | "argumentacion" | "expresion";
   texto: string;
   evaluacion: unknown | null;
   estado: "pendiente" | "evaluado" | "error";
+}
+
+export interface RespuestaDivergente {
+  objeto: string;
+  respuestasTexto: string[];
+  cantidad: number;
 }
 
 interface EstadoExperiencia {
@@ -36,6 +42,7 @@ interface EstadoExperiencia {
   respuestasGustos: RespuestaGustos[];
   respuestasCognitivo: RespuestaCognitivo[];
   respuestasVerbal: RespuestaVerbal[];
+  respuestasDivergente: RespuestaDivergente[];
   colaSync: TareaSync[];
 
   inicializarSesion: () => void;
@@ -46,6 +53,7 @@ interface EstadoExperiencia {
   agregarRespuestaGustos: (respuesta: RespuestaGustos) => void;
   agregarRespuestaCognitivo: (respuesta: RespuestaCognitivo) => void;
   agregarRespuestaVerbal: (respuesta: RespuestaVerbal) => void;
+  agregarRespuestaDivergente: (respuesta: RespuestaDivergente) => void;
   // Encola las tareas nuevas y reintenta toda la cola (incluida la pendiente de bloques
   // anteriores) contra Supabase. No es crítico que falle: lo que no se sincroniza queda
   // en colaSync para el próximo bloque completado.
@@ -62,6 +70,7 @@ export const useExperienciaStore = create<EstadoExperiencia>()(
       respuestasGustos: [],
       respuestasCognitivo: [],
       respuestasVerbal: [],
+      respuestasDivergente: [],
       colaSync: [],
 
       inicializarSesion: () => set({ sessionId: obtenerOCrearSessionId() }),
@@ -76,6 +85,8 @@ export const useExperienciaStore = create<EstadoExperiencia>()(
         set((estado) => ({ respuestasCognitivo: [...estado.respuestasCognitivo, respuesta] })),
       agregarRespuestaVerbal: (respuesta) =>
         set((estado) => ({ respuestasVerbal: [...estado.respuestasVerbal, respuesta] })),
+      agregarRespuestaDivergente: (respuesta) =>
+        set((estado) => ({ respuestasDivergente: [...estado.respuestasDivergente, respuesta] })),
 
       sincronizarBloque: async (tareas) => {
         set((estado) => ({ colaSync: [...estado.colaSync, ...tareas] }));
@@ -95,6 +106,7 @@ export const useExperienciaStore = create<EstadoExperiencia>()(
         respuestasGustos: estado.respuestasGustos,
         respuestasCognitivo: estado.respuestasCognitivo,
         respuestasVerbal: estado.respuestasVerbal,
+        respuestasDivergente: estado.respuestasDivergente,
       }),
     }
   )

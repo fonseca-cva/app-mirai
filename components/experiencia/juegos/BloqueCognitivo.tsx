@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { itemsMatrices } from "@/lib/data/matrices";
+import { itemsSeries } from "@/lib/data/series";
 import { itemsRotacion } from "@/lib/data/rotacion";
 import { BloqueMatrices, type ResultadoMatrices } from "@/components/experiencia/juegos/BloqueMatrices";
+import { BloqueSeries, type ResultadoSeries } from "@/components/experiencia/juegos/BloqueSeries";
 import { BloqueRotacion, type ResultadoRotacion } from "@/components/experiencia/juegos/BloqueRotacion";
 import { BloqueSecuencias, type ResultadoSecuencias } from "@/components/experiencia/juegos/BloqueSecuencias";
 import { useExperienciaStore } from "@/lib/store/experiencia";
@@ -14,12 +16,15 @@ interface Props {
   onPausar: () => void;
 }
 
-type Juego = "matrices" | "rotacion" | "secuencias";
+type Juego = "matrices" | "series" | "pliegues" | "secuencias";
 
 const NIVEL_POR_DIFICULTAD = { facil: 1, media: 2, dificil: 3 } as const;
 
-// Orquesta el Bloque B completo (sección 3 de la spec): Matrices → Rotación → Secuencias,
+// Orquesta el Bloque B completo (sección 3 de la spec): Matrices → Series → Pliegues → Secuencias,
 // en orden fijo, despachando cada respuesta al store para su sync posterior con Supabase.
+// Series se inserta justo después de Matrices porque ambos son juegos "de tablero/ítem único"
+// (grilla o serie + 5 alternativas, sin límite de tiempo apretado), antes de los juegos
+// espaciales (Pliegues y Secuencias).
 export function BloqueCognitivo({ onCompletar, onPausar }: Props) {
   const [juego, setJuego] = useState<Juego>("matrices");
   const sessionId = useExperienciaStore((s) => s.sessionId);
@@ -38,14 +43,29 @@ export function BloqueCognitivo({ onCompletar, onPausar }: Props) {
         repetidoPorTimeout: false,
       });
     });
-    setJuego("rotacion");
+    setJuego("series");
+  }
+
+  function registrarSeries(resultados: ResultadoSeries[]) {
+    resultados.forEach((r) => {
+      const item = itemsSeries.find((i) => i.id === r.itemId);
+      agregarRespuestaCognitivo({
+        juego: "series",
+        itemId: r.itemId,
+        correcto: r.correcto,
+        nivel: item ? NIVEL_POR_DIFICULTAD[item.dificultad] : 1,
+        duracionMs: r.duracionMs,
+        repetidoPorTimeout: false,
+      });
+    });
+    setJuego("pliegues");
   }
 
   function registrarRotacion(resultados: ResultadoRotacion[]) {
     resultados.forEach((r) => {
       const item = itemsRotacion.find((i) => i.id === r.itemId);
       agregarRespuestaCognitivo({
-        juego: "rotacion",
+        juego: "pliegues",
         itemId: r.itemId,
         correcto: r.correcto,
         nivel: item ? NIVEL_POR_DIFICULTAD[item.dificultad] : 1,
@@ -94,7 +114,9 @@ export function BloqueCognitivo({ onCompletar, onPausar }: Props) {
   const contenido =
     juego === "matrices" ? (
       <BloqueMatrices onCompletar={registrarMatrices} />
-    ) : juego === "rotacion" ? (
+    ) : juego === "series" ? (
+      <BloqueSeries onCompletar={registrarSeries} />
+    ) : juego === "pliegues" ? (
       <BloqueRotacion onCompletar={registrarRotacion} />
     ) : (
       <BloqueSecuencias onCompletar={registrarSecuencias} />

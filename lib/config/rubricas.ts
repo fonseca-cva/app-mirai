@@ -76,5 +76,34 @@ export const DILEMAS_ARGUMENTACION = [
   "¿Debería Chile priorizar la inversión en transporte público por sobre la construcción de nuevas autopistas?",
 ];
 
+// ── Prompt para expresión escrita ─────────────────────────────────
+export function promptExpresion(consigna: string): string {
+  return `Evalúa la siguiente expresión escrita libre de un/a estudiante ante una consigna.
+
+INSTRUCCIONES:
+- Evalúa SOLO la estructura, riqueza y fluidez de la expresión, NUNCA la opinión del estudiante.
+- No juzgues ortografía ni caligrafía.
+- Clasifica el nivel como: "literal" (enumera ideas sin desarrollo), "inferencial" (desarrolla ideas con detalles o ejemplos), o "critico" (estructura completa, voz propia, conexiones y matices).
+- Asigna un puntaje del 1 al 5 (1=respuesta mínima, 5=expresión rica y bien organizada).
+- Identifica una fortaleza concreta y un área de mejora específica.
+- Responde ESTRICTAMENTE en JSON con el esquema: {"nivel":"literal|inferencial|critico","puntaje":1-5,"fortaleza":"...","area_mejora":"..."}
+- No agregues texto fuera del JSON.
+
+CONSIGNA PRESENTADA:
+${consigna}
+
+RESPUESTA DEL ESTUDIANTE:
+`;
+}
+
+// ── Banco de consignas para expresión escrita ─────────────────────
+// Consignas abiertas, tema neutro, sin respuesta correcta. Rotan por session_id.
+// // CONTENIDO PROVISORIO — pendiente de firma metodológica.
+export const CONSIGNAS_EXPRESION = [
+  "Imagina que mañana te despiertas y todos los colores del mundo se intercambiaron de lugar. ¿Qué crees que pasaría en tu día a día? Cuéntalo con detalles.",
+  "Escribe una historia corta que empiece con esta frase: «Nadie esperaba que el ascensor del colegio llegara al piso 7…»",
+  "¿Cuál es el invento que más ha cambiado la forma de vivir de las personas y por qué? Explica tu elección.",
+];
+
 // ── Límites de rate limiting ──────────────────────────────────────
 export const RATE_LIMIT_POR_SESSION = 6; // máximo 6 llamadas por sesión

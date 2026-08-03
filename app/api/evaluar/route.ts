@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { EvaluacionSchema, promptComprension, promptArgumentacion, TEXTOS_COMPRENSION, DILEMAS_ARGUMENTACION, RATE_LIMIT_POR_SESSION } from "@/lib/config/rubricas";
+import { EvaluacionSchema, promptComprension, promptArgumentacion, promptExpresion, TEXTOS_COMPRENSION, DILEMAS_ARGUMENTACION, CONSIGNAS_EXPRESION, RATE_LIMIT_POR_SESSION } from "@/lib/config/rubricas";
 
 // ── Rate limiter en memoria ───────────────────────────────────────
 const contadorLlamadas = new Map<string, { count: number; resetAt: number }>();
@@ -28,10 +28,11 @@ function checkRateLimit(sessionId: string): boolean {
 // ── Esquema de entrada ────────────────────────────────────────────
 const EvaluarRequestSchema = z.object({
   sessionId: z.string().uuid(),
-  tarea: z.enum(["comprension", "argumentacion"]),
+  tarea: z.enum(["comprension", "argumentacion", "expresion"]),
   texto: z.string().min(1).max(3000),
   indiceTexto: z.number().int().min(0).optional(), // para comprensión: índice del texto base
   indiceDilema: z.number().int().min(0).optional(), // para argumentación: índice del dilema
+  indiceExpresion: z.number().int().min(0).optional(), // para expresión: índice de la consigna
 });
 
 // ── Proveedor de IA (OpenRouter-compatible) ───────────────────────
@@ -104,7 +105,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { sessionId, tarea, texto, indiceTexto, indiceDilema } = parsed.data;
+    const { sessionId, tarea, texto, indiceTexto, indiceDilema, indiceExpresion } = parsed.data;
 
     // Rate limit
     if (!checkRateLimit(sessionId)) {
@@ -118,7 +119,9 @@ export async function POST(request: NextRequest) {
     const prompt =
       tarea === "comprension"
         ? promptComprension(TEXTOS_COMPRENSION[indiceTexto ?? 0])
-        : promptArgumentacion(DILEMAS_ARGUMENTACION[indiceDilema ?? 0]);
+        : tarea === "argumentacion"
+          ? promptArgumentacion(DILEMAS_ARGUMENTACION[indiceDilema ?? 0])
+          : promptExpresion(CONSIGNAS_EXPRESION[indiceExpresion ?? 0]);
 
     const promptCompleto = prompt + "\n\n" + texto;
 

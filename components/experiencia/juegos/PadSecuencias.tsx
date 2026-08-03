@@ -1,15 +1,8 @@
-import type { FiguraOrigami } from "@/lib/logic/figuraOrigami";
-import { FiguraOrigamiSVG } from "@/components/experiencia/juegos/FiguraOrigamiSVG";
+import { IconoOrigamiSVG, type TipoOrigami } from "@/components/experiencia/juegos/IconoOrigamiSVG";
 
-// 6 símbolos fijos (sección 3.3): distintos en número de lados, no dependen del color.
-const SIMBOLOS: FiguraOrigami[] = [
-  { lados: 3, rotacionDeg: 0, relleno: 0, pliegues: 1 },
-  { lados: 4, rotacionDeg: 45, relleno: 0, pliegues: 1 },
-  { lados: 5, rotacionDeg: 0, relleno: 0, pliegues: 1 },
-  { lados: 6, rotacionDeg: 30, relleno: 0, pliegues: 1 },
-  { lados: 7, rotacionDeg: 0, relleno: 0, pliegues: 1 },
-  { lados: 8, rotacionDeg: 22.5, relleno: 0, pliegues: 1 },
-];
+// 6 objetos origami fijos (sección 3.3): reconocibles a simple vista y distinguibles entre
+// sí por su silueta (forma), nunca por color.
+const SIMBOLOS: TipoOrigami[] = ["grulla", "barco", "flor", "estrella", "casa", "pez"];
 
 interface Props {
   simboloResaltado: number | null;
@@ -24,12 +17,12 @@ export function PadSecuencias({ simboloResaltado, deshabilitado, onTocar }: Prop
         deshabilitado ? "opacity-30" : "opacity-100"
       }`}
     >
-      {SIMBOLOS.map((figura, i) => (
+      {SIMBOLOS.map((tipo, i) => (
         <button
           key={i}
           onClick={() => onTocar(i)}
           disabled={deshabilitado}
-          aria-label={`Símbolo ${i + 1}`}
+          aria-label={`Símbolo ${i + 1}: ${tipo}`}
           aria-pressed={simboloResaltado === i}
           className={`flex h-20 w-20 min-h-[44px] min-w-[44px] items-center justify-center rounded-[14px] border-2 bg-blanco-papel/70 transition disabled:cursor-default ${
             simboloResaltado === i
@@ -37,7 +30,7 @@ export function PadSecuencias({ simboloResaltado, deshabilitado, onTocar }: Prop
               : "border-tinta/15 enabled:hover:border-teal-medio"
           }`}
         >
-          <FiguraOrigamiSVG figura={figura} tamano={48} titulo={`Símbolo ${i + 1}`} />
+          <IconoOrigamiSVG tipo={tipo} tamano={48} titulo={`Símbolo ${i + 1}: ${tipo}`} />
         </button>
       ))}
     </div>

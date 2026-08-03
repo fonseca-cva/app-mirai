@@ -1,54 +1,61 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { itemsRotacion, itemPracticaPlegado, itemPracticaPlegado2 } from "@/lib/data/rotacion";
-import { bloqueRotacion, juegosCognitivos } from "@/lib/config/textos";
-import { ItemRotacion, type ResultadoItemRotacion } from "@/components/experiencia/juegos/ItemRotacion";
+import { itemsSeries, itemPracticaSeries, itemPracticaSeries2 } from "@/lib/data/series";
+import { bloqueSeries, juegosCognitivos } from "@/lib/config/textos";
+import { ItemSerie, type ResultadoItemSerie } from "@/components/experiencia/juegos/ItemSerie";
 import { FoldTransition } from "@/components/origami/FoldTransition";
-import { DemoPlegado } from "@/components/experiencia/tutorial/Demos";
-import { PracticaRotacion } from "@/components/experiencia/tutorial/PracticaRotacion";
+import { DemoSeries } from "@/components/experiencia/tutorial/Demos";
+import { PracticaSeries } from "@/components/experiencia/tutorial/PracticaSeries";
 import { AyudaOverlay } from "@/components/experiencia/tutorial/AyudaOverlay";
 import { BotonSaltarTutorial } from "@/components/experiencia/tutorial/BotonSaltarTutorial";
 import { useTutorial } from "@/components/experiencia/tutorial/useTutorial";
 import { useExperienciaStore } from "@/lib/store/experiencia";
 
-export interface ResultadoRotacion {
+export interface ResultadoSeries {
   itemId: string;
   correcto: boolean;
   duracionMs: number;
 }
 
 interface Props {
-  onCompletar: (resultados: ResultadoRotacion[]) => void;
+  onCompletar: (resultados: ResultadoSeries[]) => void;
 }
 
 // Imagen estática del juego para la pantalla de propósito (sin animación).
-function ImagenEstaticaPlegado() {
+// Serie fija de referencia: +3 cada paso.
+function ImagenEstaticaSeries() {
+  const elementos = ["2", "5", "8", "11", "?"];
   return (
-    <svg width={90} height={90} viewBox="0 0 80 80">
-      <polygon
-        points="40,10 65,20 60,55 30,65 15,40"
-        fill="var(--color-teal-medio)"
-        stroke="var(--color-teal-profundo)"
-        strokeWidth={2}
-        strokeLinejoin="round"
-      />
-    </svg>
+    <div className="flex items-center justify-center gap-2 rounded-[14px] bg-gris-papel/60 p-3">
+      {elementos.map((s, i) => (
+        <div
+          key={i}
+          className={`flex h-14 w-14 items-center justify-center rounded-[10px] font-display text-lg font-semibold tracking-tight sm:h-16 sm:w-16 ${
+            i === elementos.length - 1
+              ? "border-2 border-dashed border-tinta/30 bg-blanco-papel/70 text-tinta/40"
+              : "bg-blanco-papel/70"
+          }`}
+        >
+          {s}
+        </div>
+      ))}
+    </div>
   );
 }
 
-// Orquesta "Pliegues en el espacio": tutorial (propósito + demo en loop + 2 prácticas) → 7 ítems reales.
-export function BloqueRotacion({ onCompletar }: Props) {
+// Orquesta el juego de Series completo: tutorial (propósito + demo en loop + 2 prácticas) → 8 ítems reales.
+export function BloqueSeries({ onCompletar }: Props) {
   const [indice, setIndice] = useState(0);
-  const [resultados, setResultados] = useState<ResultadoRotacion[]>([]);
+  const [resultados, setResultados] = useState<ResultadoSeries[]>([]);
   const [ayudaAbierta, setAyudaAbierta] = useState(false);
   const sessionId = useExperienciaStore((s) => s.sessionId);
   const sincronizarBloque = useExperienciaStore((s) => s.sincronizarBloque);
   const enviadoTutorialRef = useRef(false);
 
   const tutorial = useTutorial([
-    { indiceCorrecto: itemPracticaPlegado.indiceCorrecto },
-    { indiceCorrecto: itemPracticaPlegado2.indiceCorrecto },
+    { indiceCorrecto: itemPracticaSeries.indiceCorrecto },
+    { indiceCorrecto: itemPracticaSeries2.indiceCorrecto },
   ]);
 
   useEffect(() => {
@@ -56,11 +63,11 @@ export function BloqueRotacion({ onCompletar }: Props) {
     enviadoTutorialRef.current = true;
     const r = tutorial.resultado();
     sincronizarBloque([{
-      id: `tutorial-${sessionId}-rotacion`,
+      id: `tutorial-${sessionId}-series`,
       tipo: "tutorial",
       payload: {
         session_id: sessionId,
-        juego: "pliegues" as const,
+        juego: "series" as const,
         tutorial_visto: r.tutorialVisto,
         practica_dominada: r.practicaDominada,
         demo_loops_vistos: r.ciclosDemo,
@@ -75,14 +82,14 @@ export function BloqueRotacion({ onCompletar }: Props) {
     return (
       <section className="flex min-h-screen flex-col items-center justify-center gap-6 px-4 text-center sm:px-8">
         <BotonSaltarTutorial onSaltar={tutorial.saltarTutorial} />
-        <h1 className="font-display text-2xl font-semibold">{bloqueRotacion.titulo}</h1>
-        <p className="text-sm text-tinta/60">{bloqueRotacion.fraseFuerza}</p>
-        <ImagenEstaticaPlegado />
+        <h1 className="font-display text-2xl font-semibold">{bloqueSeries.titulo}</h1>
+        <p className="text-sm text-tinta/60">{bloqueSeries.fraseFuerza}</p>
+        <ImagenEstaticaSeries />
         <button
           onClick={tutorial.verComoFunciona}
           className="rounded-[14px] bg-coral px-6 py-3 text-base font-medium text-blanco-papel transition hover:opacity-90"
         >
-          {bloqueRotacion.tutorial.propositoCta}
+          {bloqueSeries.tutorial.propositoCta}
         </button>
       </section>
     );
@@ -93,7 +100,7 @@ export function BloqueRotacion({ onCompletar }: Props) {
     return (
       <section className="flex min-h-screen flex-col items-center justify-center gap-6 px-4 text-center sm:px-8">
         <BotonSaltarTutorial onSaltar={tutorial.saltarTutorial} />
-        <DemoPlegado onCicloCompletado={tutorial.registrarCicloDemo} />
+        <DemoSeries onCicloCompletado={tutorial.registrarCicloDemo} />
         <div className="flex gap-3">
           <button
             onClick={tutorial.atrasDemo}
@@ -105,7 +112,7 @@ export function BloqueRotacion({ onCompletar }: Props) {
             onClick={tutorial.continuarAPractica}
             className="rounded-[14px] bg-coral px-6 py-3 text-base font-medium text-blanco-papel transition hover:opacity-90"
           >
-            {bloqueRotacion.tutorial.demoContinuarCta}
+            {bloqueSeries.tutorial.demoContinuarCta}
           </button>
         </div>
       </section>
@@ -114,13 +121,13 @@ export function BloqueRotacion({ onCompletar }: Props) {
 
   // Pantalla 3 — práctica
   if (tutorial.fase === "practica-1" || tutorial.fase === "practica-2") {
-    const item = tutorial.fase === "practica-1" ? itemPracticaPlegado : itemPracticaPlegado2;
+    const item = tutorial.fase === "practica-1" ? itemPracticaSeries : itemPracticaSeries2;
     return (
       <section className="flex min-h-screen flex-col items-center justify-center gap-4 px-4 sm:px-8">
         <BotonSaltarTutorial onSaltar={tutorial.saltarTutorial} />
         <p className="text-sm font-medium text-teal-profundo">{juegosCognitivos.practicaAviso}</p>
-        <p className="max-w-md text-sm text-tinta/60">{bloqueRotacion.instrucciones}</p>
-        <PracticaRotacion item={item} onRespuesta={tutorial.responder} />
+        <p className="max-w-md text-sm text-tinta/60">{bloqueSeries.instrucciones}</p>
+        <PracticaSeries item={item} onRespuesta={tutorial.responder} />
       </section>
     );
   }
@@ -131,7 +138,7 @@ export function BloqueRotacion({ onCompletar }: Props) {
       <section className="flex min-h-screen flex-col items-center justify-center gap-4 px-4 text-center sm:px-8">
         <BotonSaltarTutorial onSaltar={tutorial.saltarTutorial} />
         <div className="w-full max-w-md rounded-[20px] border-2 border-teal-profundo/30 bg-teal-profundo/5 p-6">
-          <p className="text-sm font-medium text-teal-profundo">{bloqueRotacion.tutorial.practicaAcierto}</p>
+          <p className="text-sm font-medium text-teal-profundo">{bloqueSeries.tutorial.practicaAcierto}</p>
         </div>
         <button
           onClick={tutorial.continuarTrasAcierto}
@@ -149,8 +156,8 @@ export function BloqueRotacion({ onCompletar }: Props) {
       <section className="flex min-h-screen flex-col items-center justify-center gap-4 px-4 text-center sm:px-8">
         <BotonSaltarTutorial onSaltar={tutorial.saltarTutorial} />
         <div className="w-full max-w-md rounded-[20px] border-2 border-coral/30 bg-coral/5 p-6">
-          <p className="text-sm font-medium text-coral">{bloqueRotacion.tutorial.practicaFalloMensaje}</p>
-          <p className="mt-2 text-sm text-tinta/60">{bloqueRotacion.tutorial.practicaFeedback}</p>
+          <p className="text-sm font-medium text-coral">{bloqueSeries.tutorial.practicaFalloMensaje}</p>
+          <p className="mt-2 text-sm text-tinta/60">{bloqueSeries.tutorial.practicaFeedback}</p>
         </div>
         <button
           onClick={tutorial.cerrarFeedback}
@@ -166,27 +173,27 @@ export function BloqueRotacion({ onCompletar }: Props) {
   if (tutorial.fase === "transicion") {
     return (
       <section className="flex min-h-screen flex-col items-center justify-center gap-6 px-4 text-center sm:px-8">
-        <p className="font-display text-xl text-tinta/80">{bloqueRotacion.tutorial.transicion}</p>
+        <p className="font-display text-xl text-tinta/80">{bloqueSeries.tutorial.transicion}</p>
         <button
           onClick={tutorial.completar}
           className="rounded-[14px] bg-coral px-6 py-3 text-base font-medium text-blanco-papel transition hover:opacity-90"
         >
-          {bloqueRotacion.comenzarCta}
+          {bloqueSeries.comenzarCta}
         </button>
       </section>
     );
   }
 
   // ── Ítems reales ──
-  const itemActual = itemsRotacion[indice];
+  const itemActual = itemsSeries[indice];
 
-  function registrarResultado(resultado: ResultadoItemRotacion) {
-    const nuevos: ResultadoRotacion[] = [
+  function registrarResultado(resultado: ResultadoItemSerie) {
+    const nuevos: ResultadoSeries[] = [
       ...resultados,
       { itemId: itemActual.id, correcto: resultado.correcto, duracionMs: resultado.duracionMs },
     ];
 
-    if (indice + 1 >= itemsRotacion.length) {
+    if (indice + 1 >= itemsSeries.length) {
       onCompletar(nuevos);
       return;
     }
@@ -197,10 +204,11 @@ export function BloqueRotacion({ onCompletar }: Props) {
 
   return (
     <section className="flex min-h-screen flex-col items-center justify-center gap-4 px-4 sm:px-8">
+      {/* Botón ayuda */}
       <button
         onClick={() => setAyudaAbierta(true)}
         className="fixed left-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-blanco-papel/90 text-sm font-bold text-tinta/50 shadow-sm transition hover:text-tinta/80"
-        aria-label={bloqueRotacion.tutorial.demoSaltar}
+        aria-label={bloqueSeries.tutorial.demoSaltar}
         title="?"
       >
         ?
@@ -208,12 +216,12 @@ export function BloqueRotacion({ onCompletar }: Props) {
 
       <AyudaOverlay
         abierto={ayudaAbierta}
-        resumen={bloqueRotacion.tutorial.ayudaResumen}
+        resumen={bloqueSeries.tutorial.ayudaResumen}
         onCerrar={() => setAyudaAbierta(false)}
       />
 
       <FoldTransition llave={itemActual.id}>
-        <ItemRotacion item={itemActual} onResponder={registrarResultado} pausado={ayudaAbierta} />
+        <ItemSerie item={itemActual} onResponder={registrarResultado} pausado={ayudaAbierta} />
       </FoldTransition>
     </section>
   );

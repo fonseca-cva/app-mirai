@@ -8,6 +8,7 @@ import { ResultadoParcial } from "@/components/experiencia/ResultadoParcial";
 import { FoldTransition } from "@/components/origami/FoldTransition";
 import { BloqueCognitivo } from "@/components/experiencia/juegos/BloqueCognitivo";
 import { BloqueVerbal } from "@/components/experiencia/verbal/BloqueVerbal";
+import { BloqueDivergente } from "@/components/experiencia/divergente/BloqueDivergente";
 import { Informe } from "@/components/experiencia/Informe";
 import { useAudioAmbiente } from "@/components/experiencia/useAudioAmbiente";
 import { contextos } from "@/lib/data/contextos";
@@ -122,7 +123,11 @@ export default function ExperienciaPage() {
   }
 
   if (paso === "verbal") {
-    return <BloqueVerbal onCompletar={() => irAPaso("informe")} onPausar={pausar} />;
+    return <BloqueVerbal onCompletar={() => irAPaso("divergente")} onPausar={pausar} />;
+  }
+
+  if (paso === "divergente") {
+    return <BloqueDivergente onCompletar={() => irAPaso("informe")} onPausar={pausar} />;
   }
 
   if (paso === "informe") {

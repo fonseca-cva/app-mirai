@@ -29,7 +29,7 @@ export interface RespuestaGustoRow {
 export interface RespuestaCognitivoRow {
   id?: number;
   session_id: string;
-  juego: "matrices" | "rotacion" | "secuencias";
+  juego: "matrices" | "series" | "pliegues" | "secuencias";
   item_id: string;
   correcto: boolean;
   nivel: number;
@@ -42,12 +42,24 @@ export interface RespuestaCognitivoRow {
 export interface RespuestaVerbalRow {
   id?: number;
   session_id: string;
-  tarea: "comprension" | "argumentacion";
+  tarea: "comprension" | "argumentacion" | "expresion";
   texto: string;
   evaluacion_json: EvaluacionVerbal | null;
   estado: "pendiente" | "evaluado" | "error";
   creado_en?: string;
   evaluado_en?: string | null;
+  user_id?: string;
+}
+
+// Tabla respuestas_divergente (migración 00008) — bloque EXPLORATORIO (NO REPORTAR en v1).
+// user_id es opcional porque la columna tiene DEFAULT auth.uid(): el cliente no lo envía.
+export interface RespuestaDivergenteRow {
+  id?: number;
+  session_id: string;
+  objeto: string;
+  respuestas_texto: string[];
+  cantidad: number;
+  creado_en?: string;
   user_id?: string;
 }
 
@@ -74,14 +86,14 @@ export interface PerfilResultado {
     memoria: number; // 0-100
     comunicacion: number; // 0-100 (desde verbal)
   };
-  areasCarreras: string[];
+  carrerasRecomendadas: string[]; // ids de carreras curadas (lib/data/carreras.ts)
   generado_en: string;
 }
 
 export interface TutorialEstadoRow {
   id?: number;
   session_id: string;
-  juego: "matrices" | "rotacion" | "secuencias";
+  juego: "matrices" | "series" | "pliegues" | "secuencias";
   tutorial_visto: boolean;
   practica_dominada: boolean | null;
   demo_loops_vistos: number;

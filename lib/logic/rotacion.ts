@@ -5,46 +5,12 @@ export interface Punto {
   y: number;
 }
 
-// -- Tipo (a): rotación mental. Alternativas: 1 pieza rotada (correcta) + 3 espejadas. --
-export interface AlternativaRotacion {
-  anguloDeg: number;
-  espejada: boolean;
-}
-
-export interface ItemRotacionMental {
-  id: string;
-  tipo: "rotacion";
-  dificultad: DificultadRotacion;
-  anguloReferencia: number;
-  alternativas: AlternativaRotacion[];
-  indiceCorrecto: number;
-}
-
 function ordenPorSemilla<T>(items: T[], semilla: string): T[] {
   const offset = semilla.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) % items.length;
   return [...items.slice(offset), ...items.slice(0, offset)];
 }
 
-export function generarItemRotacionMental(
-  id: string,
-  dificultad: DificultadRotacion,
-  anguloReferencia: number,
-  anguloCorrecto: number,
-  offsetsEspejados: [number, number, number]
-): ItemRotacionMental {
-  const correcta: AlternativaRotacion = { anguloDeg: anguloCorrecto, espejada: false };
-  const distractores: AlternativaRotacion[] = offsetsEspejados.map((offset) => ({
-    anguloDeg: (anguloCorrecto + offset + 360) % 360,
-    espejada: true,
-  }));
-
-  const alternativas = ordenPorSemilla([correcta, ...distractores], id);
-  const indiceCorrecto = alternativas.findIndex((a) => a === correcta);
-
-  return { id, tipo: "rotacion", dificultad, anguloReferencia, alternativas, indiceCorrecto };
-}
-
-// -- Tipo (b): plegado. Soporta 1 o más pliegues secuenciales y 1 o más perforaciones. --
+// -- Plegado. Soporta 1 o más pliegues secuenciales y 1 o más perforaciones. --
 // Al desplegar, CADA punto original se refleja a través de CADA pliegue en secuencia.
 // El resultado final son 2ⁿ puntos (n = número de pliegues) por cada punto original:
 //   p → reflejar(p, eje₁) → reflejar(reflejar(p, eje₁), eje₂) → ...
@@ -215,4 +181,4 @@ export function generarItemPlegado(
   return { id, tipo: "plegado", dificultad, pliegues, puntos, alternativas: todasLasAlternativas, indiceCorrecto };
 }
 
-export type ItemRotacionBloque = ItemRotacionMental | ItemPlegado;
+export type ItemRotacionBloque = ItemPlegado;
