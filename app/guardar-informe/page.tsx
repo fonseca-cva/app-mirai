@@ -13,16 +13,17 @@
 // usuario escribió; nada identificable vive en la URL.
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase/client";
+import { obtenerAccessToken, supabase } from "@/lib/supabase/client";
 import { guardarCuenta } from "@/lib/config/textos";
 import { sanitizarApodo } from "@/lib/logic/cuenta";
 
 const UID_ANONIMO_KEY = "mirai_uid_anonimo";
 const APODO_PENDIENTE_KEY = "mirai_apodo_pendiente";
+const SESION_ID_KEY = "mirai_sesion_id";
 
 type Estado =
   | { fase: "cargando" }
-  | { fase: "vinculado"; apodo: string | null }
+  | { fase: "vinculado"; apodo: string | null; enlace: "enviando" | "enviado" | "error" | null }
   | { fase: "cuentaExistente" }
   | { fase: "invalido" };
 
@@ -52,15 +53,36 @@ export default function GuardarInformePage() {
 
       if (uidAnonimo && sesion.user.id === uidAnonimo) {
         // Misma cuenta (el uid no cambió): conversión exitosa, los datos quedan.
-        if (apodoPendiente) {
-          const apodo = sanitizarApodo(apodoPendiente);
-          if (apodo) {
-            await supabase.auth.updateUser({ data: { apodo } });
-          }
+        const apodoLimpio = apodoPendiente ? sanitizarApodo(apodoPendiente) : null;
+        if (apodoLimpio) {
+          await supabase.auth.updateUser({ data: { apodo: apodoLimpio } });
         }
         sessionStorage.removeItem(UID_ANONIMO_KEY);
         sessionStorage.removeItem(APODO_PENDIENTE_KEY);
-        if (activo) setEstado({ fase: "vinculado", apodo: apodoPendiente ? sanitizarApodo(apodoPendiente) : null });
+
+        // Tanda B: envío del correo con el enlace permanente (/informe/[token]).
+        // Solo si conocemos la sesión que generó este informe (mismo navegador).
+        // Si falla, la cuenta quedó vinculada igual: el informe no se pierde.
+        const sesionId = sessionStorage.getItem(SESION_ID_KEY);
+        sessionStorage.removeItem(SESION_ID_KEY);
+        if (activo) setEstado({ fase: "vinculado", apodo: apodoLimpio, enlace: sesionId ? "enviando" : null });
+
+        if (sesionId) {
+          try {
+            const token = await obtenerAccessToken();
+            if (!token) throw new Error("sin sesión");
+            const respuesta = await fetch("/api/enviar-informe-permanente", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+              body: JSON.stringify({ sessionId: sesionId }),
+            });
+            if (activo) {
+              setEstado({ fase: "vinculado", apodo: apodoLimpio, enlace: respuesta.ok ? "enviado" : "error" });
+            }
+          } catch {
+            if (activo) setEstado({ fase: "vinculado", apodo: apodoLimpio, enlace: "error" });
+          }
+        }
         return;
       }
 
@@ -87,6 +109,9 @@ export default function GuardarInformePage() {
         <>
           <h1 className="font-display text-2xl font-semibold">{guardarCuenta.vinculado(estado.apodo)}</h1>
           <p className="text-base text-tinta/60">{guardarCuenta.vinculadoDetalle}</p>
+          {estado.enlace === "enviando" && <p className="text-sm text-tinta/60">{guardarCuenta.enviandoEnlace}</p>}
+          {estado.enlace === "enviado" && <p className="text-sm text-salvia">{guardarCuenta.enlaceEnviado}</p>}
+          {estado.enlace === "error" && <p className="text-sm text-tinta/70">{guardarCuenta.enlaceError}</p>}
         </>
       )}
       {estado.fase === "cuentaExistente" && (

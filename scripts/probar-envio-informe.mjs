@@ -1,32 +1,41 @@
-// Prueba de envío REAL de informe por correo (Fase 3, Paso 3).
-// Exigida por Camilo antes del merge: crea una sesión anónima real, un resultado
-// y un registro de correo, y llama a /api/enviar-informe contra un `next dev` local
-// (que sí tiene RESEND_API_KEY real vía .env.local) para confirmar que Resend envía
-// el correo de verdad, no la rama de simulación.
+// Prueba de envío REAL del correo del informe permanente (Tanda B).
+// Verifica el flujo completo nuevo: sesión anónima → resultado con token →
+// conversión de cuenta (enlace mágico) → POST /api/enviar-informe-permanente
+// con el enlace /informe/[token] contra un `next dev` local (que sí tiene
+// RESEND_API_KEY real vía .env.local) para confirmar que Resend envía de verdad,
+// no la rama de simulación.
+//
+// El correo destinatario es el de la cuenta tras la conversión (auth), así que
+// este script requiere el paso humano de abrir el enlace de confirmación (igual
+// que verificar-conversion-cuenta.mjs).
 //
 // Uso:
-//   node --env-file=.env.local scripts/probar-envio-informe.mjs <email-destino> [base-url]
-// Requiere un `next dev` corriendo en base-url (default http://localhost:3000).
+//   EMAIL_PRUEBA=correo@descartable.cl node --env-file=.env.local scripts/probar-envio-informe.mjs [base-url]
+// Requiere: migraciones 00012 y 00013 aplicadas, proveedor de email en Supabase,
+// un `next dev` corriendo en base-url (default http://localhost:3000).
 
 import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "node:crypto";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const emailDestino = process.argv[2];
-const baseUrl = process.argv[3] ?? "http://localhost:3000";
+const emailDestino = process.env.EMAIL_PRUEBA;
+const baseUrl = process.argv[2] ?? "http://localhost:3000";
+const redirectUrl = process.env.REDIRECT_URL ?? "http://localhost:3000/guardar-informe";
+const esperaMs = Number(process.env.MIRA_ESPERA_MS ?? 180000);
 
 if (!url || !anonKey) {
   console.error("Faltan NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY en el entorno.");
   process.exit(1);
 }
 if (!emailDestino) {
-  console.error("Uso: node --env-file=.env.local scripts/probar-envio-informe.mjs <email-destino> [base-url]");
+  console.error("Uso: EMAIL_PRUEBA=correo@descartable.cl node --env-file=.env.local scripts/probar-envio-informe.mjs [base-url]");
   process.exit(1);
 }
 
 const cliente = createClient(url, anonKey);
 
+// ── 1) Sesión anónima + filas de prueba ─────────────────────────────
 const { data: auth, error: authError } = await cliente.auth.signInAnonymously();
 if (authError || !auth.user || !auth.session) {
   console.error("No se pudo crear sesión anónima:", authError);
@@ -50,46 +59,74 @@ const perfilJson = {
     { codigo: "A", etiqueta: "Artístico", puntaje: 74 },
     { codigo: "S", etiqueta: "Social", puntaje: 61 },
   ],
-  capacidades: { patrones: 80, espacial: 65, memoria: 72, comunicacion: 78 },
-  areasCarreras: ["Ingeniería", "Diseño", "Psicología"],
+  capacidades: { patrones: 80, numerico: 60, espacial: 65, memoria: 72, comunicacion: 78 },
+  carrerasRecomendadas: ["medicina", "enfermeria", "psicologia"],
   generado_en: new Date(0).toISOString(),
 };
 
-const { error: resultadoError } = await cliente
+const { data: resultado, error: resultadoError } = await cliente
   .from("resultados")
-  .insert({ session_id: sessionId, perfil_json: perfilJson });
-if (resultadoError) {
-  console.error("Error creando resultado:", resultadoError.message);
+  .insert({ session_id: sessionId, perfil_json: perfilJson })
+  .select("token")
+  .single();
+if (resultadoError || !resultado?.token) {
+  console.error("Error creando resultado (¿migración 00013 aplicada?):", resultadoError?.message);
   process.exit(1);
 }
-console.log("✅ Resultado de prueba creado");
+console.log(`✅ Resultado de prueba creado — token=${resultado.token}`);
 
-const { error: correoError } = await cliente
-  .from("correos_informe")
-  .insert({ session_id: sessionId, email: emailDestino });
-if (correoError) {
-  console.error("Error registrando correo:", correoError.message);
-  process.exit(1);
+// ── 2) Conversión: vincular el correo (mismo uid) ───────────────────
+const { error: updateError } = await cliente.auth.updateUser({
+  email: emailDestino,
+  options: { emailRedirectTo: redirectUrl },
+});
+if (updateError) {
+  console.error(
+    `\n❌ updateUser({ email }) falló: ${updateError.message}\n` +
+    "Posibles causas: el correo ya pertenece a otra cuenta (usa uno desechable nuevo) " +
+    "o el proyecto no tiene proveedor de email configurado."
+  );
+  process.exit(2);
 }
-console.log(`✅ Correo registrado para envío — destino=${emailDestino}`);
+console.log(`✅ Correo de confirmación enviado — destino=${emailDestino}`);
+console.log(`\n👉 Abre el enlace del correo en un navegador (cualquiera). Esperando confirmación (hasta ${Math.round(esperaMs / 1000)}s)...\n`);
 
+const inicio = Date.now();
+let confirmado = false;
+while (Date.now() - inicio < esperaMs) {
+  const { data, error } = await cliente.auth.getUser();
+  if (!error && data.user && data.user.email === emailDestino && data.user.email_confirmed_at) {
+    confirmado = true;
+    break;
+  }
+  await new Promise((r) => setTimeout(r, 3000));
+}
+if (!confirmado) {
+  console.error("\n❌ No se confirmó la vinculación del correo a tiempo.");
+  process.exit(2);
+}
+console.log("✅ Cuenta vinculada — correo confirmado");
+
+// ── 3) Llamada al route del envío (Bearer + sessionId) ──────────────
+const { data: sesion } = await cliente.auth.getSession();
 const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
 
-const respuesta = await fetch(`${baseUrl}/api/enviar-informe`, {
+const respuesta = await fetch(`${baseUrl}/api/enviar-informe-permanente`, {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
-    Authorization: `Bearer ${auth.session.access_token}`,
+    Authorization: `Bearer ${sesion.session.access_token}`,
     ...(bypassSecret ? { "x-vercel-protection-bypass": bypassSecret } : {}),
   },
   body: JSON.stringify({ sessionId }),
 });
 
 const cuerpo = await respuesta.json().catch(() => null);
-console.log(`\nPOST /api/enviar-informe → ${respuesta.status}`, cuerpo);
+console.log(`\nPOST /api/enviar-informe-permanente → ${respuesta.status}`, cuerpo);
 
 if (respuesta.ok && cuerpo?.estado === "enviado") {
-  console.log(`\n✅ Envío reportado como exitoso. Revisa la bandeja de ${emailDestino}.`);
+  console.log(`\n✅ Envío reportado como exitoso. Revisa la bandeja de ${emailDestino}:`);
+  console.log(`   el correo debe contener el enlace ${baseUrl}/informe/${resultado.token}`);
   process.exit(0);
 } else {
   console.error("\n❌ El envío falló o no fue confirmado.");

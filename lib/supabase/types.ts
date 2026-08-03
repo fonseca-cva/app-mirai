@@ -115,11 +115,25 @@ export interface PerfilResultado {
   dimensionTop3: Array<{ codigo: string; etiqueta: string; puntaje: number }>;
   capacidades: {
     patrones: number; // 0-100
+    numerico?: number; // 0-100 (puntaje de Series; opcional: filas previas no lo tenían)
     espacial: number; // 0-100
     memoria: number; // 0-100
     comunicacion: number; // 0-100 (desde verbal)
   };
   carrerasRecomendadas: string[]; // ids de carreras curadas (lib/data/carreras.ts)
+  generado_en: string;
+  // Tanda B — reconstrucción del informe desde la fila guardada (/informe/[token]).
+  // Opcionales: las filas anteriores no los tienen y el modo estático renderiza
+  // defensivo ante perfiles viejos (mismo criterio de retrocompatibilidad).
+  aspiracion?: { opcion: string } | null;
+  discrepancia?: { etiquetaGustos: string; etiquetaActividades: string } | null;
+}
+
+// Fila que expone la RPC pública obtener_informe_publico (migración 00013):
+// SOLO las columnas del informe — nunca user_id, session_id ni correo.
+export interface InformePublicoRow {
+  token: string;
+  perfil_json: PerfilResultado;
   generado_en: string;
 }
 

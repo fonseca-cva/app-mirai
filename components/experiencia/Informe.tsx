@@ -7,9 +7,11 @@ import { calcularPuntajesIntegrados, detectarDiscrepancia } from "@/lib/logic/pu
 import { calcularPuntajesCognitivo } from "@/lib/logic/puntajeCognitivo";
 import { recomendarCarreras } from "@/lib/logic/matching";
 import { contextos } from "@/lib/data/contextos";
+import { carreraPorId, type Carrera } from "@/lib/data/carreras";
 import { GruaOrigami } from "@/components/origami/GruaOrigami";
 import { obtenerAccessToken, supabase } from "@/lib/supabase/client";
 import { sanitizarApodo } from "@/lib/logic/cuenta";
+import type { PerfilResultado } from "@/lib/supabase/types";
 
 // --- Helper para convertir puntaje numérico a etiqueta de capacidad ---
 function etiquetaCapacidad(puntaje: number): string {
@@ -21,9 +23,14 @@ function etiquetaCapacidad(puntaje: number): string {
 
 interface Props {
   onVolver?: () => void; // opcional, para cerrar la experiencia
+  // Modo estático (Tanda B): renderiza el informe desde una fila guardada
+  // (/informe/[token]) en vez de calcularlo desde el store. No muestra el
+  // bloque de guardar: la URL permanente ya es el acceso al informe.
+  perfil?: PerfilResultado | null;
 }
 
-export function Informe({ onVolver }: Props) {
+export function Informe({ onVolver, perfil }: Props) {
+  const modoEstatico = !!perfil;
   const [animacionLista, setAnimacionLista] = useState(false);
   const [guardarCorreo, setGuardarCorreo] = useState("");
   const [guardarApodo, setGuardarApodo] = useState("");
@@ -47,12 +54,28 @@ export function Informe({ onVolver }: Props) {
     () => calcularPuntajesIntegrados(respuestasGustos, respuestasActividades, respuestasAsignaturas, aspiracion),
     [respuestasGustos, respuestasActividades, respuestasAsignaturas, aspiracion]
   );
-  const top3 = puntajesDimension.slice(0, 3);
+  const top3 = useMemo(() => {
+    if (perfil) {
+      // La fila guardada usa `codigo`; el render espera `dimension` (misma clave).
+      return perfil.dimensionTop3.map((d) => ({
+        dimension: d.codigo,
+        etiqueta: d.etiqueta,
+        puntaje: d.puntaje,
+      }));
+    }
+    return puntajesDimension.slice(0, 3);
+  }, [perfil, puntajesDimension]);
 
   const discrepancia = useMemo(
-    () => detectarDiscrepancia(respuestasGustos, respuestasActividades, respuestasAsignaturas, aspiracion),
-    [respuestasGustos, respuestasActividades, respuestasAsignaturas, aspiracion]
+    () =>
+      perfil
+        ? (perfil.discrepancia ?? null)
+        : detectarDiscrepancia(respuestasGustos, respuestasActividades, respuestasAsignaturas, aspiracion),
+    [perfil, respuestasGustos, respuestasActividades, respuestasAsignaturas, aspiracion]
   );
+
+  // En modo estático la aspiración viene en la fila guardada (campo opcional).
+  const aspiracionVista = perfil ? (perfil.aspiracion ?? null) : aspiracion;
 
   // Puntaje verbal
   const evaluacionVerbal = respuestasVerbal.find((r) => r.estado === "evaluado" && r.evaluacion);
@@ -60,28 +83,52 @@ export function Informe({ onVolver }: Props) {
     ? (evaluacionVerbal.evaluacion as { puntaje?: number })?.puntaje ?? null
     : null;
 
-  // Normalizar comunicación a 0-100 desde el puntaje de verbal (1-5 → 0-100)
-  const puntajeComunicacion = puntajeVerbal ? Math.round((puntajeVerbal / 5) * 100) : 0;
+  // Normalizar comunicación a 0-100 desde el puntaje de verbal (1-5 → 0-100).
+  // En modo estático el valor viene guardado en la fila.
+  const puntajeComunicacion = useMemo(() => {
+    if (perfil) return perfil.capacidades.comunicacion;
+    return puntajeVerbal ? Math.round((puntajeVerbal / 5) * 100) : 0;
+  }, [perfil, puntajeVerbal]);
 
-  // Puntajes cognitivos
+  // Puntajes cognitivos (matrices/rotación/series/secuencias). En modo estático
+  // se reconstruyen desde la fila; numerico es opcional (filas previas, 0 como
+  // valor defensivo).
   const correctasMatrices = respuestasCognitivo.filter((r) => r.juego === "matrices" && r.correcto).length;
   const correctasRotacion = respuestasCognitivo.filter((r) => r.juego === "pliegues" && r.correcto).length;
   const correctasSeries = respuestasCognitivo.filter((r) => r.juego === "series" && r.correcto).length;
   const secuencias = respuestasCognitivo.filter((r) => r.juego === "secuencias");
   const largoMaximo = Math.max(...secuencias.map((r) => r.nivel), 0);
 
-  const puntajesCognitivo = calcularPuntajesCognitivo(
-    correctasMatrices,
-    correctasRotacion,
-    largoMaximo,
-    puntajeComunicacion,
-    correctasSeries
-  );
+  const puntajesCognitivo = useMemo(() => {
+    if (perfil) {
+      const c = perfil.capacidades;
+      return {
+        patrones: c.patrones,
+        numerico: c.numerico ?? 0,
+        espacial: c.espacial,
+        memoria: c.memoria,
+        comunicacion: c.comunicacion,
+      };
+    }
+    return calcularPuntajesCognitivo(
+      correctasMatrices,
+      correctasRotacion,
+      largoMaximo,
+      puntajeComunicacion,
+      correctasSeries
+    );
+  }, [perfil, correctasMatrices, correctasRotacion, largoMaximo, puntajeComunicacion, correctasSeries]);
 
-  // Carreras recomendadas (matching v2 sobre carreras curadas)
+  // Carreras recomendadas (matching v2 sobre carreras curadas). En modo
+  // estático se reconstruyen desde los ids guardados (carreraPorId).
   const carrerasRecomendadas = useMemo(
-    () => recomendarCarreras(puntajesDimension, puntajesCognitivo),
-    [puntajesDimension, puntajesCognitivo]
+    () =>
+      perfil
+        ? perfil.carrerasRecomendadas
+            .map((id) => ({ carrera: carreraPorId(id) }))
+            .filter((r): r is { carrera: Carrera } => !!r.carrera)
+        : recomendarCarreras(puntajesDimension, puntajesCognitivo),
+    [perfil, puntajesDimension, puntajesCognitivo]
   );
 
   const perfilResultado = useMemo(
@@ -102,13 +149,13 @@ export function Informe({ onVolver }: Props) {
 
   // Bloque D (informe) generado: sync del perfil de resultados, una sola vez por sesión.
   useEffect(() => {
-    if (resultadoSincronizado.current || !sessionId) return;
+    if (modoEstatico || resultadoSincronizado.current || !sessionId) return;
     resultadoSincronizado.current = true;
     sincronizarBloque([
       { id: `resultado-${sessionId}`, tipo: "resultado", payload: { session_id: sessionId, perfil_json: perfilResultado } },
     ]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId, sincronizarBloque]);
+  }, [modoEstatico, sessionId, sincronizarBloque]);
 
   // Tanda A: vincula el correo a la sesión anónima. La conversión usa
   // updateUser({ email }) en el route, que mantiene el MISMO auth.uid(), así que
@@ -123,6 +170,9 @@ export function Informe({ onVolver }: Props) {
       const uidAnonimo = sesionActual.session?.user.id;
       if (!uidAnonimo) throw new Error("sin sesión");
       sessionStorage.setItem("mirai_uid_anonimo", uidAnonimo);
+      // /guardar-informe usa este id para pedir el correo con el enlace
+      // permanente (el token vive en la fila de resultados, RLS por uid).
+      sessionStorage.setItem("mirai_sesion_id", sessionId);
 
       // El apodo no viaja por la red ni a logs: se aplica en /guardar-informe
       // vía updateUser({ data: { apodo } }).
@@ -150,8 +200,9 @@ export function Informe({ onVolver }: Props) {
     }
   };
 
-  // Animación de la grulla: se salta después de 3s o al hacer clic
-  if (!animacionLista) {
+  // Animación de la grulla: se salta después de 3s o al hacer clic.
+  // En modo estático (informe desde /informe/[token]) no hay animación.
+  if (!modoEstatico && !animacionLista) {
     return (
       <section className="flex min-h-screen flex-col items-center justify-center gap-6 px-4 text-center">
         <GruaOrigami className="h-32 w-32" animarEntrada />
@@ -215,11 +266,11 @@ export function Informe({ onVolver }: Props) {
           <li>{informe.fuenteAsignaturas}</li>
           <li>{informe.fuenteAspiracion}</li>
         </ul>
-        {aspiracion && (
+        {aspiracionVista && (
           <p className="mt-2 text-sm text-tinta/70">
             {informe.elegisteAspiracion}{" "}
             <span className="font-medium text-tinta">
-              {bloqueAspiracion.opciones.find((o) => o.valor === aspiracion.opcion)?.label ?? aspiracion.opcion}
+              {bloqueAspiracion.opciones.find((o) => o.valor === aspiracionVista.opcion)?.label ?? aspiracionVista.opcion}
             </span>
           </p>
         )}
@@ -288,7 +339,9 @@ export function Informe({ onVolver }: Props) {
         <p className="text-base leading-relaxed text-tinta/80">{informe.cierre}</p>
       </section>
 
-      {/* 5. Guardar informe (Tanda A): vincula el correo a la sesión anónima */}
+      {/* 5. Guardar informe (Tanda A): vincula el correo a la sesión anónima.
+          No se muestra en modo estático: la URL permanente ya es el acceso. */}
+      {!modoEstatico && (
       <section className="mt-8 rounded-[14px] bg-papel-sombra/30 p-5">
         <h2 className="font-display text-lg font-semibold">{informe.guardarTitulo}</h2>
         <p className="mt-1 text-sm text-tinta/60">{informe.guardarTexto}</p>
@@ -323,6 +376,7 @@ export function Informe({ onVolver }: Props) {
         {guardarEstado === "limite" && <p className="mt-2 text-sm text-red-500">{informe.guardarLimite}</p>}
         {guardarEstado === "error" && <p className="mt-2 text-sm text-red-500">{informe.guardarError}</p>}
       </section>
+      )}
 
       {/* Disclaimer */}
       <p className="mt-12 text-xs text-tinta/40">{informe.disclaimer}</p>

@@ -480,6 +480,10 @@ export const guardarCuenta = {
       : "¡Listo! Tu informe quedó guardado en tu cuenta.", // PENDIENTE PASADA DE COPY
   vinculadoDetalle:
     "Tu informe quedó vinculado a este correo y no se pierde si cierras la pestaña.", // PENDIENTE PASADA DE COPY
+  // Tanda B — envío del correo con el enlace permanente (/informe/[token]).
+  enviandoEnlace: "Preparando el enlace de tu informe…", // PENDIENTE PASADA DE COPY
+  enlaceEnviado: "Te enviamos el enlace permanente a tu correo.", // PENDIENTE PASADA DE COPY
+  enlaceError: "No pudimos enviar el enlace ahora, pero tu informe quedó guardado en tu cuenta.", // PENDIENTE PASADA DE COPY
   cuentaExistente:
     "Este dispositivo ya estaba asociado a otra cuenta Mirai con ese correo.", // PENDIENTE PASADA DE COPY
   cuentaExistenteDetalle:

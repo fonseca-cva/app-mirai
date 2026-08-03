@@ -1,41 +1,32 @@
-// Plantilla del correo transaccional del informe vocacional.
-// Camilo: HTML simple y liviano, texto plano como fallback, sin imágenes pesadas ni trackers.
+// Plantilla del correo del informe permanente (Tanda B).
+// Regla de Camilo: un correo CORTO que lleve al informe — "Tu informe de Mirai
+// está acá: [enlace]". HTML simple y liviano, texto plano de respaldo, sin
+// trackers de apertura (ni pixel, ni imágenes, ni analytics).
 
-import type { PerfilResultado } from "@/lib/supabase/types";
-import { carreraPorId } from "@/lib/data/carreras";
-
-function nombreCarrera(id: string): string {
-  return carreraPorId(id)?.nombre ?? id;
-}
-
-export function construirCorreoInforme(perfil: PerfilResultado): { subject: string; html: string; text: string } {
-  const top3 = perfil.dimensionTop3.map((d) => `${d.etiqueta} (${d.puntaje}%)`);
-  const areas = perfil.carrerasRecomendadas.map(nombreCarrera);
-
-  const subject = "Tu informe vocacional Mirai";
+export function construirCorreoInformePermanente(enlace: string): {
+  subject: string;
+  html: string;
+  text: string;
+} {
+  const subject = "Tu informe de Mirai está acá";
 
   const text = [
-    "Tu informe vocacional Mirai",
+    "Hola,",
     "",
-    "Tus intereses principales:",
-    ...top3.map((t) => `- ${t}`),
+    "Tu informe de Mirai está acá:",
+    enlace,
     "",
-    "Caminos para explorar:",
-    ...areas.map((a) => `- ${a}`),
+    "Guárdalo y míralo cuando quieras. Compártelo solo con quien tú quieras.",
     "",
-    "Este informe es una orientación inicial, no un diagnóstico definitivo.",
+    "Mirai — orientación vocacional con datos, no un veredicto.",
   ].join("\n");
 
   const html = `
     <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; color: #1a1a1a;">
-      <h1 style="font-size: 20px;">Tu informe vocacional Mirai</h1>
-      <h2 style="font-size: 16px; margin-top: 24px;">Tus intereses principales</h2>
-      <ul>${top3.map((t) => `<li>${t}</li>`).join("")}</ul>
-      <h2 style="font-size: 16px; margin-top: 24px;">Caminos para explorar</h2>
-      <ul>${areas.map((a) => `<li>${a}</li>`).join("")}</ul>
-      <p style="font-size: 12px; color: #666; margin-top: 32px;">
-        Este informe es una orientación inicial, no un diagnóstico definitivo.
-      </p>
+      <p>Hola,</p>
+      <p>Tu informe de Mirai está acá:</p>
+      <p><a href="${enlace}" style="color: #e05252;">${enlace}</a></p>
+      <p style="font-size: 12px; color: #666;">Guárdalo y míralo cuando quieras. Compártelo solo con quien tú quieras.</p>
     </div>
   `.trim();
 
