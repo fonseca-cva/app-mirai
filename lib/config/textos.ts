@@ -426,6 +426,7 @@ export const informe = {
   etiquetaCapacidades: (label: string) => `${label}:`, // PENDIENTE PASADA DE COPY
   leyendaCapacidades: {
     patrones: "Patrones",
+    numerico: "Razonamiento numérico",
     espacial: "Espacial",
     memoria: "Memoria",
     comunicacion: "Comunicación",
@@ -445,6 +446,9 @@ export const informe = {
   fuenteAsignaturas: "Asignaturas que te gustan (20%)", // PENDIENTE PASADA DE COPY
   fuenteAspiracion: "Lo que te gustaría hacer después de 4° medio (15%)", // PENDIENTE PASADA DE COPY
   elegisteAspiracion: "Elegiste:", // PENDIENTE PASADA DE COPY
+  discrepanciaTitulo: "Cuando las señales no coinciden", // PENDIENTE PASADA DE COPY
+  discrepanciaTexto: (a: string, b: string) =>
+    `Tus reacciones a los ambientes de trabajo apuntan más hacia ${a}, y tus actividades preferidas apuntan más hacia ${b}. No es un error del test: suele ser la parte más interesante para explorar.`, // PENDIENTE PASADA DE COPY
   cierre:
     "Este es tu primer mapa, no tu destino. Las carreras de hoy son un punto de partida para explorar; la versión profunda agrega datos de empleo e ingresos reales y contenido para recorrer cada camino.", // PENDIENTE PASADA DE COPY
   correoOpcional: "¿Quieres recibir tu informe por correo?", // PENDIENTE PASADA DE COPY
@@ -509,7 +513,7 @@ export const metodologia = {
   capacidades: {
     titulo: "Cómo medimos para qué tienes facilidad",
     cuerpo:
-      "Usamos mini-juegos, pero no cualquier juego. Cada uno está construido sobre un tipo de tarea con décadas de evidencia en psicología cognitiva. Medimos cuatro capacidades: razonamiento con patrones, razonamiento espacial, memoria de trabajo, y comprensión y expresión verbal. Están entre las capacidades con mayor respaldo científico como predictores del desempeño académico posterior, y cada una se mide con su propio tipo de ejercicio: no repetimos la misma prueba con distinta cara.\n\nEl formato de juego cumple una función concreta: reduce la ansiedad de examen, que distorsiona los resultados. La tarea de fondo es la que hace la medición.\n\nDos decisiones importantes: el tiempo no te presiona — medimos precisión y nivel alcanzado, no velocidad — y antes de cada juego hay una práctica que no puntúa, para que nadie sea evaluado mientras todavía está entendiendo las instrucciones.",
+      "Usamos mini-juegos, pero no cualquier juego. Cada uno está construido sobre un tipo de tarea con décadas de evidencia en psicología cognitiva. Medimos cinco capacidades: razonamiento con patrones, razonamiento numérico, razonamiento espacial, memoria de trabajo, y comprensión y expresión verbal. Están entre las capacidades con mayor respaldo científico como predictores del desempeño académico posterior, y cada una se mide con su propio tipo de ejercicio: no repetimos la misma prueba con distinta cara.\n\nEl formato de juego cumple una función concreta: reduce la ansiedad de examen, que distorsiona los resultados. La tarea de fondo es la que hace la medición.\n\nDos decisiones importantes: el tiempo no te presiona — medimos precisión y nivel alcanzado, no velocidad — y antes de cada juego hay una práctica que no puntúa, para que nadie sea evaluado mientras todavía está entendiendo las instrucciones.",
   },
   comprensionExpresion: {
     titulo: "Cómo evaluamos comprensión y expresión",

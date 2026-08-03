@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { contextos } from "@/lib/data/contextos";
 import { actividades } from "@/lib/data/actividades";
 import { asignaturas } from "@/lib/data/asignaturas";
-import { calcularPuntajes, calcularPuntajesIntegrados } from "@/lib/logic/puntaje";
+import { calcularPuntajes, calcularPuntajesIntegrados, detectarDiscrepancia } from "@/lib/logic/puntaje";
 import type { Respuesta, RespuestaActividad } from "@/lib/logic/puntaje";
 
 describe("calcularPuntajes", () => {
@@ -117,5 +117,35 @@ describe("calcularPuntajesIntegrados", () => {
     const etiquetas = resultado.map((r) => r.etiqueta);
     const ordenadas = [...etiquetas].sort((a, b) => a.localeCompare(b, "es"));
     expect(etiquetas).toEqual(ordenadas);
+  });
+});
+
+describe("detectarDiscrepancia", () => {
+  it("retorna null cuando no hay respuestas (ninguna fuente supera el umbral)", () => {
+    expect(detectarDiscrepancia([], [], [], null)).toBeNull();
+  });
+
+  it("retorna null cuando gustos y actividades apuntan a la misma dimensión top", () => {
+    const gustos: Respuesta[] = contextos.map((c) => ({ contextoId: c.id, valor: c.dimension === "cre" ? 2 : 0 }));
+    const act: RespuestaActividad[] = actividades.map((a) => ({
+      actividadId: a.id,
+      valor: a.dimension === "cre" ? 2 : 0,
+    }));
+    expect(detectarDiscrepancia(gustos, act, [], null)).toBeNull();
+  });
+
+  it("retorna la discrepancia cuando gustos y actividades apuntan a dimensiones distintas y fuertes", () => {
+    const gustos: Respuesta[] = contextos.map((c) => ({ contextoId: c.id, valor: c.dimension === "cre" ? 2 : 0 }));
+    const act: RespuestaActividad[] = actividades.map((a) => ({
+      actividadId: a.id,
+      valor: a.dimension === "tec" ? 2 : 0,
+    }));
+    const resultado = detectarDiscrepancia(gustos, act, [], null);
+    expect(resultado).toEqual({
+      dimensionGustos: "cre",
+      etiquetaGustos: expect.any(String),
+      dimensionActividades: "tec",
+      etiquetaActividades: expect.any(String),
+    });
   });
 });

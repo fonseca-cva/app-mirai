@@ -5,9 +5,7 @@
 //   - Intereses: 8 dimensiones ponderadas por el mapeo de área de la carrera
 //     (principal con peso implícito 1 - Σsecundarias; secundarias con su peso).
 //   - Capacidades: perfil cognitivo de la carrera (5 pesos, suma 1.0) × puntajes
-//     del estudiante. 'numerico' usa el puntaje medido de 'patrones': la batería
-//     actual no separa un constructo numérico (reparto numerico/patrones del
-//     Tanda A es solo de datos, PENDIENTE REVALIDACIÓN).
+//     medidos del estudiante (patrones, numérico, espacial, memoria, comunicación).
 //
 // PENDIENTE FIRMA METODOLÓGICA: el peso compuesto (55% intereses / 45% capacidades)
 // es provisorio y se calibrará con datos reales en Fase 3.
@@ -40,13 +38,12 @@ function pesoIntereses(carrera: Carrera, puntajesDimension: PuntajeDimension[]):
 }
 
 // Ajuste por capacidades: perfil cognitivo de la carrera (5 pesos, suma 1.0) por
-// los puntajes medidos del estudiante. 'numerico' comparte el puntaje de 'patrones'
-// (la batería no lo separa aún; ver cabecera del módulo).
+// los puntajes medidos del estudiante.
 function pesoCapacidades(carrera: Carrera, puntajesCognitivo: PuntajesCognitivo): number {
   const { patrones, numerico, espacial, memoria, comunicacion } = carrera.perfilCognitivo;
   const total =
     (patrones ?? 0) * puntajesCognitivo.patrones +
-    (numerico ?? 0) * puntajesCognitivo.patrones +
+    (numerico ?? 0) * puntajesCognitivo.numerico +
     (espacial ?? 0) * puntajesCognitivo.espacial +
     (memoria ?? 0) * puntajesCognitivo.memoria +
     (comunicacion ?? 0) * puntajesCognitivo.comunicacion;

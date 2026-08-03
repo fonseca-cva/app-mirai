@@ -9,7 +9,7 @@ function dimensionMock(codigo: DimensionCodigo, puntaje: number): PuntajeDimensi
   return { dimension: codigo, etiqueta: codigo, puntajeBruto: puntaje, puntajeMaximo: 100, puntaje };
 }
 
-const COGNITIVO_PROMEDIO: PuntajesCognitivo = { patrones: 50, espacial: 50, memoria: 50, comunicacion: 50 };
+const COGNITIVO_PROMEDIO: PuntajesCognitivo = { patrones: 50, numerico: 50, espacial: 50, memoria: 50, comunicacion: 50 };
 
 describe("recomendarCarreras", () => {
   it("retorna 3 carreras incluso con puntajes vacíos", () => {
@@ -67,22 +67,19 @@ describe("recomendarCarreras", () => {
   });
 
   it("capacidad dominante posiciona la carrera con mayor peso cognitivo", () => {
-    const soloEspacial: PuntajesCognitivo = { patrones: 0, espacial: 100, memoria: 0, comunicacion: 0 };
+    const soloEspacial: PuntajesCognitivo = { patrones: 0, numerico: 0, espacial: 100, memoria: 0, comunicacion: 0 };
     const resultado = recomendarCarreras([], soloEspacial);
 
     const maxEspacial = Math.max(...carreras.map((c) => c.perfilCognitivo.espacial ?? 0));
     expect(resultado[0].carrera.perfilCognitivo.espacial).toBe(maxEspacial);
   });
 
-  it("numerico usa el puntaje medido de patrones (batería no lo separa aún)", () => {
-    const soloPatrones: PuntajesCognitivo = { patrones: 100, espacial: 0, memoria: 0, comunicacion: 0 };
-    const resultado = recomendarCarreras([], soloPatrones);
+  it("numerico usa su propio puntaje medido, independiente de patrones", () => {
+    const soloNumerico: PuntajesCognitivo = { patrones: 0, numerico: 100, espacial: 0, memoria: 0, comunicacion: 0 };
+    const resultado = recomendarCarreras([], soloNumerico);
 
-    const maxPatronesNumerico = Math.max(
-      ...carreras.map((c) => (c.perfilCognitivo.patrones ?? 0) + (c.perfilCognitivo.numerico ?? 0))
-    );
-    const topSuma = (resultado[0].carrera.perfilCognitivo.patrones ?? 0) + (resultado[0].carrera.perfilCognitivo.numerico ?? 0);
-    expect(topSuma).toBe(maxPatronesNumerico);
+    const maxNumerico = Math.max(...carreras.map((c) => c.perfilCognitivo.numerico ?? 0));
+    expect(resultado[0].carrera.perfilCognitivo.numerico).toBe(maxNumerico);
   });
 
   it("compone 55% intereses / 45% capacidades", () => {

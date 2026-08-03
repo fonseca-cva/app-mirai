@@ -99,19 +99,37 @@ function puntajeAspiracionPorDimension(opcion: OpcionAspiracion | null): Map<Dim
 // Puntaje integrado de intereses: combina las tres fuentes del pilar con pesos
 // fijos 45/40/15. Misma escala 0-100 y mismos desempates que calcularPuntajes.
 // puntajeBruto conserva la granularidad pre-redondeo (×100) solo para desempates.
+// Puntajes 0-100 por dimensión de las cuatro fuentes, antes de combinarlas.
+// Se expone para poder comparar fuentes entre sí (ver detectarDiscrepancia).
+function calcularFuentes(
+  respuestasGustos: Respuesta[],
+  respuestasActividades: RespuestaActividad[],
+  respuestasAsignaturas: RespuestaAsignatura[],
+  aspiracion: Aspiracion | null
+) {
+  return {
+    gustos: puntajePorItems(contextos, new Map(respuestasGustos.map((r) => [r.contextoId, r.valor]))),
+    actividadesScore: puntajePorItems(
+      actividades,
+      new Map(respuestasActividades.map((r) => [r.actividadId, r.valor]))
+    ),
+    asignaturasScore: puntajeAsignaturasPorDimension(respuestasAsignaturas),
+    aspiracionScore: puntajeAspiracionPorDimension(aspiracion?.opcion ?? null),
+  };
+}
+
 export function calcularPuntajesIntegrados(
   respuestasGustos: Respuesta[],
   respuestasActividades: RespuestaActividad[],
   respuestasAsignaturas: RespuestaAsignatura[],
   aspiracion: Aspiracion | null
 ): PuntajeDimension[] {
-  const gustos = puntajePorItems(contextos, new Map(respuestasGustos.map((r) => [r.contextoId, r.valor])));
-  const actividadesScore = puntajePorItems(
-    actividades,
-    new Map(respuestasActividades.map((r) => [r.actividadId, r.valor]))
+  const { gustos, actividadesScore, asignaturasScore, aspiracionScore } = calcularFuentes(
+    respuestasGustos,
+    respuestasActividades,
+    respuestasAsignaturas,
+    aspiracion
   );
-  const asignaturasScore = puntajeAsignaturasPorDimension(respuestasAsignaturas);
-  const aspiracionScore = puntajeAspiracionPorDimension(aspiracion?.opcion ?? null);
 
   const resultado: PuntajeDimension[] = Object.keys(dimensiones).map((dim) => {
     const d = dim as DimensionCodigo;
@@ -136,6 +154,53 @@ export function calcularPuntajesIntegrados(
   });
 
   return resultado;
+}
+
+// Dimensión con mayor puntaje de una fuente (desempate alfabético por código).
+function dimensionTope(puntajes: Map<DimensionCodigo, number>): DimensionCodigo | null {
+  let mejor: DimensionCodigo | null = null;
+  let mejorValor = -1;
+  for (const [dim, valor] of puntajes) {
+    if (valor > mejorValor || (valor === mejorValor && mejor !== null && dim < mejor)) {
+      mejor = dim;
+      mejorValor = valor;
+    }
+  }
+  return mejorValor >= 50 ? mejor : null;
+}
+
+export interface Discrepancia {
+  dimensionGustos: DimensionCodigo;
+  etiquetaGustos: string;
+  dimensionActividades: DimensionCodigo;
+  etiquetaActividades: string;
+}
+
+// Detecta cuando la dimensión mejor puntuada por contextos (gustos) difiere de
+// la mejor puntuada por actividades. Solo se reporta si ambas fuentes tienen
+// una señal fuerte (>=50); si no, el silencio (null) evita ruido con datos débiles.
+export function detectarDiscrepancia(
+  respuestasGustos: Respuesta[],
+  respuestasActividades: RespuestaActividad[],
+  respuestasAsignaturas: RespuestaAsignatura[],
+  aspiracion: Aspiracion | null
+): Discrepancia | null {
+  const { gustos, actividadesScore } = calcularFuentes(
+    respuestasGustos,
+    respuestasActividades,
+    respuestasAsignaturas,
+    aspiracion
+  );
+  const topGustos = dimensionTope(gustos);
+  const topActividades = dimensionTope(actividadesScore);
+  if (!topGustos || !topActividades || topGustos === topActividades) return null;
+
+  return {
+    dimensionGustos: topGustos,
+    etiquetaGustos: dimensiones[topGustos],
+    dimensionActividades: topActividades,
+    etiquetaActividades: dimensiones[topActividades],
+  };
 }
 
 // Puntaje por dimensión = suma respuestas / máximo posible (0-100).

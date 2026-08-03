@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { informe, lecturasPorDimension, bloqueAspiracion } from "@/lib/config/textos";
 import { useExperienciaStore } from "@/lib/store/experiencia";
-import { calcularPuntajesIntegrados } from "@/lib/logic/puntaje";
+import { calcularPuntajesIntegrados, detectarDiscrepancia } from "@/lib/logic/puntaje";
 import { calcularPuntajesCognitivo } from "@/lib/logic/puntajeCognitivo";
 import { recomendarCarreras } from "@/lib/logic/matching";
 import { contextos } from "@/lib/data/contextos";
@@ -46,6 +46,11 @@ export function Informe({ onVolver }: Props) {
   );
   const top3 = puntajesDimension.slice(0, 3);
 
+  const discrepancia = useMemo(
+    () => detectarDiscrepancia(respuestasGustos, respuestasActividades, respuestasAsignaturas, aspiracion),
+    [respuestasGustos, respuestasActividades, respuestasAsignaturas, aspiracion]
+  );
+
   // Puntaje verbal
   const evaluacionVerbal = respuestasVerbal.find((r) => r.estado === "evaluado" && r.evaluacion);
   const puntajeVerbal = evaluacionVerbal
@@ -58,10 +63,17 @@ export function Informe({ onVolver }: Props) {
   // Puntajes cognitivos
   const correctasMatrices = respuestasCognitivo.filter((r) => r.juego === "matrices" && r.correcto).length;
   const correctasRotacion = respuestasCognitivo.filter((r) => r.juego === "pliegues" && r.correcto).length;
+  const correctasSeries = respuestasCognitivo.filter((r) => r.juego === "series" && r.correcto).length;
   const secuencias = respuestasCognitivo.filter((r) => r.juego === "secuencias");
   const largoMaximo = Math.max(...secuencias.map((r) => r.nivel), 0);
 
-  const puntajesCognitivo = calcularPuntajesCognitivo(correctasMatrices, correctasRotacion, largoMaximo, puntajeComunicacion);
+  const puntajesCognitivo = calcularPuntajesCognitivo(
+    correctasMatrices,
+    correctasRotacion,
+    largoMaximo,
+    puntajeComunicacion,
+    correctasSeries
+  );
 
   // Carreras recomendadas (matching v2 sobre carreras curadas)
   const carrerasRecomendadas = useMemo(
@@ -74,6 +86,7 @@ export function Informe({ onVolver }: Props) {
       dimensionTop3: top3.map((d) => ({ codigo: d.dimension, etiqueta: d.etiqueta, puntaje: d.puntaje })),
       capacidades: {
         patrones: puntajesCognitivo.patrones,
+        numerico: puntajesCognitivo.numerico,
         espacial: puntajesCognitivo.espacial,
         memoria: puntajesCognitivo.memoria,
         comunicacion: puntajeComunicacion,
@@ -167,6 +180,12 @@ export function Informe({ onVolver }: Props) {
             </span>
           </p>
         )}
+        {discrepancia && (
+          <p className="mt-3 rounded-[10px] bg-blanco-papel p-3 text-sm text-tinta/80">
+            <span className="font-medium text-tinta">{informe.discrepanciaTitulo}. </span>
+            {informe.discrepanciaTexto(discrepancia.etiquetaGustos, discrepancia.etiquetaActividades)}
+          </p>
+        )}
       </section>
 
       {/* 2. Capacidades */}
@@ -175,6 +194,7 @@ export function Informe({ onVolver }: Props) {
         <div className="mt-4 space-y-4">
           {[
             { key: "patrones", label: informe.leyendaCapacidades.patrones, valor: puntajesCognitivo.patrones },
+            { key: "numerico", label: informe.leyendaCapacidades.numerico, valor: puntajesCognitivo.numerico },
             { key: "espacial", label: informe.leyendaCapacidades.espacial, valor: puntajesCognitivo.espacial },
             { key: "memoria", label: informe.leyendaCapacidades.memoria, valor: puntajesCognitivo.memoria },
             { key: "comunicacion", label: informe.leyendaCapacidades.comunicacion, valor: puntajeComunicacion },

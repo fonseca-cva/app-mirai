@@ -10,8 +10,13 @@ export function puntajeRotacion(correctas: number): number {
   return Math.round((correctas / 10) * 100);
 }
 
+export function puntajeSeries(correctas: number): number {
+  return Math.round((correctas / 8) * 100);
+}
+
 export interface PuntajesCognitivo {
   patrones: number;
+  numerico: number;
   espacial: number;
   memoria: number;
   comunicacion: number; // desde bloque verbal, normalizado a 0-100
@@ -22,9 +27,11 @@ export function calcularPuntajesCognitivo(
   correctasRotacion: number,
   largoMaximoSecuencias: number,
   puntajeComunicacion: number = 0,
+  correctasSeries: number = 0,
 ): PuntajesCognitivo {
   return {
     patrones: puntajeMatrices(correctasMatrices),
+    numerico: puntajeSeries(correctasSeries),
     espacial: puntajeRotacion(correctasRotacion),
     memoria: puntajeSecuencias(largoMaximoSecuencias),
     comunicacion: puntajeComunicacion,
