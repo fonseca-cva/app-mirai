@@ -493,6 +493,55 @@ export const guardarCuenta = {
   irAExperiencia: "Ir a la experiencia", // PENDIENTE PASADA DE COPY
 };
 
+// ── Página /mi-cuenta (Tanda C) ───────────────────────────────────
+// Tres estados: sin sesión (entrar con enlace), anónima (vincular o perder los
+// informes locales) y vinculada (correo, apodo, informes, desvincular).
+export const miCuenta = {
+  cargando: "Cargando…", // PENDIENTE PASADA DE COPY
+  sinSesion: {
+    titulo: "Entra con tu correo", // PENDIENTE PASADA DE COPY
+    detalle:
+      "Si guardaste tu informe, entra con el correo que usaste. Si todavía no lo has hecho, haz la experiencia y guárdalo al final.", // PENDIENTE PASADA DE COPY
+    entrarLabel: "Tu correo", // PENDIENTE PASADA DE COPY
+    enviarBoton: "Enviar enlace de entrada", // PENDIENTE PASADA DE COPY
+    enviado: "Revisa tu correo: te enviamos el enlace para entrar.", // PENDIENTE PASADA DE COPY
+    limite: "Enviaste varios enlaces a este correo. Espera una hora y prueba de nuevo.", // PENDIENTE PASADA DE COPY
+    error: "No pudimos enviar el enlace. Intenta de nuevo.", // PENDIENTE PASADA DE COPY
+    ctaExperiencia: "Hacer la experiencia", // PENDIENTE PASADA DE COPY
+    ctaExperienciaHref: "/experiencia", // PENDIENTE PASADA DE COPY
+  },
+  anonima: {
+    titulo: "Modo sin cuenta", // PENDIENTE PASADA DE COPY
+    detalle:
+      "Tus informes de este navegador están acá, pero se pierden si se borran los datos del navegador.", // PENDIENTE PASADA DE COPY
+    vincularLabel: "Vincúlalo a un correo para no perderlo:", // PENDIENTE PASADA DE COPY
+    vincularBoton: "Enviar enlace", // PENDIENTE PASADA DE COPY
+    vincularExito: "Revisa tu correo: te llegó un enlace para guardar tu informe.", // PENDIENTE PASADA DE COPY
+    vincularYaTenias:
+      "Este correo ya está asociado a una cuenta Mirai. Si es tu cuenta, tu informe ya queda vinculado.", // PENDIENTE PASADA DE COPY
+    vincularLimite: "Enviaste varios enlaces a este correo. Espera una hora y prueba de nuevo.", // PENDIENTE PASADA DE COPY
+    vincularError: "No pudimos enviar el enlace. Intenta de nuevo.", // PENDIENTE PASADA DE COPY
+  },
+  vinculada: {
+    correoLabel: "Correo", // PENDIENTE PASADA DE COPY
+    apodoLabel: "Apodo", // PENDIENTE PASADA DE COPY
+    apodoPlaceholder: "¿Cómo te llamamos? (opcional)", // PENDIENTE PASADA DE COPY
+    apodoGuardar: "Guardar", // PENDIENTE PASADA DE COPY
+    apodoGuardado: "Apodo guardado.", // PENDIENTE PASADA DE COPY
+    apodoError: "No pudimos guardar el apodo. Intenta de nuevo.", // PENDIENTE PASADA DE COPY
+    listaTitulo: "Tus informes", // PENDIENTE PASADA DE COPY
+    sinInformes: "Todavía no tienes informes guardados.", // PENDIENTE PASADA DE COPY
+    abrirInforme: "Ver informe", // PENDIENTE PASADA DE COPY
+    desvincularDetalle:
+      "Cerrarás la sesión en este navegador. Tus informes no se borran: puedes volver a entrar con tu correo.", // PENDIENTE PASADA DE COPY
+    desvincularBoton: "Desvincular esta sesión", // PENDIENTE PASADA DE COPY
+    desvincularConfirmar: "¿Seguro? Tus informes quedan guardados en tu cuenta.", // PENDIENTE PASADA DE COPY
+    desvincularCancelar: "Cancelar", // PENDIENTE PASADA DE COPY
+  },
+  // Entradas a /mi-cuenta desde /guardar-informe y desde el bloque guardar del informe.
+  verMisInformes: "Ver mis informes", // PENDIENTE PASADA DE COPY
+};
+
 // Banco de lecturas amables por dimensión — sección 5.2. Se usa para las top 3 dimensiones.
 // PENDIENTE PASADA DE COPY (todas las entradas de este registro)
 export const lecturasPorDimension: Record<string, string> = {

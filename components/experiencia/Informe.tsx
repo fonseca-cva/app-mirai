@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
-import { informe, lecturasPorDimension, bloqueAspiracion } from "@/lib/config/textos";
+import { informe, lecturasPorDimension, bloqueAspiracion, miCuenta } from "@/lib/config/textos";
 import { useExperienciaStore } from "@/lib/store/experiencia";
 import { calcularPuntajesIntegrados, detectarDiscrepancia } from "@/lib/logic/puntaje";
 import { calcularPuntajesCognitivo } from "@/lib/logic/puntajeCognitivo";
@@ -371,7 +371,17 @@ export function Informe({ onVolver, perfil }: Props) {
           className="mt-2 w-full rounded-[14px] border border-tinta/10 bg-blanco-papel px-4 py-2 text-sm text-tinta outline-none transition focus:border-coral/50 sm:w-1/2"
           aria-label={informe.guardarApodoPlaceholder}
         />
-        {guardarEstado === "enviado" && <p className="mt-2 text-sm text-salvia">{informe.guardarExito}</p>}
+        {guardarEstado === "enviado" && (
+          <>
+            <p className="mt-2 text-sm text-salvia">{informe.guardarExito}</p>
+            <a
+              href="/mi-cuenta"
+              className="mt-1 inline-block text-sm font-medium text-coral underline transition hover:opacity-80"
+            >
+              {miCuenta.verMisInformes}
+            </a>
+          </>
+        )}
         {guardarEstado === "yaTenias" && <p className="mt-2 text-sm text-tinta/70">{informe.guardarYaTenias}</p>}
         {guardarEstado === "limite" && <p className="mt-2 text-sm text-red-500">{informe.guardarLimite}</p>}
         {guardarEstado === "error" && <p className="mt-2 text-sm text-red-500">{informe.guardarError}</p>}

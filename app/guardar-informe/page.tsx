@@ -14,7 +14,7 @@
 
 import { useEffect, useState } from "react";
 import { obtenerAccessToken, supabase } from "@/lib/supabase/client";
-import { guardarCuenta } from "@/lib/config/textos";
+import { guardarCuenta, miCuenta } from "@/lib/config/textos";
 import { sanitizarApodo } from "@/lib/logic/cuenta";
 
 const UID_ANONIMO_KEY = "mirai_uid_anonimo";
@@ -112,6 +112,12 @@ export default function GuardarInformePage() {
           {estado.enlace === "enviando" && <p className="text-sm text-tinta/60">{guardarCuenta.enviandoEnlace}</p>}
           {estado.enlace === "enviado" && <p className="text-sm text-salvia">{guardarCuenta.enlaceEnviado}</p>}
           {estado.enlace === "error" && <p className="text-sm text-tinta/70">{guardarCuenta.enlaceError}</p>}
+          <a
+            href="/mi-cuenta"
+            className="mt-1 text-sm font-medium text-coral underline transition hover:opacity-80"
+          >
+            {miCuenta.verMisInformes}
+          </a>
         </>
       )}
       {estado.fase === "cuentaExistente" && (
