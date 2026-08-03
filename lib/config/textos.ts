@@ -508,7 +508,7 @@ export const metodologia = {
   porQuePreguntamos: {
     titulo: "Por qué preguntamos lo mismo de varias formas",
     cuerpo:
-      "Ninguna forma de preguntar es suficiente por sí sola. Una respuesta puede estar teñida por lo que uno cree que debería contestar, por el día que tuvo o por la palabra exacta que usamos. Al medir cada área de interés con varios tipos de pregunta, el perfil se vuelve más estable.\n\nPor eso tu informe no entrega un solo número: muestra de dónde sale el perfil, con el peso de cada fuente — tus reacciones a las escenas de trabajo, tus actividades, tus asignaturas y lo que ya tenías en mente. Preferimos que veas cómo se arma la conclusión antes que ocultarla detrás de un promedio.",
+      "Ninguna forma de preguntar es suficiente por sí sola. Una respuesta puede estar teñida por lo que uno cree que debería contestar, por el día que tuvo o por la palabra exacta que usamos. Al medir cada área de interés con varios tipos de pregunta, el perfil se vuelve más estable.\n\nY cuando las señales no coinciden, también lo decimos. Si tus reacciones a los ambientes de trabajo apuntan a un lugar y tus actividades preferidas a otro, tu informe te lo muestra en vez de esconderlo detrás de un promedio. Esa discrepancia no es un error del test: suele ser la parte más interesante de la conversación.",
   },
   capacidades: {
     titulo: "Cómo medimos para qué tienes facilidad",
