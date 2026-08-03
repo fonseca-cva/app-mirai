@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "verificar-rls": "node --env-file=.env.local scripts/verificar-rls.mjs"
+    "verificar-rls": "node --env-file=.env.local scripts/verificar-rls.mjs",
+    "verificar-rate-limit": "node --env-file=.env.local scripts/verificar-rate-limit.mjs",
+    "verificar-conversion-cuenta": "node --env-file=.env.local scripts/verificar-conversion-cuenta.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.8",

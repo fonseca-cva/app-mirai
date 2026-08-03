@@ -451,13 +451,42 @@ export const informe = {
     `Tus reacciones a los ambientes de trabajo apuntan más hacia ${a}, y tus actividades preferidas apuntan más hacia ${b}. No es un error del test: suele ser la parte más interesante para explorar.`, // PENDIENTE PASADA DE COPY
   cierre:
     "Este es tu primer mapa, no tu destino. Las carreras de hoy son un punto de partida para explorar; la versión profunda agrega datos de empleo e ingresos reales y contenido para recorrer cada camino.", // PENDIENTE PASADA DE COPY
-  correoOpcional: "¿Quieres recibir tu informe por correo?", // PENDIENTE PASADA DE COPY
-  correoPlaceholder: "tu@correo.cl", // PENDIENTE PASADA DE COPY
-  correoEnviar: "Enviar", // PENDIENTE PASADA DE COPY
-  correoGracias: "Recibirás tu informe en unos minutos.", // PENDIENTE PASADA DE COPY
-  correoError: "No pudimos enviar el correo. Intenta de nuevo.", // PENDIENTE PASADA DE COPY
+  // Tanda A — oferta de guardar el informe vinculando el correo (sin contraseñas).
+  guardarTitulo: "¿Quieres guardar tu informe?", // PENDIENTE PASADA DE COPY
+  guardarTexto:
+    "Te mandamos un enlace a tu correo y queda disponible cuando quieras. No pedimos contraseña ni tus datos personales.", // PENDIENTE PASADA DE COPY
+  guardarCorreoPlaceholder: "tu@correo.cl", // PENDIENTE PASADA DE COPY
+  guardarApodoPlaceholder: "¿Cómo te llamamos? (opcional)", // PENDIENTE PASADA DE COPY
+  guardarBoton: "Enviar enlace", // PENDIENTE PASADA DE COPY
+  guardarEnviado: "Enlace enviado", // PENDIENTE PASADA DE COPY
+  guardarExito: "Revisa tu correo: te llegó un enlace para guardar tu informe.", // PENDIENTE PASADA DE COPY
+  guardarYaTenias:
+    "Este correo ya está asociado a una cuenta Mirai. Si es tu cuenta, tu informe ya queda vinculado; si no, todavía no podemos unirlo a esa cuenta.", // PENDIENTE PASADA DE COPY
+  guardarLimite:
+    "Enviaste varios enlaces a este correo. Espera una hora y prueba de nuevo.", // PENDIENTE PASADA DE COPY
+  guardarError: "No pudimos enviar el enlace. Intenta de nuevo.", // PENDIENTE PASADA DE COPY
   disclaimer:
     "Este instrumento está en desarrollo. Los resultados son orientativos y no constituyen una recomendación vocacional definitiva.", // PENDIENTE PASADA DE COPY
+};
+
+// ── Página /guardar-informe (Tanda A) ──────────────────────────────
+// Textos del destino del enlace de confirmación de correo. Esta página nunca
+// muestra el correo ni datos identificables: solo el estado de la vinculación.
+export const guardarCuenta = {
+  cargando: "Revisando tu enlace…", // PENDIENTE PASADA DE COPY
+  vinculado: (apodo: string | null) =>
+    apodo
+      ? `¡Listo, ${apodo}! Tu informe quedó guardado en tu cuenta.` // PENDIENTE PASADA DE COPY
+      : "¡Listo! Tu informe quedó guardado en tu cuenta.", // PENDIENTE PASADA DE COPY
+  vinculadoDetalle:
+    "Tu informe quedó vinculado a este correo y no se pierde si cierras la pestaña.", // PENDIENTE PASADA DE COPY
+  cuentaExistente:
+    "Este dispositivo ya estaba asociado a otra cuenta Mirai con ese correo.", // PENDIENTE PASADA DE COPY
+  cuentaExistenteDetalle:
+    "Por seguridad no unimos informes entre cuentas distintas en esta versión. Tu informe de esta sesión sigue disponible en pantalla.", // PENDIENTE PASADA DE COPY
+  invalido: "Este enlace ya no es válido o expiró.", // PENDIENTE PASADA DE COPY
+  invalidoDetalle: "Vuelve a tu informe y pide un enlace nuevo.", // PENDIENTE PASADA DE COPY
+  irAExperiencia: "Ir a la experiencia", // PENDIENTE PASADA DE COPY
 };
 
 // Banco de lecturas amables por dimensión — sección 5.2. Se usa para las top 3 dimensiones.

@@ -8,7 +8,8 @@ import { calcularPuntajesCognitivo } from "@/lib/logic/puntajeCognitivo";
 import { recomendarCarreras } from "@/lib/logic/matching";
 import { contextos } from "@/lib/data/contextos";
 import { GruaOrigami } from "@/components/origami/GruaOrigami";
-import { obtenerAccessToken } from "@/lib/supabase/client";
+import { obtenerAccessToken, supabase } from "@/lib/supabase/client";
+import { sanitizarApodo } from "@/lib/logic/cuenta";
 
 // --- Helper para convertir puntaje numérico a etiqueta de capacidad ---
 function etiquetaCapacidad(puntaje: number): string {
@@ -24,9 +25,11 @@ interface Props {
 
 export function Informe({ onVolver }: Props) {
   const [animacionLista, setAnimacionLista] = useState(false);
-  const [correo, setCorreo] = useState("");
-  const [correoEnviado, setCorreoEnviado] = useState(false);
-  const [correoError, setCorreoError] = useState(false);
+  const [guardarCorreo, setGuardarCorreo] = useState("");
+  const [guardarApodo, setGuardarApodo] = useState("");
+  const [guardarEstado, setGuardarEstado] = useState<
+    "idle" | "enviando" | "enviado" | "yaTenias" | "limite" | "error"
+  >("idle");
 
   const sessionId = useExperienciaStore((s) => s.sessionId);
   const respuestasGustos = useExperienciaStore((s) => s.respuestasGustos);
@@ -106,6 +109,46 @@ export function Informe({ onVolver }: Props) {
     ]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId, sincronizarBloque]);
+
+  // Tanda A: vincula el correo a la sesión anónima. La conversión usa
+  // updateUser({ email }) en el route, que mantiene el MISMO auth.uid(), así que
+  // todas las filas de respuestas/resultados quedan bajo la cuenta nueva.
+  const enviarVincular = async () => {
+    if (!guardarCorreo.trim() || !sessionId) return;
+    setGuardarEstado("enviando");
+    try {
+      // Guardamos el uid anónimo actual para que /guardar-informe confirme que la
+      // cuenta vinculada es la misma (conversión con preservación, no merge).
+      const { data: sesionActual } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
+      const uidAnonimo = sesionActual.session?.user.id;
+      if (!uidAnonimo) throw new Error("sin sesión");
+      sessionStorage.setItem("mirai_uid_anonimo", uidAnonimo);
+
+      // El apodo no viaja por la red ni a logs: se aplica en /guardar-informe
+      // vía updateUser({ data: { apodo } }).
+      const apodoLimpio = sanitizarApodo(guardarApodo);
+      if (apodoLimpio) sessionStorage.setItem("mirai_apodo_pendiente", apodoLimpio);
+
+      const token = await obtenerAccessToken();
+      if (!token) throw new Error("sin sesión");
+
+      const respuesta = await fetch("/api/vincular-cuenta", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ correo: guardarCorreo.trim() }),
+      });
+      if (respuesta.status === 429) {
+        setGuardarEstado("limite");
+        return;
+      }
+      if (!respuesta.ok) throw new Error("envío falló");
+
+      const cuerpo = (await respuesta.json()) as { yaTeniasCuenta?: boolean };
+      setGuardarEstado(cuerpo.yaTeniasCuenta ? "yaTenias" : "enviado");
+    } catch {
+      setGuardarEstado("error");
+    }
+  };
 
   // Animación de la grulla: se salta después de 3s o al hacer clic
   if (!animacionLista) {
@@ -245,52 +288,40 @@ export function Informe({ onVolver }: Props) {
         <p className="text-base leading-relaxed text-tinta/80">{informe.cierre}</p>
       </section>
 
-      {/* 5. Correo opcional */}
-      <section className="mt-8">
-        <p className="text-sm text-tinta/60">{informe.correoOpcional}</p>
-        <div className="mt-2 flex gap-2">
+      {/* 5. Guardar informe (Tanda A): vincula el correo a la sesión anónima */}
+      <section className="mt-8 rounded-[14px] bg-papel-sombra/30 p-5">
+        <h2 className="font-display text-lg font-semibold">{informe.guardarTitulo}</h2>
+        <p className="mt-1 text-sm text-tinta/60">{informe.guardarTexto}</p>
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
           <input
             type="email"
-            value={correo}
-            onChange={(e) => setCorreo(e.target.value)}
-            placeholder={informe.correoPlaceholder}
+            value={guardarCorreo}
+            onChange={(e) => setGuardarCorreo(e.target.value)}
+            placeholder={informe.guardarCorreoPlaceholder}
             className="flex-1 rounded-[14px] border border-tinta/10 bg-blanco-papel px-4 py-2 text-sm text-tinta outline-none transition focus:border-coral/50"
-            aria-label={informe.correoOpcional}
+            aria-label={informe.guardarCorreoPlaceholder}
           />
           <button
-            onClick={async () => {
-              if (!correo.trim() || !sessionId) return;
-              setCorreoError(false);
-              try {
-                // Reintenta el upsert de resultados por si el sync del efecto (al montar)
-                // todavía no terminó — evita que /api/enviar-informe no encuentre la fila.
-                await sincronizarBloque([
-                  { id: `resultado-${sessionId}`, tipo: "resultado", payload: { session_id: sessionId, perfil_json: perfilResultado } },
-                  { id: `correo-${sessionId}`, tipo: "correo", payload: { session_id: sessionId, email: correo.trim() } },
-                ]);
-
-                const token = await obtenerAccessToken();
-                if (!token) throw new Error("sin sesión");
-
-                const respuesta = await fetch("/api/enviar-informe", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-                  body: JSON.stringify({ sessionId }),
-                });
-                if (!respuesta.ok) throw new Error("envío falló");
-
-                setCorreoEnviado(true);
-              } catch {
-                setCorreoError(true);
-              }
-            }}
-            disabled={!correo.trim() || correoEnviado}
+            onClick={enviarVincular}
+            disabled={guardarEstado === "enviando" || guardarEstado === "enviado" || !guardarCorreo.trim()}
             className="rounded-[14px] bg-coral px-4 py-2 text-sm font-medium text-blanco-papel transition enabled:hover:opacity-90 disabled:opacity-40"
           >
-            {correoEnviado ? informe.correoGracias : informe.correoEnviar}
+            {guardarEstado === "enviado" ? informe.guardarEnviado : informe.guardarBoton}
           </button>
         </div>
-        {correoError && <p className="mt-1 text-sm text-red-500">{informe.correoError}</p>}
+        <input
+          type="text"
+          value={guardarApodo}
+          onChange={(e) => setGuardarApodo(e.target.value)}
+          maxLength={20}
+          placeholder={informe.guardarApodoPlaceholder}
+          className="mt-2 w-full rounded-[14px] border border-tinta/10 bg-blanco-papel px-4 py-2 text-sm text-tinta outline-none transition focus:border-coral/50 sm:w-1/2"
+          aria-label={informe.guardarApodoPlaceholder}
+        />
+        {guardarEstado === "enviado" && <p className="mt-2 text-sm text-salvia">{informe.guardarExito}</p>}
+        {guardarEstado === "yaTenias" && <p className="mt-2 text-sm text-tinta/70">{informe.guardarYaTenias}</p>}
+        {guardarEstado === "limite" && <p className="mt-2 text-sm text-red-500">{informe.guardarLimite}</p>}
+        {guardarEstado === "error" && <p className="mt-2 text-sm text-red-500">{informe.guardarError}</p>}
       </section>
 
       {/* Disclaimer */}
