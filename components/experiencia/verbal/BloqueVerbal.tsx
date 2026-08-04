@@ -19,6 +19,12 @@ export function BloqueVerbal({ onCompletar, onPausar }: Props) {
   const [evaluando, setEvaluando] = useState(false);
   const [error, setError] = useState(false);
   const [hecho, setHecho] = useState(false);
+  // Validez (plan de Camilo): reintento único tras respuesta no pertinente.
+  const [avisoPertinencia, setAvisoPertinencia] = useState<string | null>(null);
+  // Telemetría de control de calidad (punto 4): evento paste en el textarea.
+  // Uso EXCLUSIVO de QA — no afecta puntaje, no se muestra al usuario.
+  const [pegado, setPegado] = useState(false);
+  const [caracteresPegados, setCaracteresPegados] = useState(0);
   const sessionId = useExperienciaStore((s) => s.sessionId);
   const agregarRespuestaVerbal = useExperienciaStore((s) => s.agregarRespuestaVerbal);
   const sincronizarBloque = useExperienciaStore((s) => s.sincronizarBloque);
@@ -43,34 +49,71 @@ export function BloqueVerbal({ onCompletar, onPausar }: Props) {
         : bloqueVerbal.expresion;
   const caracteresMinimos = config.minimoCaracteres;
 
-  function evaluarLocalmente(textoIngresado: string): RespuestaVerbal {
-    // Evaluación symulada en cliente (sin llamar a la API) mientras no haya claves configuradas.
-    // // DECISIÓN: en desarrollo se simula para no bloquear el flujo.
-    return {
-      tarea,
-      texto: textoIngresado,
-      evaluacion: {
-        nivel: textoIngresado.length > 200 ? "inferencial" : "literal",
-        puntaje: textoIngresado.length > 200 ? 4 : 2,
-        fortaleza: textoIngresado.length > 200
-          ? "Logra expresar ideas con claridad y estructura."
-          : "Identifica la idea principal del texto.",
-        area_mejora: textoIngresado.length > 200
-          ? "Podría incorporar ejemplos concretos para reforzar su análisis."
-          : "Podría profundizar en el desarrollo de sus ideas.",
-      },
-      estado: "evaluado",
-    } as RespuestaVerbal;
-  }
+  // Número de intento por tarea: 1 = primer envío; 2 = único reintento tras
+  // respuesta no pertinente (máximo un reintento, plan de Camilo punto 2).
+  const [intentos, setIntentos] = useState<Record<Tarea, number>>({
+    comprension: 1,
+    argumentacion: 1,
+    expresion: 1,
+  });
+
+  // Registro del evento paste (control de calidad únicamente): cuantos
+  // caracteres se pegaron en total (el contador acumula por envío).
+  const manejarPaste = useCallback((e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const textoPegado = e.clipboardData?.getData("text") ?? "";
+    setPegado(true);
+    setCaracteresPegados((prev) => prev + textoPegado.length);
+  }, []);
+
+  const avanzarTarea = useCallback(() => {
+    setTexto("");
+    setAvisoPertinencia(null);
+    setPegado(false);
+    setCaracteresPegados(0);
+    setError(false);
+
+    if (tarea === "comprension") {
+      setTarea("argumentacion");
+    } else if (tarea === "argumentacion") {
+      setTarea("expresion");
+    } else {
+      setHecho(true);
+
+      // Bloque C (verbal) completado: sync de las respuestas (comprensión +
+      // argumentación + expresión), incluida la telemetría de QA de validez.
+      if (sessionId) {
+        const respuestas = useExperienciaStore.getState().respuestasVerbal;
+        sincronizarBloque(
+          respuestas.map((r, i) => ({
+            id: `verbal-${sessionId}-${i}`,
+            tipo: "verbal" as const,
+            payload: {
+              session_id: sessionId,
+              tarea: r.tarea,
+              texto: r.texto,
+              evaluacion_json: r.evaluacion as RespuestaVerbalRow["evaluacion_json"],
+              estado: r.estado,
+              pegado: r.pegado,
+              caracteres_pegados: r.caracteresPegados,
+              revision_requerida: r.revisionRequerida,
+              intento: r.intento,
+            },
+          }))
+        );
+      }
+    }
+  }, [tarea, sessionId, sincronizarBloque]);
 
   const manejarEnvio = useCallback(async () => {
-    if (texto.trim().length < caracteresMinimos) return;
+    if (texto.trim().length < caracteresMinimos || evaluando) return;
 
+    const intentoActual = intentos[tarea];
     setEvaluando(true);
     setError(false);
 
     try {
-      // Intentar llamar al endpoint real
+      // Intentar llamar al endpoint real. Se envían pegado/caracteresPegados/intento
+      // SOLO como metadato de control de calidad (no van al modelo, no afectan puntaje).
       const respuesta = await fetch("/api/evaluar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -81,6 +124,9 @@ export function BloqueVerbal({ onCompletar, onPausar }: Props) {
           indiceTexto,
           indiceDilema,
           indiceExpresion,
+          pegado,
+          caracteresPegados,
+          intento: intentoActual,
         }),
       });
 
@@ -90,51 +136,116 @@ export function BloqueVerbal({ onCompletar, onPausar }: Props) {
 
       const data = await respuesta.json();
 
-      const respuestaVerbal: RespuestaVerbal = {
+      if (data.estado === "evaluado") {
+        agregarRespuestaVerbal({
+          tarea,
+          texto: texto.trim(),
+          evaluacion: data.evaluacion as RespuestaVerbal["evaluacion"],
+          estado: "evaluado",
+          pegado,
+          caracteresPegados,
+          revisionRequerida: data.revision_requerida === true,
+          intento: intentoActual,
+        });
+        avanzarTarea();
+        return;
+      }
+
+      if (data.estado === "no_pertinente") {
+        if (intentoActual === 1) {
+          // Se guarda la respuesta rechazada (QA/trazabilidad) y se ofrece el
+          // único reintento permitido. El texto se mantiene para reescribir.
+          agregarRespuestaVerbal({
+            tarea,
+            texto: texto.trim(),
+            evaluacion: null,
+            estado: "no_pertinente",
+            pegado,
+            caracteresPegados,
+            intento: 1,
+          });
+          setIntentos((prev) => ({ ...prev, [tarea]: 2 }));
+          setAvisoPertinencia(
+            data.mensaje ?? "Parece que tu respuesta no habla del texto que leíste. ¿Quieres intentarlo de nuevo?"
+          );
+          setPegado(false);
+          setCaracteresPegados(0);
+          return;
+        }
+        // Segundo envío también no pertinente: la dimensión queda sin evaluar.
+        agregarRespuestaVerbal({
+          tarea,
+          texto: texto.trim(),
+          evaluacion: null,
+          estado: "no_pertinente",
+          pegado,
+          caracteresPegados,
+          intento: 2,
+        });
+        avanzarTarea();
+        return;
+      }
+
+      if (data.estado === "no_evaluado") {
+        // Sin proveedor, fallo o formato inválido: NUNCA se inventa un puntaje.
+        console.warn(`[verbal] ${data.mensaje ?? "Evaluación no disponible"}`);
+        agregarRespuestaVerbal({
+          tarea,
+          texto: texto.trim(),
+          evaluacion: null,
+          estado: "no_evaluado",
+          pegado,
+          caracteresPegados,
+          intento: intentoActual,
+        });
+        avanzarTarea();
+        return;
+      }
+
+      // 'pendiente' (u otro estado): se guarda sin evaluación y se continúa.
+      agregarRespuestaVerbal({
         tarea,
         texto: texto.trim(),
-        evaluacion: data.estado === "evaluado" ? data.evaluacion : null,
-        estado: data.estado === "evaluado" ? "evaluado" : "pendiente",
-      };
-
-      agregarRespuestaVerbal(respuestaVerbal);
+        evaluacion: null,
+        estado: data.estado === "pendiente" ? "pendiente" : "no_evaluado",
+        pegado,
+        caracteresPegados,
+        intento: intentoActual,
+      });
+      avanzarTarea();
     } catch {
-      // Fallback: evaluar localmente si la API no responde
-      console.warn("[verbal] API no disponible, evaluando localmente");
-      const respuestaVerbal = evaluarLocalmente(texto.trim());
-      agregarRespuestaVerbal(respuestaVerbal);
+      // API no disponible: se continúa SIN puntaje (antes se fabricaba uno por
+      // longitud — bug de validez reportado por Camilo; eliminado).
+      console.warn("[verbal] API no disponible, respuesta queda sin evaluar");
+      agregarRespuestaVerbal({
+        tarea,
+        texto: texto.trim(),
+        evaluacion: null,
+        estado: "no_evaluado",
+        pegado,
+        caracteresPegados,
+        intento: intentoActual,
+      });
+      avanzarTarea();
     } finally {
       setEvaluando(false);
-      setTexto("");
-
-      if (tarea === "comprension") {
-        setTarea("argumentacion");
-      } else if (tarea === "argumentacion") {
-        setTarea("expresion");
-      } else {
-        setHecho(true);
-
-        // Bloque C (verbal) completado: sync de las 3 respuestas (comprensión + argumentación + expresión).
-        if (sessionId) {
-          const respuestas = useExperienciaStore.getState().respuestasVerbal;
-          sincronizarBloque(
-            respuestas.map((r, i) => ({
-              id: `verbal-${sessionId}-${i}`,
-              tipo: "verbal" as const,
-              payload: {
-                session_id: sessionId,
-                tarea: r.tarea,
-                texto: r.texto,
-                evaluacion_json: r.evaluacion as RespuestaVerbalRow["evaluacion_json"],
-                estado: r.estado,
-              },
-            }))
-          );
-        }
-
-      }
     }
-  }, [texto, tarea, sessionId, indiceTexto, indiceDilema, indiceExpresion, agregarRespuestaVerbal, sincronizarBloque, caracteresMinimos]);
+  }, [texto, tarea, sessionId, indiceTexto, indiceDilema, indiceExpresion, agregarRespuestaVerbal, avanzarTarea, caracteresMinimos, intentos, pegado, caracteresPegados, evaluando]);
+
+  const omitirTarea = useCallback(() => {
+    // Salida sin responder (tras aviso de pertinencia): dimensión sin evaluar.
+    if (evaluando) return;
+    agregarRespuestaVerbal({
+      tarea,
+      texto: texto.trim(),
+      evaluacion: null,
+      estado: "no_evaluado",
+      pegado,
+      caracteresPegados,
+      intento: intentos[tarea],
+    });
+    avanzarTarea();
+  }, [tarea, texto, pegado, caracteresPegados, intentos, evaluando, agregarRespuestaVerbal, avanzarTarea]);
 
   if (hecho) {
     return (
@@ -178,9 +289,16 @@ export function BloqueVerbal({ onCompletar, onPausar }: Props) {
         </div>
       </details>
 
+      {avisoPertinencia && (
+        <div className="rounded-[14px] border border-dorado/40 bg-dorado/10 p-4">
+          <p className="text-sm text-tinta/90">{avisoPertinencia}</p>
+        </div>
+      )}
+
       <textarea
         value={texto}
         onChange={(e) => setTexto(e.target.value)}
+        onPaste={manejarPaste}
         placeholder={config.placeholder}
         className="min-h-[160px] w-full resize-y rounded-[14px] border border-tinta/10 bg-blanco-papel p-4 text-base text-tinta outline-none transition focus:border-coral/50 focus:ring-2 focus:ring-coral/20"
         disabled={evaluando}
@@ -192,13 +310,28 @@ export function BloqueVerbal({ onCompletar, onPausar }: Props) {
           {texto.length}/{caracteresMinimos} {config.minimoCaracteres ? bloqueVerbal.comprension.contadorCaracteres : ""}
         </span>
 
-        <button
-          onClick={manejarEnvio}
-          disabled={texto.trim().length < caracteresMinimos || evaluando}
-          className="rounded-[14px] bg-coral px-6 py-3 text-base font-medium text-blanco-papel transition enabled:hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          {evaluando ? `${bloqueVerbal.evaluando}...` : config.siguienteCta}
-        </button>
+        <div className="flex items-center gap-3">
+          {avisoPertinencia && (
+            <button
+              onClick={omitirTarea}
+              disabled={evaluando}
+              className="text-sm text-tinta/50 underline transition hover:text-tinta/80 disabled:opacity-40"
+            >
+              {bloqueVerbal.omitir}
+            </button>
+          )}
+          <button
+            onClick={manejarEnvio}
+            disabled={texto.trim().length < caracteresMinimos || evaluando}
+            className="rounded-[14px] bg-coral px-6 py-3 text-base font-medium text-blanco-papel transition enabled:hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {evaluando
+              ? `${bloqueVerbal.evaluando}...`
+              : avisoPertinencia
+                ? bloqueVerbal.reintentar
+                : config.siguienteCta}
+          </button>
+        </div>
       </div>
 
       {error && (

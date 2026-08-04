@@ -45,7 +45,13 @@ export interface RespuestaVerbalRow {
   tarea: "comprension" | "argumentacion" | "expresion";
   texto: string;
   evaluacion_json: EvaluacionVerbal | null;
-  estado: "pendiente" | "evaluado" | "error";
+  estado: "pendiente" | "evaluado" | "error" | "no_pertinente" | "no_evaluado";
+  // Validez (migración 00015): telemetría de QA + doble evaluación.
+  // NOT NULL en BD (con DEFAULT) — siempre presentes en insert/lectura.
+  pegado: boolean;
+  caracteres_pegados: number;
+  revision_requerida: boolean;
+  intento: number;
   creado_en?: string;
   evaluado_en?: string | null;
   user_id?: string;
@@ -101,6 +107,15 @@ export interface EvaluacionVerbal {
   puntaje: number; // 1-5
   fortaleza: string;
   area_mejora: string;
+  // Doble evaluación (plan de Camilo, punto 5): segundo evaluador guardado dentro
+  // del JSON, más el acuerdo entre evaluadores (métrica del sistema para /metodologia).
+  evaluacion2?: {
+    nivel: "literal" | "inferencial" | "critico";
+    puntaje: number;
+    fortaleza: string;
+    area_mejora: string;
+  } | null;
+  acuerdo_evaluadores?: boolean;
 }
 
 export interface ResultadoRow {
@@ -118,7 +133,7 @@ export interface PerfilResultado {
     numerico?: number; // 0-100 (puntaje de Series; opcional: filas previas no lo tenían)
     espacial: number; // 0-100
     memoria: number; // 0-100
-    comunicacion: number; // 0-100 (desde verbal)
+    comunicacion: number | null; // 0-100 (desde verbal); null = sin evaluar (NUNCA un 0 inventado)
   };
   carrerasRecomendadas: string[]; // ids de carreras curadas (lib/data/carreras.ts)
   generado_en: string;

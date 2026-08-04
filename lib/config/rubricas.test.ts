@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { EvaluacionSchema, promptComprension, promptArgumentacion } from "@/lib/config/rubricas";
+import { EvaluacionSchema, PertinenciaSchema, promptComprension, promptArgumentacion, promptPertinencia, RATE_LIMIT_POR_SESSION } from "@/lib/config/rubricas";
 
 describe("EvaluacionSchema", () => {
   it("acepta evaluación válida completa", () => {
@@ -67,5 +67,48 @@ describe("promptArgumentacion", () => {
   it("incluye instrucción de evaluar estructura no opinión", () => {
     const prompt = promptArgumentacion("¿Y?");
     expect(prompt.toLowerCase()).toContain("nunca");
+  });
+});
+
+describe("PertinenciaSchema (filtro de pertinencia, punto 2 del plan)", () => {
+  it("acepta salida binaria válida con razón", () => {
+    const resultado = PertinenciaSchema.safeParse({ pertinente: false, razon: "Texto genérico intercambiable." });
+    expect(resultado.success).toBe(true);
+  });
+
+  it("rechaza sin razón", () => {
+    const resultado = PertinenciaSchema.safeParse({ pertinente: true });
+    expect(resultado.success).toBe(false);
+  });
+
+  it("rechaza valor no booleano", () => {
+    const resultado = PertinenciaSchema.safeParse({ pertinente: "quizás", razon: "N/A" });
+    expect(resultado.success).toBe(false);
+  });
+});
+
+describe("promptPertinencia", () => {
+  it("incluye el estímulo y la respuesta", () => {
+    const prompt = promptPertinencia("Estímulo X", "Respuesta Y");
+    expect(prompt).toContain("Estímulo X");
+    expect(prompt).toContain("Respuesta Y");
+  });
+});
+
+describe("rúbricas ancladas (punto 3 del plan)", () => {
+  it("los prompts exigen la regla de no premiar texto genérico", () => {
+    expect(promptComprension("X")).toContain("genérico");
+    expect(promptArgumentacion("X")).toContain("genérico");
+  });
+
+  it("los niveles 4 y 5 exigen evidencia concreta del estímulo", () => {
+    expect(promptComprension("X")).toContain("EXIGEN evidencia concreta");
+    expect(promptArgumentacion("X")).toContain("EXIGEN evidencia concreta");
+  });
+});
+
+describe("rate limit", () => {
+  it("9 llamadas por sesión (pertinencia + rúbrica + doble evaluación × 2 intentos)", () => {
+    expect(RATE_LIMIT_POR_SESSION).toBe(9);
   });
 });

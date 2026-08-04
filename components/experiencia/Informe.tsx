@@ -84,10 +84,11 @@ export function Informe({ onVolver, perfil }: Props) {
     : null;
 
   // Normalizar comunicación a 0-100 desde el puntaje de verbal (1-5 → 0-100).
-  // En modo estático el valor viene guardado en la fila.
+  // Validez (plan de Camilo): sin evaluación válida → null, NUNCA un 0 inventado.
+  // En modo estático el valor viene guardado en la fila (puede ser null en filas nuevas).
   const puntajeComunicacion = useMemo(() => {
     if (perfil) return perfil.capacidades.comunicacion;
-    return puntajeVerbal ? Math.round((puntajeVerbal / 5) * 100) : 0;
+    return puntajeVerbal ? Math.round((puntajeVerbal / 5) * 100) : null;
   }, [perfil, puntajeVerbal]);
 
   // Puntajes cognitivos (matrices/rotación/series/secuencias). En modo estático
@@ -294,23 +295,37 @@ export function Informe({ onVolver, perfil }: Props) {
             { key: "comunicacion", label: informe.leyendaCapacidades.comunicacion, valor: puntajeComunicacion },
           ].map((cap) => (
             <div key={cap.key}>
-              <div className="flex items-baseline justify-between">
-                <span className="text-base font-medium text-tinta">
-                  {informe.etiquetaCapacidades(cap.label)}
-                </span>
-                <span className="text-sm text-tinta/50">{etiquetaCapacidad(cap.valor)}</span>
-              </div>
-              <div className="mt-1 h-3 w-full overflow-hidden rounded-full bg-papel-sombra/60">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-coral/70 to-dorado transition-all duration-700"
-                  style={{ width: `${cap.valor}%` }}
-                  role="progressbar"
-                  aria-valuenow={cap.valor}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-label={`${cap.label}: ${etiquetaCapacidad(cap.valor)}`}
-                />
-              </div>
+              {cap.valor === null ? (
+                <>
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-base font-medium text-tinta">
+                      {informe.etiquetaCapacidades(cap.label)}
+                    </span>
+                    <span className="text-sm text-tinta/50">{informe.sinEvaluar}</span>
+                  </div>
+                  <p className="mt-1 text-sm text-tinta/50">{informe.sinEvaluarNota}</p>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-base font-medium text-tinta">
+                      {informe.etiquetaCapacidades(cap.label)}
+                    </span>
+                    <span className="text-sm text-tinta/50">{etiquetaCapacidad(cap.valor)}</span>
+                  </div>
+                  <div className="mt-1 h-3 w-full overflow-hidden rounded-full bg-papel-sombra/60">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-coral/70 to-dorado transition-all duration-700"
+                      style={{ width: `${cap.valor}%` }}
+                      role="progressbar"
+                      aria-valuenow={cap.valor}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-label={`${cap.label}: ${etiquetaCapacidad(cap.valor)}`}
+                    />
+                  </div>
+                </>
+              )}
             </div>
           ))}
         </div>

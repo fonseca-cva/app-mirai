@@ -39,15 +39,24 @@ function pesoIntereses(carrera: Carrera, puntajesDimension: PuntajeDimension[]):
 
 // Ajuste por capacidades: perfil cognitivo de la carrera (5 pesos, suma 1.0) por
 // los puntajes medidos del estudiante.
+// Validez (plan de Camilo): si una capacidad quedó sin evaluar (null), NO se le
+// imputa 0 (eso castigaría carreras injustamente): se renorma sobre las
+// capacidades medidas para mantener la escala 0-100.
 function pesoCapacidades(carrera: Carrera, puntajesCognitivo: PuntajesCognitivo): number {
   const { patrones, numerico, espacial, memoria, comunicacion } = carrera.perfilCognitivo;
-  const total =
-    (patrones ?? 0) * puntajesCognitivo.patrones +
-    (numerico ?? 0) * puntajesCognitivo.numerico +
-    (espacial ?? 0) * puntajesCognitivo.espacial +
-    (memoria ?? 0) * puntajesCognitivo.memoria +
-    (comunicacion ?? 0) * puntajesCognitivo.comunicacion;
-  return Math.round(total);
+  const pares: Array<[number | null | undefined, number]> = [
+    [patrones, puntajesCognitivo.patrones],
+    [numerico, puntajesCognitivo.numerico],
+    [espacial, puntajesCognitivo.espacial],
+    [memoria, puntajesCognitivo.memoria],
+  ];
+  if (puntajesCognitivo.comunicacion !== null) {
+    pares.push([comunicacion, puntajesCognitivo.comunicacion]);
+  }
+  const sumaPesos = pares.reduce((acc, [peso]) => acc + (peso ?? 0), 0);
+  if (sumaPesos === 0) return 0;
+  const total = pares.reduce((acc, [peso, valor]) => acc + (peso ?? 0) * valor, 0);
+  return Math.round(total / sumaPesos);
 }
 
 export interface CarreraRecomendada {

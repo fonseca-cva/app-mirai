@@ -19,14 +19,14 @@ export interface PuntajesCognitivo {
   numerico: number;
   espacial: number;
   memoria: number;
-  comunicacion: number; // desde bloque verbal, normalizado a 0-100
+  comunicacion: number | null; // desde bloque verbal, normalizado a 0-100; null = sin evaluar (NUNCA 0 inventado)
 }
 
 export function calcularPuntajesCognitivo(
   correctasMatrices: number,
   correctasRotacion: number,
   largoMaximoSecuencias: number,
-  puntajeComunicacion: number = 0,
+  puntajeComunicacion: number | null = null,
   correctasSeries: number = 0,
 ): PuntajesCognitivo {
   return {

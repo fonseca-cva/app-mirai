@@ -1,6 +1,12 @@
 // Rúbricas de evaluación del Bloque Verbal — sección 4 de la spec.
 // La IA evalúa estructura y comprensión, JAMÁS la opinión del estudiante.
-// // CONTENIDO PROVISORIO — pendiente de firma metodológica.
+//
+// VALIDEZ (plan de Camilo, entrega 1, punto 3): rúbricas ancladas con
+// descriptores explícitos por nivel (1 a 5) + ejemplo corto de qué cuenta como
+// cada nivel. Regla dura: texto bien escrito pero genérico NO pasa de 2; los
+// niveles 4 y 5 exigen evidencia concreta del estímulo en el texto del
+// estudiante. El filtro de pertinencia (punto 2) vive en promptPertinencia y
+// se ejecuta ANTES de estas rúbricas en app/api/evaluar/route.ts.
 
 import { z } from "zod";
 
@@ -19,17 +25,56 @@ export interface Evaluacion {
   area_mejora: string;
 }
 
+// ── Filtro de pertinencia (punto 2 del plan) ───────────────────────
+// Verificación binaria previa a la rúbrica: ¿la respuesta se refiere
+// efectivamente al texto/dilema/consigna presentado? Si NO es pertinente no se
+// puntúa: se guarda la respuesta con estado 'no_pertinente' y se ofrece un
+// único reintento al estudiante (ver BloqueVerbal.tsx).
+export const PertinenciaSchema = z.object({
+  pertinente: z.boolean(),
+  razon: z.string().min(1).max(300),
+});
+
+export function promptPertinencia(estimulo: string, respuesta: string): string {
+  return `Eres un control de calidad de un test vocacional. Tu ÚNICA tarea es decidir si la respuesta de un/a estudiante se refiere efectivamente al texto o dilema presentado, o si es un texto arbitrario sin relación con la consigna (por ejemplo, pegado desde otro lugar).
+
+Responde ESTRICTAMENTE en JSON con el esquema: {"pertinente": true|false, "razon": "..."}
+- "pertinente": true SOLO si la respuesta alude a contenido específico del estímulo o responde directamente a la pregunta planteada.
+- "pertinente": false si la respuesta es un texto genérico intercambiable (podría usarse ante cualquier consigna), trata de otro tema, o es una copia literal del propio estímulo.
+- "razon": una frase corta que justifique la decisión.
+- No agregues texto fuera del JSON.
+
+ESTÍMULO PRESENTADO:
+${estimulo}
+
+RESPUESTA DEL ESTUDIANTE:
+${respuesta}`;
+}
+
+// ── Rúbrica anclada común a las 3 tareas (punto 3 del plan) ────────
+const REGLA_ANCLAJE = `RÚBRICA ANCLADA (niveles 1 al 5). Usa TODO el rango: la mayoría de las respuestas NO merece 4 o 5.
+- Nivel 1: no responde a la consigna, repite el estímulo o es incomprensible. Ejemplo: "no sé, el texto habla de cosas".
+- Nivel 2: texto bien escrito pero GENÉRICO: podría aplicarse a cualquier tema, sin referirse al estímulo. Ejemplo: "la comunicación es importante y hay que expresarse bien" (sin nombrar nada del texto, dilema ni consigna).
+- Nivel 3: respuesta pertinente con alguna idea propia, pero desarrollo parcial o sin evidencia concreta del estímulo. Ejemplo: "la minería tiene impactos, pero también sirve para la economía" (idea propia sin citar contenido específico).
+- Nivel 4: respuesta pertinente CON evidencia concreta del estímulo (refiere a contenido específico: datos, ejemplos, argumentos del texto o dilema) y desarrollo organizado. Ejemplo: "el texto dice que la minería ya usa agua de mar desalinizada, y eso muestra que la sostenibilidad es posible si hay inversión".
+- Nivel 5: cumple el nivel 4 con varias evidencias concretas, estructura completa y conexiones propias (relaciona, matiza, contrapone). Ejemplo: "el texto muestra el conflicto entre identidad y progreso: mientras La Moneda se conserva por su valor histórico, otros inmuebles se demuelen por costo; esa tensión es la pregunta real".
+
+REGLA DURA: un texto bien escrito pero genérico NO puede superar el nivel 2. Los niveles 4 y 5 EXIGEN evidencia concreta del estímulo en el texto del estudiante (referencia a contenido específico, no generalidades).`;
+
 // ── Prompt para comprensión lectora ───────────────────────────────
 export function promptComprension(texto: string): string {
   return `Evalúa la siguiente respuesta de un/a estudiante a un texto de comprensión lectora.
 
 INSTRUCCIONES:
 - Evalúa SOLO la estructura y profundidad de la comprensión, NUNCA la opinión personal del estudiante.
+- La respuesta debe referirse al texto presentado; si no lo hace, es NO pertinente.
 - Clasifica el nivel como: "literal" (repite información textual), "inferencial" (conecta ideas), o "critico" (evalúa, cuestiona, relaciona con contexto).
-- Asigna un puntaje del 1 al 5 (1=muy superficial, 5=análisis profundo y bien estructurado).
+- Asigna un puntaje del 1 al 5 usando la rúbrica anclada.
 - Identifica una fortaleza concreta y un área de mejora específica.
 - Responde ESTRICTAMENTE en JSON con el esquema: {"nivel":"literal|inferencial|critico","puntaje":1-5,"fortaleza":"...","area_mejora":"..."}
 - No agregues texto fuera del JSON.
+
+${REGLA_ANCLAJE}
 
 TEXTO LEÍDO POR EL ESTUDIANTE:
 ${texto}
@@ -45,16 +90,42 @@ export function promptArgumentacion(dilema: string): string {
 INSTRUCCIONES:
 - Evalúa SOLO la estructura del argumento (afirmación → razón → evidencia), NUNCA la opinión del estudiante.
 - No penalices ni premies la postura tomada; evalúa cómo la defiende.
+- La argumentación debe referirse al dilema presentado; si no lo hace, es NO pertinente.
 - Clasifica el nivel como: "literal" (solo afirma sin desarrollar), "inferencial" (da razones), o "critico" (estructura completa con evidencia y contrapunto).
-- Asigna un puntaje del 1 al 5.
+- Asigna un puntaje del 1 al 5 usando la rúbrica anclada.
 - Identifica una fortaleza concreta y un área de mejora específica.
 - Responde ESTRICTAMENTE en JSON con el esquema: {"nivel":"literal|inferencial|critico","puntaje":1-5,"fortaleza":"...","area_mejora":"..."}
 - No agregues texto fuera del JSON.
+
+${REGLA_ANCLAJE}
 
 DILEMA PRESENTADO:
 ${dilema}
 
 ARGUMENTACIÓN DEL ESTUDIANTE:
+`;
+}
+
+// ── Prompt para expresión escrita ─────────────────────────────────
+export function promptExpresion(consigna: string): string {
+  return `Evalúa la siguiente expresión escrita libre de un/a estudiante ante una consigna.
+
+INSTRUCCIONES:
+- Evalúa SOLO la estructura, riqueza y fluidez de la expresión, NUNCA la opinión del estudiante.
+- No juzgues ortografía ni caligrafía.
+- El texto debe responder a la consigna presentada; si no lo hace, es NO pertinente.
+- Clasifica el nivel como: "literal" (enumera ideas sin desarrollo), "inferencial" (desarrolla ideas con detalles o ejemplos), o "critico" (estructura completa, voz propia, conexiones y matices).
+- Asigna un puntaje del 1 al 5 usando la rúbrica anclada.
+- Identifica una fortaleza concreta y un área de mejora específica.
+- Responde ESTRICTAMENTE en JSON con el esquema: {"nivel":"literal|inferencial|critico","puntaje":1-5,"fortaleza":"...","area_mejora":"..."}
+- No agregues texto fuera del JSON.
+
+${REGLA_ANCLAJE}
+
+CONSIGNA PRESENTADA:
+${consigna}
+
+RESPUESTA DEL ESTUDIANTE:
 `;
 }
 
@@ -76,26 +147,6 @@ export const DILEMAS_ARGUMENTACION = [
   "¿Debería Chile priorizar la inversión en transporte público por sobre la construcción de nuevas autopistas?",
 ];
 
-// ── Prompt para expresión escrita ─────────────────────────────────
-export function promptExpresion(consigna: string): string {
-  return `Evalúa la siguiente expresión escrita libre de un/a estudiante ante una consigna.
-
-INSTRUCCIONES:
-- Evalúa SOLO la estructura, riqueza y fluidez de la expresión, NUNCA la opinión del estudiante.
-- No juzgues ortografía ni caligrafía.
-- Clasifica el nivel como: "literal" (enumera ideas sin desarrollo), "inferencial" (desarrolla ideas con detalles o ejemplos), o "critico" (estructura completa, voz propia, conexiones y matices).
-- Asigna un puntaje del 1 al 5 (1=respuesta mínima, 5=expresión rica y bien organizada).
-- Identifica una fortaleza concreta y un área de mejora específica.
-- Responde ESTRICTAMENTE en JSON con el esquema: {"nivel":"literal|inferencial|critico","puntaje":1-5,"fortaleza":"...","area_mejora":"..."}
-- No agregues texto fuera del JSON.
-
-CONSIGNA PRESENTADA:
-${consigna}
-
-RESPUESTA DEL ESTUDIANTE:
-`;
-}
-
 // ── Banco de consignas para expresión escrita ─────────────────────
 // Consignas abiertas, tema neutro, sin respuesta correcta. Rotan por session_id.
 // // CONTENIDO PROVISORIO — pendiente de firma metodológica.
@@ -106,4 +157,6 @@ export const CONSIGNAS_EXPRESION = [
 ];
 
 // ── Límites de rate limiting ──────────────────────────────────────
-export const RATE_LIMIT_POR_SESSION = 6; // máximo 6 llamadas por sesión
+// 9 llamadas por sesión: (pertinencia + rúbrica + doble evaluación) × 2
+// intentos como máximo (reintento permitido solo tras 'no_pertinente').
+export const RATE_LIMIT_POR_SESSION = 9;

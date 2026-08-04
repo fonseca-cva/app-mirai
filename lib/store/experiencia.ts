@@ -41,7 +41,15 @@ export interface RespuestaVerbal {
   tarea: "comprension" | "argumentacion" | "expresion";
   texto: string;
   evaluacion: unknown | null;
-  estado: "pendiente" | "evaluado" | "error";
+  // Validez (plan de Camilo): 'no_pertinente' = filtro de pertinencia rechazó la
+  // respuesta (se guarda igual para QA); 'no_evaluado' = evaluación no disponible
+  // (sin proveedor, fallo o formato inválido). NUNCA se inventa un puntaje.
+  estado: "pendiente" | "evaluado" | "error" | "no_pertinente" | "no_evaluado";
+  // Telemetría de control de calidad (solo QA: no afecta puntaje ni se muestra).
+  pegado?: boolean;
+  caracteresPegados?: number;
+  revisionRequerida?: boolean;
+  intento?: number;
 }
 
 export interface RespuestaDivergente {

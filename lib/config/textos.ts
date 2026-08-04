@@ -344,6 +344,7 @@ export const bloqueVerbal = {
   evaluando: "Evaluando tu respuesta...", // PENDIENTE PASADA DE COPY
   error: "No pudimos evaluar esta respuesta. Puedes seguir igual.", // PENDIENTE PASADA DE COPY
   reintentar: "Reintentar", // PENDIENTE PASADA DE COPY
+  omitir: "Seguir sin responder esta tarea", // PENDIENTE PASADA DE COPY
 };
 
 // ── Bloque exploratorio — Pensamiento divergente (Tanda D) ────────
@@ -437,6 +438,11 @@ export const informe = {
     medio: "En desarrollo", // PENDIENTE PASADA DE COPY
     bajo: "Área a desarrollar", // PENDIENTE PASADA DE COPY
   },
+  // Validez (plan de Camilo): sin evaluación válida se muestra "sin evaluar",
+  // NUNCA un número inventado (antes mostraba 0%).
+  sinEvaluar: "Sin evaluar", // PENDIENTE PASADA DE COPY
+  sinEvaluarNota:
+    "No alcanzamos a evaluar esta capacidad hoy. Puedes intentar la experiencia de nuevo más adelante.", // PENDIENTE PASADA DE COPY
   seccionCaminos: "Caminos para explorar", // PENDIENTE PASADA DE COPY
   // Bloque Integración: de dónde sale el perfil de intereses (pesos 45/40/15).
   seccionConvergencia: "De dónde sale este perfil", // PENDIENTE PASADA DE COPY
