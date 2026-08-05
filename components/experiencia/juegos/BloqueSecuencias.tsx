@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { bloqueSecuencias, juegosCognitivos } from "@/lib/config/textos";
 import { PadSecuencias } from "@/components/experiencia/juegos/PadSecuencias";
+import { IconoOrigamiSVG, type TipoOrigami } from "@/components/experiencia/juegos/IconoOrigamiSVG";
 import { useSecuencias, type IntentoSecuencia } from "@/components/experiencia/juegos/useSecuencias";
 import { puntajeSecuencias } from "@/lib/logic/secuencias";
 import { DemoSecuencias } from "@/components/experiencia/tutorial/Demos";
@@ -26,16 +27,18 @@ interface Props {
 const SECUENCIA_PRACTICA_1 = [0, 3];
 const SECUENCIA_PRACTICA_2 = [1, 4, 2];
 
+const SIMBOLOS_PROPOSITO: TipoOrigami[] = ["grulla", "barco", "flor", "estrella", "casa", "pez"];
+
 // Imagen estática del juego para la pantalla de propósito (sin animación).
 function ImagenEstaticaSecuencias() {
   return (
     <div className="grid grid-cols-3 gap-3">
-      {["△", "○", "◇", "⬡", "□", "⏢"].map((s, i) => (
+      {SIMBOLOS_PROPOSITO.map((tipo, i) => (
         <div
           key={i}
-          className="flex h-14 w-14 items-center justify-center rounded-[14px] border-2 border-tinta/15 bg-blanco-papel/70 text-lg sm:h-16 sm:w-16"
+          className="flex h-14 w-14 items-center justify-center rounded-[14px] border-2 border-tinta/15 bg-blanco-papel/70 sm:h-16 sm:w-16"
         >
-          {s}
+          <IconoOrigamiSVG tipo={tipo} tamano={40} titulo={`Símbolo ${i + 1}: ${tipo}`} />
         </div>
       ))}
     </div>

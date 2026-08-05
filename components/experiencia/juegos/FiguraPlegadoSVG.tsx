@@ -132,6 +132,19 @@ export function PanelPerforado({ pliegues, puntos }: EstimuloProps) {
   );
 }
 
+// Imagen estática (sin props) para la pantalla de propósito: mismo papel, doblez punteado
+// coral y perforación que ven luego en la demo y en los ítems reales.
+export function ImagenEstaticaPlegadoSVG() {
+  return (
+    <svg width={TAMANO} height={TAMANO} viewBox={`0 0 ${TAMANO} ${TAMANO}`} role="img" aria-label="Papel con línea de doblez y perforación">
+      <rect x={0} y={0} width={TAMANO} height={TAMANO} fill="var(--color-blanco-papel)" stroke="var(--color-tinta)" strokeOpacity={0.15} />
+      <line x1={TAMANO / 2} y1={0} x2={TAMANO / 2} y2={TAMANO} stroke="var(--color-coral)" strokeDasharray="4 3" strokeWidth={2} />
+      <circle cx={TAMANO / 2 + 18} cy={TAMANO / 2} r={5} fill="none" stroke="var(--color-coral)" strokeWidth={2} />
+      <circle cx={TAMANO / 2 + 18} cy={TAMANO / 2} r={1.5} fill="var(--color-coral)" />
+    </svg>
+  );
+}
+
 interface AlternativaProps {
   puntos: Punto[];
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useReducedMotion } from "./useTutorial";
 import { PanelDoblez, PanelPerforado, AlternativaPlegado } from "@/components/experiencia/juegos/FiguraPlegadoSVG";
 import type { Eje } from "@/lib/logic/rotacion";
+import { IconoOrigamiSVG, type TipoOrigami } from "@/components/experiencia/juegos/IconoOrigamiSVG";
 
 // ── Animación CSS compartida ────────────────────────────────────────
 
@@ -388,7 +389,7 @@ export function DemoPlegado({ onCicloCompletado }: Props) {
 // ── Demo: Secuencias ────────────────────────────────────────────────
 
 const SECUENCIA_DEMO = [0, 2, 4]; // índices de símbolos
-const SIMBOLOS = ["△", "○", "◇", "⬡", "□", "⏢"];
+const SIMBOLOS: TipoOrigami[] = ["grulla", "barco", "flor", "estrella", "casa", "pez"];
 
 export function DemoSecuencias({ onCicloCompletado }: Props) {
   const reduced = useReducedMotion();
@@ -468,10 +469,10 @@ export function DemoSecuencias({ onCicloCompletado }: Props) {
       </p>
 
       <div className="grid grid-cols-3 gap-3">
-        {SIMBOLOS.map((s, i) => (
+        {SIMBOLOS.map((tipo, i) => (
           <div
             key={i}
-            className={`flex h-16 w-16 items-center justify-center rounded-[14px] border-2 text-xl transition-all duration-500 sm:h-20 sm:w-20 ${
+            className={`flex h-16 w-16 items-center justify-center rounded-[14px] border-2 transition-all duration-500 sm:h-20 sm:w-20 ${
               simboloActivo === i
                 ? "border-coral bg-coral/10"
                 : paso >= 4 && SECUENCIA_DEMO.includes(i)
@@ -479,7 +480,7 @@ export function DemoSecuencias({ onCicloCompletado }: Props) {
                   : "border-tinta/15 bg-blanco-papel/70"
             }`}
           >
-            {s}
+            <IconoOrigamiSVG tipo={tipo} tamano={48} titulo={`Símbolo ${i + 1}: ${tipo}`} />
           </div>
         ))}
       </div>

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { itemsRotacion, itemPracticaPlegado, itemPracticaPlegado2 } from "@/lib/data/rotacion";
 import { bloqueRotacion, juegosCognitivos } from "@/lib/config/textos";
 import { ItemRotacion, type ResultadoItemRotacion } from "@/components/experiencia/juegos/ItemRotacion";
+import { ImagenEstaticaPlegadoSVG } from "@/components/experiencia/juegos/FiguraPlegadoSVG";
 import { FoldTransition } from "@/components/origami/FoldTransition";
 import { DemoPlegado } from "@/components/experiencia/tutorial/Demos";
 import { PracticaRotacion } from "@/components/experiencia/tutorial/PracticaRotacion";
@@ -20,21 +21,6 @@ export interface ResultadoRotacion {
 
 interface Props {
   onCompletar: (resultados: ResultadoRotacion[]) => void;
-}
-
-// Imagen estática del juego para la pantalla de propósito (sin animación).
-function ImagenEstaticaPlegado() {
-  return (
-    <svg width={90} height={90} viewBox="0 0 80 80">
-      <polygon
-        points="40,10 65,20 60,55 30,65 15,40"
-        fill="var(--color-teal-medio)"
-        stroke="var(--color-teal-profundo)"
-        strokeWidth={2}
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
 }
 
 // Orquesta "Pliegues en el espacio": tutorial (propósito + demo en loop + 2 prácticas) → 7 ítems reales.
@@ -77,7 +63,7 @@ export function BloqueRotacion({ onCompletar }: Props) {
         <BotonSaltarTutorial onSaltar={tutorial.saltarTutorial} />
         <h1 className="font-display text-2xl font-semibold">{bloqueRotacion.titulo}</h1>
         <p className="text-sm text-tinta/60">{bloqueRotacion.fraseFuerza}</p>
-        <ImagenEstaticaPlegado />
+        <ImagenEstaticaPlegadoSVG />
         <button
           onClick={tutorial.verComoFunciona}
           className="rounded-[14px] bg-coral px-6 py-3 text-base font-medium text-blanco-papel transition hover:opacity-90"
