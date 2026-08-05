@@ -38,6 +38,10 @@ export interface RespuestaCognitivo {
 }
 
 export interface RespuestaVerbal {
+  // Id de la fila respuestas_verbal insertada en 'pendiente' antes de evaluar
+  // (reintento asíncrono, punto 10). Si existe, el sync del bloque actualiza la
+  // fila vía RPC en vez de insertar una nueva.
+  id?: number;
   tarea: "comprension" | "argumentacion" | "expresion";
   texto: string;
   evaluacion: unknown | null;
@@ -49,6 +53,9 @@ export interface RespuestaVerbal {
   pegado?: boolean;
   caracteresPegados?: number;
   revisionRequerida?: boolean;
+  // Doble evaluación: true si la evaluación se reportó con un solo evaluador
+  // (el segundo no estaba configurado o falló). Se persiste para auditoría.
+  acuerdoNoDisponible?: boolean;
   intento?: number;
 }
 

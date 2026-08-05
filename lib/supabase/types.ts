@@ -51,6 +51,9 @@ export interface RespuestaVerbalRow {
   pegado: boolean;
   caracteres_pegados: number;
   revision_requerida: boolean;
+  // Migración 00016: true si la evaluación se reportó con un solo evaluador
+  // (el segundo no estaba configurado o falló). NOT NULL DEFAULT false.
+  acuerdo_no_disponible?: boolean;
   intento: number;
   creado_en?: string;
   evaluado_en?: string | null;

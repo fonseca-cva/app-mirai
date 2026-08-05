@@ -21,7 +21,10 @@ import { construirCorreoInformePermanente } from "@/lib/email/plantillaInforme";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const RESEND_API_KEY = process.env.RESEND_API_KEY ?? "";
-const EMAIL_FROM = process.env.EMAIL_FROM ?? "Mirai <informe@informes.miraiapp.cl>";
+// Remitente: dominio raíz verificable en Resend (decisión de Camilo — el SPF de
+// Zoho en la raíz NO se toca: los registros de Resend viven en el subdominio
+// 'send' y en el selector DKIM, ver 00017 o el plan de DNS del equipo).
+const EMAIL_FROM = process.env.EMAIL_FROM ?? "Mirai <informe@miraiapp.cl>";
 
 const RequestSchema = z.object({ sessionId: z.string().uuid() });
 

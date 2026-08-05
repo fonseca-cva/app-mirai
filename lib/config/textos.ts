@@ -345,6 +345,8 @@ export const bloqueVerbal = {
   error: "No pudimos evaluar esta respuesta. Puedes seguir igual.", // PENDIENTE PASADA DE COPY
   reintentar: "Reintentar", // PENDIENTE PASADA DE COPY
   omitir: "Seguir sin responder esta tarea", // PENDIENTE PASADA DE COPY
+  // Requisito de Camilo (anonimización): advertencia antes de cada tarea escrita.
+  avisoDatosPersonales: "No incluyas tu nombre ni datos personales en tu respuesta.",
 };
 
 // ── Bloque exploratorio — Pensamiento divergente (Tanda D) ────────

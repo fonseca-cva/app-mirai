@@ -65,14 +65,53 @@ export async function syncRespuestasCognitivo(respuestas: RespuestaCognitivoRow[
 
 // ── Sync de respuestas verbal ─────────────────────────────────────
 // El texto se guarda aunque la evaluación falle (spec sección 4).
+// Si la fila ya tiene id (insertada en 'pendiente' antes de evaluar, para el
+// reintento asíncrono del punto 10), el resultado se escribe vía la RPC
+// actualizar_evaluacion_verbal (verifica propiedad y no pisa filas 'evaluado').
 export async function syncRespuestaVerbal(respuesta: RespuestaVerbalRow): Promise<boolean> {
   if (!supabase) return false;
   const cliente = supabase;
   try {
+    if (respuesta.id) {
+      await conSesion(() =>
+        cliente.rpc("actualizar_evaluacion_verbal", {
+          p_id: respuesta.id,
+          p_evaluacion_json: respuesta.evaluacion_json,
+          p_estado: respuesta.estado,
+          p_revision_requerida: respuesta.revision_requerida,
+          p_acuerdo_no_disponible: respuesta.acuerdo_no_disponible ?? false,
+        })
+      );
+      return true;
+    }
     await conSesion(() => cliente.from("respuestas_verbal").insert(respuesta));
     return true;
   } catch {
     return false;
+  }
+}
+
+// ── Insert de respuesta verbal en 'pendiente' (punto 10) ──────────
+// Se inserta ANTES de llamar a /api/evaluar para tener el id con el que el
+// servidor puede completar la evaluación en segundo plano si falla en el
+// momento. Devuelve el id de la fila, o null si el insert falló.
+export async function insertarRespuestaVerbalPendiente(
+  respuesta: Omit<RespuestaVerbalRow, "estado" | "evaluacion_json" | "revision_requerida">
+): Promise<number | null> {
+  if (!supabase) return null;
+  const cliente = supabase;
+  try {
+    const { data, error } = await conSesion(() =>
+      cliente
+        .from("respuestas_verbal")
+        .insert({ ...respuesta, estado: "pendiente", evaluacion_json: null, revision_requerida: false })
+        .select("id")
+        .maybeSingle()
+    );
+    if (error) return null;
+    return (data?.id as number | undefined) ?? null;
+  } catch {
+    return null;
   }
 }
 
@@ -147,10 +186,26 @@ export async function syncRespuestasDivergente(respuestas: RespuestaDivergenteRo
 }
 
 // ── Sync de resultados ────────────────────────────────────────────
+// Guard de merge (punto 10): si el reintento asíncrono del servidor ya
+// completó la comunicación (perfil_json.capacidades.comunicacion != null) y
+// este guardado local aún la trae null (la evaluación falló en el momento),
+// NO se pisa la versión del servidor: el informe permanente ya quedó completo.
 export async function syncResultados(resultado: ResultadoRow): Promise<boolean> {
   if (!supabase) return false;
   const cliente = supabase;
   try {
+    const entrante = resultado.perfil_json;
+    if (entrante.capacidades?.comunicacion == null) {
+      const { data: existente } = await conSesion(() =>
+        cliente.from("resultados").select("perfil_json").eq("session_id", resultado.session_id).maybeSingle()
+      );
+      const comunicacionExistente = (existente?.perfil_json as { capacidades?: { comunicacion?: number | null } } | undefined)
+        ?.capacidades?.comunicacion;
+      if (comunicacionExistente != null) {
+        // El servidor ya completó la dimensión: no pisar el informe.
+        return true;
+      }
+    }
     await conSesion(() => cliente.from("resultados").upsert(resultado, { onConflict: "session_id" }));
     return true;
   } catch {

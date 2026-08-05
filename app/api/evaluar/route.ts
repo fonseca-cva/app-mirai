@@ -1,45 +1,55 @@
 // POST /api/evaluar — Evalúa respuestas del Bloque Verbal usando IA.
 // Sección 4 de la spec: la clave del proveedor vive SOLO en variable de entorno del servidor.
 //
-// VALIDEZ (plan de Camilo, entrega 1, puntos 1-7). Pipeline, en orden:
+// VALIDEZ (plan de Camilo, entregas 1 y 2). Pipeline:
 //   1. Validación de entrada (mínimo 120 caracteres, igual que el cliente).
-//   2. Rechazo de copia literal del estímulo (solapamiento de n-gramas) — SIN llamar al modelo.
-//   3. Filtro de pertinencia (modelo principal): binario pertinente/no pertinente + razón.
-//      Si NO es pertinente → NO se puntúa: estado 'no_pertinente' (el cliente ofrece 1 reintento).
-//   4. Rúbrica anclada 1-5 (modelo principal).
-//   5. Doble evaluación (modelo secundario si AI_API_KEY_2 está configurada): se guardan
-//      ambos puntajes; si difieren en más de 1 punto → revision_requerida: true y se
-//      reporta el MENOR. acuerdo_evaluadores alimenta la métrica de % de acuerdo del sistema.
-//   6. NUNCA se inventa un puntaje: sin clave, fallo del proveedor o formato inválido →
-//      estado 'no_evaluado' (la dimensión se reporta "sin evaluar" en el informe).
+//   2. ANONIMIZACIÓN obligatoria (requisito de Camilo): el texto del estudiante
+//      pasa por sanitizarTextoEstudiante() ANTES de armar cualquier prompt.
+//      Al proveedor viaja SOLO estímulo + rúbrica + texto anonimizado
+//      (allowlist en lib/anonimizacion.ts). session_id/user_id/correo/apodo/
+//      edad/curso jamás entran al prompt. El texto original se guarda en la
+//      base sin alterar. Cada llamada loguea la LISTA de campos enviados.
+//   3. Rechazo de copia literal (sin llamar al modelo).
+//   4. Filtro de pertinencia (modelo principal) — gate serial.
+//   5. Rúbrica anclada 1-5: evaluador 1 (DeepSeek) y evaluador 2 (Groq, si
+//      AI_API_KEY_2 existe) EN PARALELO. El segundo es OPCIONAL: si falta o
+//      falla, se puntúa con el primero y se expone acuerdo_no_disponible: true
+//      (un evaluador funcionando > ninguna evaluación).
+//   6. NUNCA se inventa un puntaje: sin clave, fallo o formato inválido →
+//      estado 'no_evaluado'.
+//   7. REINTENTO ASÍNCRONO (punto 10): si la cadena falla y el cliente envió
+//      respuestaId (fila insertada en 'pendiente'), se reintenta UNA vez en
+//      segundo plano con after(). Si resuelve, se actualiza la fila vía RPC
+//      actualizar_evaluacion_verbal y se completa el perfil_json del informe
+//      (comunicacion + carrerasRecomendadas). El estudiante ya recibió su
+//      informe: la dimensión se completa sola cuando la evaluación resuelve.
 //
-// POLÍTICA DE DATOS (punto 7 del plan) — verificada en fuentes oficiales:
-//   * OpenRouter: no entrena con tus datos, pero los model providers pueden.
-//     gpt-4o-mini es de OpenAI: su API no entrena con datos por defecto (opt-in).
-//     No existe flag por request: el control es la elección de modelo/proveedor.
-//   * Groq: no retiene datos de cliente en inferencia por defecto; logs de monitoreo
-//     hasta 30 días; ZDR (Zero Data Retention) disponible en Data Controls (admin de la
-//     org). Groq no entrena (es proveedor de inferencia).
-//   * No hay flag "no entrenar" en estas APIs; documentamos la política aquí. La elección
-//     definitiva de proveedor para texto escrito por menores queda sujeta a revisión legal
-//     (transferencia internacional de datos). Mientras eso se resuelve, NO se cambia el
-//     proveedor principal.
+// POLÍTICA DE DATOS (DeepSeek + Groq): documentada en lib/logic/evaluacionIA.ts.
 
 import { NextRequest, NextResponse } from "next/server";
+import { after } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import {
-  EvaluacionSchema,
-  PertinenciaSchema,
-  promptComprension,
-  promptArgumentacion,
-  promptExpresion,
-  promptPertinencia,
+  RATE_LIMIT_POR_SESSION,
   TEXTOS_COMPRENSION,
   DILEMAS_ARGUMENTACION,
   CONSIGNAS_EXPRESION,
-  RATE_LIMIT_POR_SESSION,
 } from "@/lib/config/rubricas";
-import { esCopiaLiteral, CARACTERES_MINIMOS } from "@/lib/logic/verbal";
+import { CARACTERES_MINIMOS } from "@/lib/logic/verbal";
+import { ejecutarCadenaVerbal } from "@/lib/logic/evaluacionIA";
+import type { TareaVerbal } from "@/lib/logic/evaluacionIA";
+import { recalcularPerfilConComunicacion } from "@/lib/logic/perfilServidor";
+import type { PerfilResultado } from "@/lib/supabase/types";
+import type {
+  Respuesta,
+  RespuestaActividad,
+  RespuestaAsignatura,
+  Aspiracion,
+} from "@/lib/logic/puntaje";
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 // ── Rate limiter en memoria ───────────────────────────────────────
 // // LIMITACIÓN: se resetea en cada cold start de Vercel.
@@ -69,6 +79,9 @@ const EvaluarRequestSchema = z.object({
   indiceTexto: z.number().int().min(0).optional(), // para comprensión: índice del texto base
   indiceDilema: z.number().int().min(0).optional(), // para argumentación: índice del dilema
   indiceExpresion: z.number().int().min(0).optional(), // para expresión: índice de la consigna
+  // Id de la fila respuestas_verbal insertada en 'pendiente' por el cliente
+  // antes de evaluar: habilita el reintento asíncrono (punto 10).
+  respuestaId: z.number().int().positive().optional(),
   // Telemetría de control de calidad (punto 4): SOLO metadato. No va al modelo,
   // no afecta el puntaje, no se muestra al usuario.
   pegado: z.boolean().optional(),
@@ -76,94 +89,135 @@ const EvaluarRequestSchema = z.object({
   intento: z.number().int().min(1).max(2).optional(),
 });
 
-// ── Proveedores de IA (OpenRouter/Groq-compatibles) ───────────────
-interface ProveedorConfig {
-  url: string;
-  apiKey: string;
-  model: string;
-}
+// ── Reintento asíncrono (punto 10) ────────────────────────────────
+const reintentosEnCurso = new Set<string>();
 
-// Evaluador principal. Sin AI_API_KEY → null (NO se simula: la evaluación queda 'no_evaluado').
-function proveedorPrincipal(): ProveedorConfig | null {
-  const apiKey = process.env.AI_API_KEY ?? "";
-  if (!apiKey) return null;
-  return {
-    url: process.env.AI_PROVIDER_URL ?? "https://openrouter.ai/api/v1/chat/completions",
-    apiKey,
-    model: process.env.AI_MODEL ?? "openai/gpt-4o-mini",
-  };
-}
-
-// Segundo evaluador (doble evaluación, punto 5). Groq es aceptable. Sin clave → un solo
-// evaluador (comportamiento degradado documentado: revision_requerida siempre false).
-function proveedorSecundario(): ProveedorConfig | null {
-  const apiKey = process.env.AI_API_KEY_2 ?? "";
-  if (!apiKey) return null;
-  return {
-    url: process.env.AI_PROVIDER_URL_2 ?? "https://api.groq.com/openai/v1/chat/completions",
-    apiKey,
-    model: process.env.AI_MODEL_2 ?? "llama-3.3-70b-versatile",
-  };
-}
-
-interface ChatMessage {
-  role: "system" | "user" | "assistant";
-  content: string;
-}
-
-async function llamarIA(prompt: string, proveedor: ProveedorConfig | null): Promise<string | null> {
-  if (!proveedor) return null; // sin proveedor → no se evalúa, nunca se inventa
-
-  const messages: ChatMessage[] = [
-    { role: "system", content: "Eres un evaluador vocacional. Evalúas estructura y comprensión, nunca la opinión del estudiante. Respondes solo en JSON según el esquema indicado." },
-    { role: "user", content: prompt },
-  ];
+async function reintentarEvaluacion(opts: {
+  sessionId: string;
+  tarea: TareaVerbal;
+  estimulo: string;
+  texto: string;
+  respuestaId: number;
+  intento: number;
+  authHeader: string | null;
+}): Promise<void> {
+  const clave = `${opts.sessionId}:${opts.tarea}:${opts.intento}:${opts.respuestaId}`;
+  if (reintentosEnCurso.has(clave)) return;
+  reintentosEnCurso.add(clave);
 
   try {
-    const respuesta = await fetch(proveedor.url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${proveedor.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: proveedor.model,
-        messages,
-        temperature: 0.3, // baja para consistencia en evaluación
-        max_tokens: 500,
-      }),
-      signal: AbortSignal.timeout(20000), // 20s: pertinencia + rúbrica exigen más margen
+    const r = await ejecutarCadenaVerbal({
+      sessionId: opts.sessionId,
+      tarea: opts.tarea,
+      estimulo: opts.estimulo,
+      texto: opts.texto,
     });
 
-    if (!respuesta.ok) {
-      console.error(`[evaluar] API responded ${respuesta.status}: ${await respuesta.text()}`);
-      return null;
+    if (r.estado !== "evaluado" || !r.evaluacion) {
+      console.log(
+        `[evaluar] reintento sin resultado sessionId=${opts.sessionId} estado=${r.estado}`
+      );
+      return;
     }
 
-    const data = await respuesta.json();
-    const content: string = data?.choices?.[0]?.message?.content ?? "";
-    return content;
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !opts.authHeader) {
+      console.warn(
+        `[evaluar] reintento sin sesión para actualizar sessionId=${opts.sessionId} (authHeader ausente)`
+      );
+      return;
+    }
+
+    // Cliente as-user con el JWT capturado del request: RLS aplica normal.
+    const cliente = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      global: { headers: { Authorization: opts.authHeader } },
+    });
+
+    // 1) Persistir la evaluación en la fila (RPC con verificación de propiedad
+    //    y guarda de terminalidad: no pisa filas ya 'evaluado').
+    const { data: filaOk, error: errFila } = await cliente.rpc(
+      "actualizar_evaluacion_verbal",
+      {
+        p_id: opts.respuestaId,
+        p_evaluacion_json: r.evaluacion,
+        p_estado: "evaluado",
+        p_revision_requerida: r.revision_requerida,
+        p_acuerdo_no_disponible: r.acuerdo_no_disponible,
+      }
+    );
+    if (errFila) {
+      console.error(
+        `[evaluar] reintento: RPC falló sessionId=${opts.sessionId} error=${errFila.message}`
+      );
+      return;
+    }
+    console.log(
+      `[evaluar] reintento ok sessionId=${opts.sessionId} fila=${opts.respuestaId} actualizada=${filaOk}`
+    );
+
+    // 2) Completar el informe guardado (snapshot perfil_json): solo si quedó
+    //    con comunicacion null (el reintento no pisa una evaluación posterior).
+    const { data: filaResultado } = await cliente
+      .from("resultados")
+      .select("perfil_json")
+      .eq("session_id", opts.sessionId)
+      .maybeSingle();
+
+    const perfilAnterior = filaResultado?.perfil_json as PerfilResultado | undefined;
+    if (perfilAnterior && perfilAnterior.capacidades?.comunicacion == null) {
+      const [gustos, actividades, asignaturas, aspiracion, cognitivo] =
+        await Promise.all([
+          cliente.from("respuestas_gustos").select("contexto_id, valor").eq("session_id", opts.sessionId),
+          cliente.from("respuestas_actividades").select("actividad_id, valor").eq("session_id", opts.sessionId),
+          cliente.from("respuestas_asignaturas").select("asignatura_id, valor").eq("session_id", opts.sessionId),
+          cliente.from("aspiraciones").select("opcion, detalle").eq("session_id", opts.sessionId).maybeSingle(),
+          cliente.from("respuestas_cognitivo").select("juego, correcto, nivel").eq("session_id", opts.sessionId),
+        ]);
+
+      const filas = {
+        gustos: (gustos?.data ?? []).map((g): Respuesta => ({
+          contextoId: g.contexto_id,
+          valor: g.valor,
+        })),
+        actividades: (actividades?.data ?? []).map((a): RespuestaActividad => ({
+          actividadId: a.actividad_id,
+          valor: a.valor,
+        })),
+        asignaturas: (asignaturas?.data ?? []).map((a): RespuestaAsignatura => ({
+          asignaturaId: a.asignatura_id,
+          valor: a.valor,
+        })),
+        aspiracion: (aspiracion?.data as Aspiracion | null) ?? null,
+        cognitivo: cognitivo?.data ?? [],
+      };
+
+      const perfilNuevo = recalcularPerfilConComunicacion(
+        perfilAnterior,
+        filas,
+        Math.round((r.evaluacion.puntaje / 5) * 100)
+      );
+
+      const { error: errPerfil } = await cliente
+        .from("resultados")
+        .update({ perfil_json: perfilNuevo })
+        .eq("session_id", opts.sessionId);
+
+      if (errPerfil) {
+        console.error(
+          `[evaluar] reintento: perfil no actualizado sessionId=${opts.sessionId} error=${errPerfil.message}`
+        );
+      } else {
+        console.log(
+          `[evaluar] reintento: perfil completado sessionId=${opts.sessionId} comunicacion=${perfilNuevo.capacidades.comunicacion}`
+        );
+      }
+    }
   } catch (err) {
-    console.error("[evaluar] Error calling AI provider:", err);
-    return null;
-  }
-}
-
-// Extrae el JSON de la respuesta (puede venir envuelto en ```json ... ```).
-function extraerJson(raw: string): unknown {
-  const sinFences = raw.replace(/```json\s*/gi, "").replace(/```\s*$/gi, "").trim();
-  try {
-    return JSON.parse(sinFences);
-  } catch {
-    // Último recurso: recortar desde el primer "{" hasta el último "}".
-    const inicio = sinFences.indexOf("{");
-    const fin = sinFences.lastIndexOf("}");
-    if (inicio === -1 || fin === -1 || fin <= inicio) return null;
-    try {
-      return JSON.parse(sinFences.slice(inicio, fin + 1));
-    } catch {
-      return null;
-    }
+    const mensaje = err instanceof Error ? err.message : String(err);
+    console.error(
+      `[evaluar] reintento error sessionId=${opts.sessionId} error=${mensaje}`
+    );
+  } finally {
+    reintentosEnCurso.delete(clave);
   }
 }
 
@@ -198,107 +252,61 @@ export async function POST(request: NextRequest) {
           ? DILEMAS_ARGUMENTACION[indiceDilema ?? 0]
           : CONSIGNAS_EXPRESION[indiceExpresion ?? 0];
 
-    // ── Paso 1: rechazo de copia literal (punto 6) — sin llamar al modelo ──
-    if (esCopiaLiteral(texto, estimulo)) {
+    // Cadena completa (anonimización → copia literal → pertinencia →
+    // evaluador 1 + evaluador 2 en paralelo). Compartida con /debug.
+    const resultado = await ejecutarCadenaVerbal({
+      sessionId,
+      tarea,
+      estimulo,
+      texto,
+    });
+
+    // Reintento asíncrono: solo cuando la cadena falló (no_evaluado) y el
+    // cliente nos dio la fila 'pendiente' para completar.
+    if (resultado.estado === "no_evaluado" && parsed.data.respuestaId) {
+      const authHeader = request.headers.get("authorization");
+      after(() => {
+        void reintentarEvaluacion({
+          sessionId,
+          tarea,
+          estimulo,
+          texto,
+          respuestaId: parsed.data.respuestaId as number,
+          intento: parsed.data.intento ?? 1,
+          authHeader,
+        });
+      });
+    }
+
+    if (resultado.estado === "evaluado") {
       return NextResponse.json(
         {
-          estado: "no_pertinente",
-          razon: "copia_literal",
-          mensaje: "Tu respuesta repite el texto original. Cuéntalo con tus propias palabras.",
+          estado: "evaluado",
+          pertinente: true,
+          evaluacion: resultado.evaluacion,
+          evaluacion2: resultado.evaluacion2,
+          revision_requerida: resultado.revision_requerida,
+          acuerdo_evaluadores: resultado.acuerdo_evaluadores,
+          acuerdo_no_disponible: resultado.acuerdo_no_disponible,
         },
         { status: 200 }
       );
     }
 
-    const principal = proveedorPrincipal();
-
-    // ── Paso 2: filtro de pertinencia (punto 2) ──
-    const rawPertinencia = await llamarIA(promptPertinencia(estimulo, texto), principal);
-    if (rawPertinencia === null) {
-      // No se pudo verificar pertinencia → no se puntúa (conservador y válido).
-      return NextResponse.json(
-        { estado: "no_evaluado", mensaje: "No se pudo evaluar tu respuesta en este momento." },
-        { status: 200 }
-      );
-    }
-    const pertinencia = PertinenciaSchema.safeParse(extraerJson(rawPertinencia));
-    if (!pertinencia.success || !pertinencia.data.pertinente) {
+    if (resultado.estado === "no_pertinente") {
       return NextResponse.json(
         {
           estado: "no_pertinente",
-          razon: pertinencia.success ? pertinencia.data.razon : "sin_razon",
-          mensaje: "Parece que tu respuesta no habla del texto que leíste. ¿Quieres intentarlo de nuevo?",
+          razon: resultado.razon,
+          mensaje: resultado.mensaje,
         },
         { status: 200 }
       );
     }
 
-    // ── Paso 3: rúbrica anclada (evaluador principal) ──
-    const prompt =
-      tarea === "comprension"
-        ? promptComprension(estimulo)
-        : tarea === "argumentacion"
-          ? promptArgumentacion(estimulo)
-          : promptExpresion(estimulo);
-
-    const promptCompleto = prompt + "\n\n" + texto;
-
-    const raw1 = await llamarIA(promptCompleto, principal);
-    if (raw1 === null) {
-      return NextResponse.json(
-        { estado: "no_evaluado", mensaje: "No se pudo evaluar tu respuesta en este momento." },
-        { status: 200 }
-      );
-    }
-    const eval1 = EvaluacionSchema.safeParse(extraerJson(raw1));
-    if (!eval1.success) {
-      console.error("[evaluar] Invalid AI response format (evaluador 1):", raw1);
-      return NextResponse.json(
-        { estado: "no_evaluado", mensaje: "No se pudo evaluar tu respuesta en este momento." },
-        { status: 200 }
-      );
-    }
-
-    // ── Paso 4: doble evaluación (punto 5) ──
-    const secundario = proveedorSecundario();
-    let evaluacionReportada = eval1.data;
-    let evaluacion2: typeof eval1.data | null = null;
-    // El acuerdo solo existe si AMBOS evaluadores respondieron y coincidieron:
-    // sin secundario configurado, o si este falla, NO hay acuerdo que reportar.
-    let acuerdoEvaluadores = false;
-    let revisionRequerida = false;
-
-    if (secundario) {
-      const raw2 = await llamarIA(promptCompleto, secundario);
-      const eval2 = raw2 === null ? null : EvaluacionSchema.safeParse(extraerJson(raw2));
-      if (eval2?.success) {
-        evaluacion2 = eval2.data;
-        const diferencia = Math.abs(eval1.data.puntaje - eval2.data.puntaje);
-        if (diferencia > 1) {
-          revisionRequerida = true;
-          // Se usa el MENOR de los dos puntajes.
-          evaluacionReportada =
-            eval1.data.puntaje <= eval2.data.puntaje ? eval1.data : eval2.data;
-        } else {
-          acuerdoEvaluadores = true;
-        }
-      } else {
-        // El segundo evaluador falló o devolvió formato inválido: se reporta el
-        // primero y se marca para revisión (no se descarta la evaluación válida).
-        revisionRequerida = true;
-        if (raw2 !== null) console.error("[evaluar] Invalid AI response format (evaluador 2):", raw2);
-      }
-    }
-
+    // no_evaluado: sin proveedor, fallo del proveedor o formato inválido.
     return NextResponse.json(
-      {
-        estado: "evaluado",
-        pertinente: true,
-        evaluacion: evaluacionReportada,
-        evaluacion2,
-        revision_requerida: revisionRequerida,
-        acuerdo_evaluadores: acuerdoEvaluadores,
-      },
+      { estado: "no_evaluado", mensaje: resultado.mensaje },
       { status: 200 }
     );
   } catch (err) {

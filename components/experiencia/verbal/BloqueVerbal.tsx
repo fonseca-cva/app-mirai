@@ -5,6 +5,8 @@ import { bloqueVerbal, juegosCognitivos } from "@/lib/config/textos";
 import { TEXTOS_COMPRENSION, DILEMAS_ARGUMENTACION, CONSIGNAS_EXPRESION } from "@/lib/config/rubricas";
 import { useExperienciaStore, type RespuestaVerbal } from "@/lib/store/experiencia";
 import type { RespuestaVerbalRow } from "@/lib/supabase/types";
+import { obtenerAccessToken } from "@/lib/supabase/client";
+import { insertarRespuestaVerbalPendiente } from "@/lib/supabase/sync";
 
 interface Props {
   onCompletar: () => void;
@@ -96,7 +98,11 @@ export function BloqueVerbal({ onCompletar, onPausar }: Props) {
               pegado: r.pegado,
               caracteres_pegados: r.caracteresPegados,
               revision_requerida: r.revisionRequerida,
+              acuerdo_no_disponible: r.acuerdoNoDisponible ?? false,
               intento: r.intento,
+              // Si la fila ya existe (insert 'pendiente' antes de evaluar), el
+              // sync la ACTUALIZA vía RPC en vez de duplicar (punto 10).
+              ...(r.id ? { id: r.id } : {}),
             },
           }))
         );
@@ -111,12 +117,32 @@ export function BloqueVerbal({ onCompletar, onPausar }: Props) {
     setEvaluando(true);
     setError(false);
 
+    // Reintento asíncrono (punto 10): se inserta la fila en 'pendiente'
+    // ANTES de evaluar para que el servidor pueda completarla en segundo
+    // plano si la cadena falla en el momento. El id viaja en la llamada.
+    let respuestaId: number | null = null;
+
     try {
+      if (sessionId) {
+        respuestaId = await insertarRespuestaVerbalPendiente({
+          session_id: sessionId,
+          tarea,
+          texto: texto.trim(),
+          pegado,
+          caracteres_pegados: caracteresPegados,
+          intento: intentoActual,
+        });
+      }
+
       // Intentar llamar al endpoint real. Se envían pegado/caracteresPegados/intento
       // SOLO como metadato de control de calidad (no van al modelo, no afectan puntaje).
+      const token = await obtenerAccessToken();
       const respuesta = await fetch("/api/evaluar", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           sessionId,
           tarea,
@@ -124,6 +150,7 @@ export function BloqueVerbal({ onCompletar, onPausar }: Props) {
           indiceTexto,
           indiceDilema,
           indiceExpresion,
+          respuestaId,
           pegado,
           caracteresPegados,
           intento: intentoActual,
@@ -138,6 +165,7 @@ export function BloqueVerbal({ onCompletar, onPausar }: Props) {
 
       if (data.estado === "evaluado") {
         agregarRespuestaVerbal({
+          id: respuestaId ?? undefined,
           tarea,
           texto: texto.trim(),
           evaluacion: data.evaluacion as RespuestaVerbal["evaluacion"],
@@ -145,6 +173,7 @@ export function BloqueVerbal({ onCompletar, onPausar }: Props) {
           pegado,
           caracteresPegados,
           revisionRequerida: data.revision_requerida === true,
+          acuerdoNoDisponible: data.acuerdo_no_disponible === true,
           intento: intentoActual,
         });
         avanzarTarea();
@@ -156,6 +185,7 @@ export function BloqueVerbal({ onCompletar, onPausar }: Props) {
           // Se guarda la respuesta rechazada (QA/trazabilidad) y se ofrece el
           // único reintento permitido. El texto se mantiene para reescribir.
           agregarRespuestaVerbal({
+            id: respuestaId ?? undefined,
             tarea,
             texto: texto.trim(),
             evaluacion: null,
@@ -174,6 +204,7 @@ export function BloqueVerbal({ onCompletar, onPausar }: Props) {
         }
         // Segundo envío también no pertinente: la dimensión queda sin evaluar.
         agregarRespuestaVerbal({
+          id: respuestaId ?? undefined,
           tarea,
           texto: texto.trim(),
           evaluacion: null,
@@ -190,6 +221,7 @@ export function BloqueVerbal({ onCompletar, onPausar }: Props) {
         // Sin proveedor, fallo o formato inválido: NUNCA se inventa un puntaje.
         console.warn(`[verbal] ${data.mensaje ?? "Evaluación no disponible"}`);
         agregarRespuestaVerbal({
+          id: respuestaId ?? undefined,
           tarea,
           texto: texto.trim(),
           evaluacion: null,
@@ -218,6 +250,7 @@ export function BloqueVerbal({ onCompletar, onPausar }: Props) {
       // longitud — bug de validez reportado por Camilo; eliminado).
       console.warn("[verbal] API no disponible, respuesta queda sin evaluar");
       agregarRespuestaVerbal({
+        id: respuestaId ?? undefined,
         tarea,
         texto: texto.trim(),
         evaluacion: null,
@@ -294,6 +327,9 @@ export function BloqueVerbal({ onCompletar, onPausar }: Props) {
           <p className="text-sm text-tinta/90">{avisoPertinencia}</p>
         </div>
       )}
+
+      {/* Requisito de Camilo: advertencia de anonimización antes de cada tarea escrita. */}
+      <p className="text-xs text-tinta/50">{bloqueVerbal.avisoDatosPersonales}</p>
 
       <textarea
         value={texto}
