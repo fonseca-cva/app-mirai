@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calcularPuntajesCognitivo, puntajeMatrices, puntajeRotacion, puntajeSeries } from "@/lib/logic/puntajeCognitivo";
+import { calcularPuntajesCognitivo, puntajeMatrices, puntajePliegues, puntajeSeries } from "@/lib/logic/puntajeCognitivo";
 
 describe("puntajeMatrices", () => {
   it("mapea correctas/12 a 0-100", () => {
@@ -9,11 +9,11 @@ describe("puntajeMatrices", () => {
   });
 });
 
-describe("puntajeRotacion", () => {
+describe("puntajePliegues", () => {
   it("mapea correctas/10 a 0-100", () => {
-    expect(puntajeRotacion(0)).toBe(0);
-    expect(puntajeRotacion(10)).toBe(100);
-    expect(puntajeRotacion(5)).toBe(50);
+    expect(puntajePliegues(0)).toBe(0);
+    expect(puntajePliegues(10)).toBe(100);
+    expect(puntajePliegues(5)).toBe(50);
   });
 });
 

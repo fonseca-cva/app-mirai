@@ -231,7 +231,7 @@ export const bloqueSeries = {
   },
 };
 
-export const bloqueRotacion = {
+export const bloquePliegues = {
   titulo: "Pliegues en el espacio", // PENDIENTE PASADA DE COPY
   fraseFuerza: "Este juego mira cómo visualizas lo que pasa cuando se dobla un papel.",
   instrucciones: "Mira cómo se dobla y se perfora el papel. Luego toca la alternativa que muestra cómo queda al desplegarlo.",

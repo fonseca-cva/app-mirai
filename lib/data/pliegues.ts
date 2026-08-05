@@ -6,9 +6,9 @@
 //   1 difícil — doblez diagonal + 1 perforación
 // La dificultad se modula por: número de pliegues, número de perforaciones,
 // tipo de eje (diagonal es más díficil que vertical/horizontal), y offsetDecoy.
-import { generarItemPlegado, type ItemRotacionBloque } from "@/lib/logic/rotacion";
+import { generarItemPlegado, type ItemPlieguesBloque } from "@/lib/logic/pliegues";
 
-export const itemsRotacion: ItemRotacionBloque[] = [
+export const itemsPliegues: ItemPlieguesBloque[] = [
   // ── Fáciles (1 doblez, 1 perforación, offsetDecoy alto) ──────────
   generarItemPlegado("rot-01", "facil", ["vertical"], [{ x: 0.8, y: 0.3 }], 0.35),
   generarItemPlegado("rot-02", "facil", ["horizontal"], [{ x: 0.25, y: 0.85 }], 0.35),
@@ -41,7 +41,7 @@ export const itemPracticaPlegado = {
     { puntos: [{ x: 0.8, y: 0.3 }, { x: 0.2, y: 0.3 }] },
   ],
   indiceCorrecto: 3,
-} satisfies ItemRotacionBloque;
+} satisfies ItemPlieguesBloque;
 
 // Práctica 2: plegado simple (1 doblez horizontal, 1 perforación).
 // Correcta: el punto (0.30, 0.80) se refleja sobre el eje horizontal → (0.30, 0.20).
@@ -58,4 +58,4 @@ export const itemPracticaPlegado2 = {
     { puntos: [{ x: 0.3, y: 0.8 }, { x: 0.3, y: 0.2 }] },
   ],
   indiceCorrecto: 3,
-} satisfies ItemRotacionBloque;
+} satisfies ItemPlieguesBloque;

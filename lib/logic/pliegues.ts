@@ -1,4 +1,4 @@
-export type DificultadRotacion = "facil" | "media" | "dificil";
+export type DificultadPliegues = "facil" | "media" | "dificil";
 export type Eje = "vertical" | "horizontal" | "diagonal";
 export interface Punto {
   x: number;
@@ -23,7 +23,7 @@ export interface AlternativaPlegado {
 export interface ItemPlegado {
   id: string;
   tipo: "plegado";
-  dificultad: DificultadRotacion;
+  dificultad: DificultadPliegues;
   pliegues: Eje[];      // secuencia de dobleces (1-2)
   puntos: Punto[];      // puntos de perforación (1-2)
   alternativas: AlternativaPlegado[];
@@ -128,7 +128,7 @@ function distractorSinReflejar(
 
 export function generarItemPlegado(
   id: string,
-  dificultad: DificultadRotacion,
+  dificultad: DificultadPliegues,
   pliegues: Eje[],
   puntos: Punto[],
   // Decoy offset: más pequeño = más difícil (el distractor desplazado se confunde más con el correcto)
@@ -181,4 +181,4 @@ export function generarItemPlegado(
   return { id, tipo: "plegado", dificultad, pliegues, puntos, alternativas: todasLasAlternativas, indiceCorrecto };
 }
 
-export type ItemRotacionBloque = ItemPlegado;
+export type ItemPlieguesBloque = ItemPlegado;

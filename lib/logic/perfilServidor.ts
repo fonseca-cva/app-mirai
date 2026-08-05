@@ -56,7 +56,7 @@ export function recalcularPerfilConComunicacion(
   const correctasMatrices = filas.cognitivo.filter(
     (r) => r.juego === "matrices" && r.correcto
   ).length;
-  const correctasRotacion = filas.cognitivo.filter(
+  const correctasPliegues = filas.cognitivo.filter(
     (r) => r.juego === "pliegues" && r.correcto
   ).length;
   const correctasSeries = filas.cognitivo.filter(
@@ -69,7 +69,7 @@ export function recalcularPerfilConComunicacion(
 
   const puntajesCognitivo = calcularPuntajesCognitivo(
     correctasMatrices,
-    correctasRotacion,
+    correctasPliegues,
     largoMaximo,
     puntajeComunicacion,
     correctasSeries

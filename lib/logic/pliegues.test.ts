@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { generarItemPlegado, combinacionesReflejo } from "@/lib/logic/rotacion";
+import { generarItemPlegado, combinacionesReflejo } from "@/lib/logic/pliegues";
 describe("generarItemPlegado", () => {
   it("1 pliegue vertical, 1 punto: la correcta contiene el punto y su reflejo", () => {
     const item = generarItemPlegado("ple-test", "media", ["vertical"], [{ x: 0.8, y: 0.3 }], 0.2);

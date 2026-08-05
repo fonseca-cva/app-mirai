@@ -1,18 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import type { ItemRotacionBloque } from "@/lib/logic/rotacion";
+import type { ItemPlieguesBloque } from "@/lib/logic/pliegues";
 import { PanelDoblez, PanelPerforado, AlternativaPlegado } from "@/components/experiencia/juegos/FiguraPlegadoSVG";
-import { bloqueRotacion } from "@/lib/config/textos";
+import { bloquePliegues } from "@/lib/config/textos";
 
 interface Props {
-  item: ItemRotacionBloque;
+  item: ItemPlieguesBloque;
   onRespuesta: (indice: number) => void;
 }
 
 type Estado = "jugando" | "feedback";
 
-export function PracticaRotacion({ item, onRespuesta }: Props) {
+export function PracticaPliegues({ item, onRespuesta }: Props) {
   const [estado, setEstado] = useState<Estado>("jugando");
   const [indiceRespuesta, setIndiceRespuesta] = useState<number | null>(null);
 
@@ -36,20 +36,20 @@ export function PracticaRotacion({ item, onRespuesta }: Props) {
   return (
     <div className="flex flex-col items-center gap-4">
       <div className={clasesContenedor}>
-        <p className="mb-3 text-center text-sm font-medium text-tinta/70">{bloqueRotacion.tutorial.consignaPlegado}</p>
+        <p className="mb-3 text-center text-sm font-medium text-tinta/70">{bloquePliegues.tutorial.consignaPlegado}</p>
 
         <div className="flex justify-center gap-3 rounded-[14px] bg-gris-papel/60 p-4">
           <div className="flex flex-col items-center gap-1">
             <PanelDoblez pliegues={item.pliegues} puntos={item.puntos} />
-            <span className="text-[11px] text-tinta/50">{bloqueRotacion.tutorial.plegadoPanelDoblez}</span>
+            <span className="text-[11px] text-tinta/50">{bloquePliegues.tutorial.plegadoPanelDoblez}</span>
           </div>
           <div className="flex flex-col items-center gap-1">
             <PanelPerforado pliegues={item.pliegues} puntos={item.puntos} />
-            <span className="text-[11px] text-tinta/50">{bloqueRotacion.tutorial.plegadoPanelPerforado}</span>
+            <span className="text-[11px] text-tinta/50">{bloquePliegues.tutorial.plegadoPanelPerforado}</span>
           </div>
         </div>
 
-        <p className="mt-4 text-center text-xs font-medium text-teal-profundo">{bloqueRotacion.tutorial.plegadoPanelPregunta}</p>
+        <p className="mt-4 text-center text-xs font-medium text-teal-profundo">{bloquePliegues.tutorial.plegadoPanelPregunta}</p>
 
         <div className="mt-3 grid grid-cols-4 gap-2">
           {item.alternativas.map((alternativa, i) => {
@@ -80,7 +80,7 @@ export function PracticaRotacion({ item, onRespuesta }: Props) {
           correcto ? "bg-teal-profundo/10 text-teal-profundo" : "bg-coral/10 text-coral"
         }`}>
           <p className="font-medium">
-            {correcto ? bloqueRotacion.tutorial.practicaAcierto : bloqueRotacion.tutorial.practicaFalloMensaje}
+            {correcto ? bloquePliegues.tutorial.practicaAcierto : bloquePliegues.tutorial.practicaFalloMensaje}
           </p>
           {!correcto && (
             <p className="mt-1 text-tinta/60 text-xs">

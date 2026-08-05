@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useReducedMotion } from "./useTutorial";
 import { PanelDoblez, PanelPerforado, AlternativaPlegado } from "@/components/experiencia/juegos/FiguraPlegadoSVG";
-import type { Eje } from "@/lib/logic/rotacion";
+import type { Eje } from "@/lib/logic/pliegues";
 import { IconoOrigamiSVG, type TipoOrigami } from "@/components/experiencia/juegos/IconoOrigamiSVG";
 
 // ── Animación CSS compartida ────────────────────────────────────────

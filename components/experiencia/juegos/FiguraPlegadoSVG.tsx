@@ -1,4 +1,4 @@
-import type { Eje, Punto } from "@/lib/logic/rotacion";
+import type { Eje, Punto } from "@/lib/logic/pliegues";
 
 const TAMANO = 80;
 

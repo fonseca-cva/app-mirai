@@ -6,7 +6,7 @@ export function puntajeMatrices(correctas: number): number {
   return Math.round((correctas / 12) * 100);
 }
 
-export function puntajeRotacion(correctas: number): number {
+export function puntajePliegues(correctas: number): number {
   return Math.round((correctas / 10) * 100);
 }
 
@@ -24,7 +24,7 @@ export interface PuntajesCognitivo {
 
 export function calcularPuntajesCognitivo(
   correctasMatrices: number,
-  correctasRotacion: number,
+  correctasPliegues: number,
   largoMaximoSecuencias: number,
   puntajeComunicacion: number | null = null,
   correctasSeries: number = 0,
@@ -32,7 +32,7 @@ export function calcularPuntajesCognitivo(
   return {
     patrones: puntajeMatrices(correctasMatrices),
     numerico: puntajeSeries(correctasSeries),
-    espacial: puntajeRotacion(correctasRotacion),
+    espacial: puntajePliegues(correctasPliegues),
     memoria: puntajeSecuencias(largoMaximoSecuencias),
     comunicacion: puntajeComunicacion,
   };

@@ -91,11 +91,11 @@ export function Informe({ onVolver, perfil }: Props) {
     return puntajeVerbal ? Math.round((puntajeVerbal / 5) * 100) : null;
   }, [perfil, puntajeVerbal]);
 
-  // Puntajes cognitivos (matrices/rotación/series/secuencias). En modo estático
+  // Puntajes cognitivos (matrices/pliegues/series/secuencias). En modo estático
   // se reconstruyen desde la fila; numerico es opcional (filas previas, 0 como
   // valor defensivo).
   const correctasMatrices = respuestasCognitivo.filter((r) => r.juego === "matrices" && r.correcto).length;
-  const correctasRotacion = respuestasCognitivo.filter((r) => r.juego === "pliegues" && r.correcto).length;
+  const correctasPliegues = respuestasCognitivo.filter((r) => r.juego === "pliegues" && r.correcto).length;
   const correctasSeries = respuestasCognitivo.filter((r) => r.juego === "series" && r.correcto).length;
   const secuencias = respuestasCognitivo.filter((r) => r.juego === "secuencias");
   const largoMaximo = Math.max(...secuencias.map((r) => r.nivel), 0);
@@ -113,12 +113,12 @@ export function Informe({ onVolver, perfil }: Props) {
     }
     return calcularPuntajesCognitivo(
       correctasMatrices,
-      correctasRotacion,
+      correctasPliegues,
       largoMaximo,
       puntajeComunicacion,
       correctasSeries
     );
-  }, [perfil, correctasMatrices, correctasRotacion, largoMaximo, puntajeComunicacion, correctasSeries]);
+  }, [perfil, correctasMatrices, correctasPliegues, largoMaximo, puntajeComunicacion, correctasSeries]);
 
   // Carreras recomendadas (matching v2 sobre carreras curadas). En modo
   // estático se reconstruyen desde los ids guardados (carreraPorId).

@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { itemsMatrices } from "@/lib/data/matrices";
 import { itemsSeries } from "@/lib/data/series";
-import { itemsRotacion } from "@/lib/data/rotacion";
+import { itemsPliegues } from "@/lib/data/pliegues";
 import { BloqueMatrices, type ResultadoMatrices } from "@/components/experiencia/juegos/BloqueMatrices";
 import { BloqueSeries, type ResultadoSeries } from "@/components/experiencia/juegos/BloqueSeries";
-import { BloqueRotacion, type ResultadoRotacion } from "@/components/experiencia/juegos/BloqueRotacion";
+import { BloquePliegues, type ResultadoPliegues } from "@/components/experiencia/juegos/BloquePliegues";
 import { BloqueSecuencias, type ResultadoSecuencias } from "@/components/experiencia/juegos/BloqueSecuencias";
 import { useExperienciaStore } from "@/lib/store/experiencia";
 import { juegosCognitivos } from "@/lib/config/textos";
@@ -61,9 +61,9 @@ export function BloqueCognitivo({ onCompletar, onPausar }: Props) {
     setJuego("pliegues");
   }
 
-  function registrarRotacion(resultados: ResultadoRotacion[]) {
+  function registrarPliegues(resultados: ResultadoPliegues[]) {
     resultados.forEach((r) => {
-      const item = itemsRotacion.find((i) => i.id === r.itemId);
+      const item = itemsPliegues.find((i) => i.id === r.itemId);
       agregarRespuestaCognitivo({
         juego: "pliegues",
         itemId: r.itemId,
@@ -117,7 +117,7 @@ export function BloqueCognitivo({ onCompletar, onPausar }: Props) {
     ) : juego === "series" ? (
       <BloqueSeries onCompletar={registrarSeries} />
     ) : juego === "pliegues" ? (
-      <BloqueRotacion onCompletar={registrarRotacion} />
+      <BloquePliegues onCompletar={registrarPliegues} />
     ) : (
       <BloqueSecuencias onCompletar={registrarSecuencias} />
     );

@@ -1,23 +1,23 @@
 import { describe, expect, it } from "vitest";
-import { itemsRotacion, itemPracticaPlegado, itemPracticaPlegado2 } from "@/lib/data/rotacion";
-import { combinacionesReflejo, type Eje, type Punto, type ItemPlegado } from "@/lib/logic/rotacion";
+import { itemsPliegues, itemPracticaPlegado, itemPracticaPlegado2 } from "@/lib/data/pliegues";
+import { combinacionesReflejo, type Eje, type Punto, type ItemPlegado } from "@/lib/logic/pliegues";
 
-const itemsPlegado = itemsRotacion.filter((i): i is ItemPlegado => i.tipo === "plegado");
+const itemsPlegado = itemsPliegues.filter((i): i is ItemPlegado => i.tipo === "plegado");
 
 function puntosStr(puntos: Punto[]): string {
   return puntos.map((p) => `(${p.x.toFixed(2)},${p.y.toFixed(2)})`).sort().join(" ");
 }
 
-describe("itemsRotacion (ahora 7 ítems de plegado)", () => {
+describe("itemsPliegues (ahora 7 ítems de plegado)", () => {
   it("tiene 7 ítems, todos de tipo plegado, con rampa 3/3/1", () => {
-    expect(itemsRotacion).toHaveLength(7);
-    itemsRotacion.forEach((item) => {
+    expect(itemsPliegues).toHaveLength(7);
+    itemsPliegues.forEach((item) => {
       expect(item.tipo, `${item.id} debe ser plegado`).toBe("plegado");
     });
 
-    expect(itemsRotacion.filter((i) => i.dificultad === "facil")).toHaveLength(3);
-    expect(itemsRotacion.filter((i) => i.dificultad === "media")).toHaveLength(3);
-    expect(itemsRotacion.filter((i) => i.dificultad === "dificil")).toHaveLength(1);
+    expect(itemsPliegues.filter((i) => i.dificultad === "facil")).toHaveLength(3);
+    expect(itemsPliegues.filter((i) => i.dificultad === "media")).toHaveLength(3);
+    expect(itemsPliegues.filter((i) => i.dificultad === "dificil")).toHaveLength(1);
   });
 
   it("cada ítem tiene exactamente 4 alternativas únicas y un índice correcto válido", () => {
@@ -32,7 +32,7 @@ describe("itemsRotacion (ahora 7 ítems de plegado)", () => {
   });
 
   it("todos los ids son únicos", () => {
-    const ids = itemsRotacion.map((i) => i.id);
+    const ids = itemsPliegues.map((i) => i.id);
     expect(new Set(ids).size).toBe(ids.length);
   });
 
