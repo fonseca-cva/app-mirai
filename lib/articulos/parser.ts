@@ -7,6 +7,21 @@ import { ArticuloFrontmatterSchema, Articulo, ArticuloFrontmatter } from './sche
 const md = new MarkdownIt();
 const ARTICULOS_DIR = path.join(process.cwd(), 'articulos');
 
+// Lista archivos .md recursivamente (los artículos se organizan por público:
+// articulos/alumnos, articulos/apoderados, etc.)
+function listMarkdownFiles(dir: string): string[] {
+  const results: string[] = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      results.push(...listMarkdownFiles(fullPath));
+    } else if (entry.isFile() && entry.name.endsWith('.md')) {
+      results.push(fullPath);
+    }
+  }
+  return results;
+}
+
 interface ParseResult {
   success: boolean;
   articulos: Articulo[];
@@ -28,12 +43,12 @@ export function parseArticulos(): ParseResult {
     return result;
   }
 
-  const files = fs.readdirSync(ARTICULOS_DIR).filter((f) => f.endsWith('.md'));
+  const files = listMarkdownFiles(ARTICULOS_DIR);
   const slugsSeen = new Set<string>();
   const articulos: Articulo[] = [];
 
-  for (const file of files) {
-    const filePath = path.join(ARTICULOS_DIR, file);
+  for (const filePath of files) {
+    const file = path.basename(filePath);
     const content = fs.readFileSync(filePath, 'utf-8');
 
     try {
