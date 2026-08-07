@@ -25,7 +25,7 @@ export function construirCorreoInformePermanente(enlace: string): {
     <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; color: #1a1a1a;">
       <p>Hola,</p>
       <p>Tu informe de Mirai está acá:</p>
-      <p><a href="${enlace}" style="color: #e05252;">${enlace}</a></p>
+      <p><a href="${enlace}" style="color: #e05252; text-decoration: underline;">Ver mi informe</a></p>
       <p style="font-size: 12px; color: #666;">Guárdalo y míralo cuando quieras. Compártelo solo con quien tú quieras.</p>
     </div>
   `.trim();

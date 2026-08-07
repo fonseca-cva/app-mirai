@@ -127,11 +127,26 @@ export default function MetodologiaPage() {
         </article>
       </section>
 
-      {/* Sección 7 — Datos del mercado — fondo teal */}
+      {/* Sección 7 — Anonimización — fondo papel */}
+      <section id="anonimizacion" className="bg-papel px-4 py-12 sm:px-8 sm:py-16 scroll-mt-24">
+        <article className="mx-auto w-full max-w-[680px]">
+          <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full border border-dorado text-sm font-semibold text-dorado">
+            05
+          </div>
+          <h2 className="font-display text-2xl font-semibold text-tinta">{metodologia.anonimizacion.titulo}</h2>
+          <div className="mt-4 space-y-4 text-base leading-relaxed text-tinta/80">
+            {metodologia.anonimizacion.cuerpo.split("\n\n").map((parrafo, i) => (
+              <p key={i}>{parrafo}</p>
+            ))}
+          </div>
+        </article>
+      </section>
+
+      {/* Sección 8 — Datos del mercado — fondo teal */}
       <section id="datos-mercado" className="bg-teal/10 px-4 py-12 sm:px-8 sm:py-16 scroll-mt-24">
         <article className="mx-auto w-full max-w-[680px]">
           <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full border border-teal text-sm font-semibold text-teal">
-            05
+            06
           </div>
           <h2 className="font-display text-2xl font-semibold text-tinta">{metodologia.datosMercado.titulo}</h2>
           <div className="mt-4 space-y-4 text-base leading-relaxed text-tinta/80">
@@ -142,11 +157,11 @@ export default function MetodologiaPage() {
         </article>
       </section>
 
-      {/* Sección 8 — Lo que no hacemos — fondo papel */}
+      {/* Sección 9 — Lo que no hacemos — fondo papel */}
       <section id="lo-que-no-hacemos" className="bg-papel px-4 py-12 sm:px-8 sm:py-16 scroll-mt-24">
         <article className="mx-auto w-full max-w-[680px]">
           <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full border border-coral text-sm font-semibold text-coral">
-            06
+            07
           </div>
           <h2 className="font-display text-2xl font-semibold text-tinta">{metodologia.loQueNoHacemos.titulo}</h2>
           <ul className="mt-4 space-y-3">
@@ -160,11 +175,11 @@ export default function MetodologiaPage() {
         </article>
       </section>
 
-      {/* Sección 9 — Estado de desarrollo — fondo papel */}
+      {/* Sección 10 — Estado de desarrollo — fondo papel */}
       <section id="estado-desarrollo" className="bg-papel px-4 py-12 sm:px-8 sm:py-16 scroll-mt-24">
         <article className="mx-auto w-full max-w-[680px]">
           <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full border border-salvia text-sm font-semibold text-salvia">
-            07
+            08
           </div>
           <h2 className="font-display text-2xl font-semibold text-tinta">{metodologia.estadoDesarrollo.titulo}</h2>
           <div className="mt-4 space-y-4 text-base leading-relaxed text-tinta/80">
