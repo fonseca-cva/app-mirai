@@ -50,17 +50,36 @@ export default function ExperienciaPage() {
   }, [inicializarSesion]);
 
   // Activación del modo prueba (Entrega 2): ?prueba=1 revalida contra la cookie
-  // httpOnly de /debug (única puerta de escritura con es_prueba=true). Si la
-  // revalidación falla (sin cookie, DEBUG_KEY no configurada, etc.) no hace nada.
+  // httpOnly de /debug (única puerta de escritura con es_prueba=true). Si además
+  // viene ?clave=XXXX en la URL, primero se autentica contra /api/debug/auth para
+  // setear esa cookie en el mismo paso (evita el flujo de dos pantallas). Si la
+  // revalidación falla (sin cookie, clave incorrecta, DEBUG_KEY no configurada) no
+  // hace nada.
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (new URLSearchParams(window.location.search).get("prueba") !== "1") return;
-    fetch("/api/debug/verificar-prueba", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((data: { ok?: boolean }) => {
-        if (data?.ok === true) setModoPrueba(true);
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("prueba") !== "1") return;
+    const clave = params.get("clave");
+
+    const revalidar = () =>
+      fetch("/api/debug/verificar-prueba", { cache: "no-store" })
+        .then((r) => r.json())
+        .then((data: { ok?: boolean }) => {
+          if (data?.ok === true) setModoPrueba(true);
+        })
+        .catch(() => {});
+
+    if (clave) {
+      fetch("/api/debug/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clave }),
       })
-      .catch(() => {});
+        .then(() => revalidar())
+        .catch(() => {});
+    } else {
+      revalidar();
+    }
   }, [setModoPrueba]);
 
   const BLOQUES_RELLENABLES = new Set([
