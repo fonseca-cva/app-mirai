@@ -30,6 +30,7 @@ export function BloqueVerbal({ onCompletar, onPausar }: Props) {
   const sessionId = useExperienciaStore((s) => s.sessionId);
   const agregarRespuestaVerbal = useExperienciaStore((s) => s.agregarRespuestaVerbal);
   const sincronizarBloque = useExperienciaStore((s) => s.sincronizarBloque);
+  const modoPrueba = useExperienciaStore((s) => s.modoPrueba);
 
   // Índices determinísticos para textos/dilemas/consignas basados en sessionId
   const indiceTexto = sessionId ? sessionId.charCodeAt(0) % TEXTOS_COMPRENSION.length : 0;
@@ -134,28 +135,38 @@ export function BloqueVerbal({ onCompletar, onPausar }: Props) {
         });
       }
 
-      // Intentar llamar al endpoint real. Se envían pegado/caracteresPegados/intento
-      // SOLO como metadato de control de calidad (no van al modelo, no afectan puntaje).
-      const token = await obtenerAccessToken();
-      const respuesta = await fetch("/api/evaluar", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          sessionId,
-          tarea,
-          texto: texto.trim(),
-          indiceTexto,
-          indiceDilema,
-          indiceExpresion,
-          respuestaId,
-          pegado,
-          caracteresPegados,
-          intento: intentoActual,
-        }),
-      });
+      // Modo prueba (Entrega 2): pasa por /api/debug/evaluar (misma cadena de
+      // lib/logic/evaluacionIA.ts, cookie de /debug en vez de auth de usuario)
+      // para no gastar cuota de producción ni requerir sesión autenticada.
+      let respuesta: Response;
+      if (modoPrueba) {
+        respuesta = await fetch("/api/debug/evaluar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ modo: "cadena", texto: texto.trim(), tarea }),
+        });
+      } else {
+        const token = await obtenerAccessToken();
+        respuesta = await fetch("/api/evaluar", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            sessionId,
+            tarea,
+            texto: texto.trim(),
+            indiceTexto,
+            indiceDilema,
+            indiceExpresion,
+            respuestaId,
+            pegado,
+            caracteresPegados,
+            intento: intentoActual,
+          }),
+        });
+      }
 
       if (!respuesta.ok) {
         throw new Error(`HTTP ${respuesta.status}`);
@@ -263,7 +274,7 @@ export function BloqueVerbal({ onCompletar, onPausar }: Props) {
     } finally {
       setEvaluando(false);
     }
-  }, [texto, tarea, sessionId, indiceTexto, indiceDilema, indiceExpresion, agregarRespuestaVerbal, avanzarTarea, caracteresMinimos, intentos, pegado, caracteresPegados, evaluando]);
+  }, [texto, tarea, sessionId, indiceTexto, indiceDilema, indiceExpresion, agregarRespuestaVerbal, avanzarTarea, caracteresMinimos, intentos, pegado, caracteresPegados, evaluando, modoPrueba]);
 
   const omitirTarea = useCallback(() => {
     // Salida sin responder (tras aviso de pertinencia): dimensión sin evaluar.

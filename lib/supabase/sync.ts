@@ -27,6 +27,35 @@ async function conSesion<T>(operacion: () => PromiseLike<T>): Promise<T> {
   return conTimeout(operacion(), TIMEOUT_MS);
 }
 
+// ── Construcción de la fila de sesión ─────────────────────────────
+// ÚNICO punto de construcción del SesionRow en todo el repo (aislamiento del
+// modo prueba, migración 00017, exigencia "no negociable" de Camilo):
+//   * Cuando modoPrueba es true, es_prueba SIEMPRE se fuerza a true — nunca a false.
+//   * Cuando modoPrueba es false, la clave es_prueba se OMITE por completo (la BD
+//     aplica el default false). No existe ninguna ruta que desdoble true→false.
+// Los datos hijos (gustos, cognitivo, verbal, …) caen bajo este session_id y solo
+// se persisten si el sync de la sesión escribe correctamente (verifica el flag).
+export function construirSesionRow(
+  sessionId: string,
+  modoPrueba: boolean,
+  base: {
+    creada_en?: string;
+    edad?: string | null;
+    curso?: string | null;
+    dispositivo?: string | null;
+  } = {}
+): SesionRow {
+  const fila: SesionRow = {
+    id: sessionId,
+    creada_en: base.creada_en ?? new Date().toISOString(),
+    edad: base.edad ?? null,
+    curso: base.curso ?? null,
+    dispositivo: base.dispositivo ?? null,
+  };
+  if (modoPrueba) fila.es_prueba = true;
+  return fila;
+}
+
 // ── Sync de sesión ─────────────────────────────────────────────────
 export async function syncSesion(sesion: SesionRow): Promise<boolean> {
   if (!supabase) return false;

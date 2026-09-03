@@ -11,6 +11,12 @@ export interface SesionRow {
   edad: string | null;
   curso: string | null;
   dispositivo: string | null;
+  // Migración 00017 — modo prueba: true si la sesión se creó desde la UI de
+  // depuración (?prueba=1). Las consultas de análisis DEBEN filtrar es_prueba=false.
+  // Opcional porque el sync normal del cliente NO lo envía (default false en BD);
+  // solo se envía (forzado a true) cuando el modo prueba está activo. JAMÁS se
+  // envía `es_prueba: false` desde el código: si no hay modo prueba, el campo se omite.
+  es_prueba?: boolean;
   user_id?: string;
 }
 
