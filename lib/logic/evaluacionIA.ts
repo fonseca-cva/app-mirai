@@ -6,7 +6,7 @@
 //     entrenar modelos (política de privacidad de DeepSeek: los datos de API se
 //     usan solo para entregar el servicio; retención limitada de logs para
 //     monitoreo/abuso, no para entrenamiento).
-//   * Groq (API, llama-3.3-70b-versatile): Groq es proveedor de inferencia, NO
+//   * Groq (API, openai/gpt-oss-120b): Groq es proveedor de inferencia, NO
 //     entrena con datos de clientes. Retiene datos de solicitudes hasta 30 días
 //     para monitoreo de seguridad/abuso; ofrece Zero Data Retention (ZDR) vía
 //     Data Controls para cuentas enterprise.
@@ -40,6 +40,18 @@ import {
 // en paralelo) nunca puede exceder ~2×30s, muy bajo del límite de Vercel.
 export const TIMEOUT_IA_MS = 30_000;
 
+// Forma EXACTA del body enviado al proveedor (solo nombres de campos, nunca
+// contenido). Constante porque la estructura de la llamada no varía entre
+// pasos: sirve para diagnóstico sin tocar el texto del estudiante.
+export const CAMPOS_BODY_IA = [
+  "model",
+  "messages[0].role=system",
+  "messages[1].role=user",
+  "messages[1].content", // prompt (rúbrica + texto anonimizado) — nunca logueado
+  "temperature",
+  "max_tokens",
+] as const;
+
 export type TareaVerbal = "comprension" | "argumentacion" | "expresion";
 
 // ── Proveedores ───────────────────────────────────────────────────
@@ -70,7 +82,7 @@ export function proveedorSecundario(): ProveedorConfig | null {
     nombre: "Groq",
     url: process.env.AI_PROVIDER_URL_2 ?? "https://api.groq.com/openai/v1/chat/completions",
     apiKey,
-    model: process.env.AI_MODEL_2 ?? "llama-3.3-70b-versatile",
+    model: process.env.AI_MODEL_2 ?? "openai/gpt-oss-120b",
   };
 }
 
@@ -107,9 +119,10 @@ export async function llamarIA(
     return { ok: false, content: null, status: null, error: "sin_proveedor", ...base };
   }
 
-  // Registro auditable: lista de campos enviados (no el contenido).
+  // Registro auditable: URL exacta, modelo y forma del body (nunca la clave
+  // ni el contenido del texto del estudiante).
   console.log(
-    `[evaluar] IA enviar sessionId=${ctx.sessionId} paso=${ctx.paso} proveedor=${proveedor.nombre} modelo=${proveedor.model} campos=${CAMPOS_ENVIADOS_AL_PROVEEDOR.join(",")}`
+    `[evaluar] IA enviar sessionId=${ctx.sessionId} paso=${ctx.paso} proveedor=${proveedor.nombre} modelo=${proveedor.model} url=${proveedor.url} bodyCampos=${CAMPOS_BODY_IA.join(",")} campos=${CAMPOS_ENVIADOS_AL_PROVEEDOR.join(",")}`
   );
 
   try {
@@ -203,8 +216,9 @@ export interface ResultadoCadena {
   textoLimpio: string;
   marcadores: MarcadoresDetectados;
   proveedorInfo: {
-    principal: { nombre: string; modelo: string } | null;
-    secundario: { nombre: string; modelo: string } | null;
+    principal: { nombre: string; modelo: string; url: string } | null;
+    secundario: { nombre: string; modelo: string; url: string } | null;
+    bodyCampos: readonly string[];
     timeoutMs: number;
   };
 }
@@ -225,8 +239,9 @@ export async function ejecutarCadenaVerbal(opts: {
   const principal = proveedorPrincipal();
   const secundario = proveedorSecundario();
   const proveedorInfo = {
-    principal: principal ? { nombre: principal.nombre, modelo: principal.model } : null,
-    secundario: secundario ? { nombre: secundario.nombre, modelo: secundario.model } : null,
+    principal: principal ? { nombre: principal.nombre, modelo: principal.model, url: principal.url } : null,
+    secundario: secundario ? { nombre: secundario.nombre, modelo: secundario.model, url: secundario.url } : null,
+    bodyCampos: CAMPOS_BODY_IA,
     timeoutMs: TIMEOUT_IA_MS,
   };
 
