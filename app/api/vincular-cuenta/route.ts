@@ -60,30 +60,55 @@ export async function POST(request: NextRequest) {
 
   // 2) Conversión: mismo uid, correo de confirmación a la dirección indicada.
   // La URL de redirect no lleva ningún dato identificable (sin correo, sin apodo).
+  //
+  // NO se usa cliente.auth.updateUser(): esa función del SDK exige una sesión
+  // completa en el storage interno del cliente (_useSession()) y, al no tenerla
+  // (solo pasamos el token por header), lanza localmente AuthSessionMissingError
+  // ("Auth session missing!") ANTES de tocar la red — sin excepción para
+  // hasCustomAuthorizationHeader, a diferencia de getUser(). Se llama directo al
+  // endpoint REST oficial PUT /auth/v1/user, que sí acepta el Bearer del header.
   const emailRedirectTo = `${new URL(request.url).origin}/guardar-informe`;
-  const { error } = await cliente.auth.updateUser(
-    { email: correo },
-    { emailRedirectTo }
-  );
+  const respuesta = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    method: "PUT",
+    headers: {
+      Authorization: authHeader,
+      apikey: SUPABASE_ANON_KEY,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email: correo, email_redirect_to: emailRedirectTo }),
+  });
+  const cuerpo = (await respuesta.json().catch(() => ({}))) as {
+    msg?: string;
+    message?: string;
+    error_description?: string;
+    error?: string;
+    code?: string;
+    error_code?: string;
+  };
+  const errorMsg =
+    cuerpo.msg ?? cuerpo.message ?? cuerpo.error_description ?? cuerpo.error ?? "";
 
-  if (error) {
+  if (!respuesta.ok) {
     // El correo ya pertenece a otra cuenta (o a esta misma sesión): no podemos
     // enviar el enlace de conversión. Nada se pierde: la sesión anónima sigue
     // intacta y el informe sigue en pantalla.
-    if (error.status === 422 || /already|registered|same/i.test(error.message)) {
+    if (
+      respuesta.status === 422 ||
+      /already|registered|same|exists/i.test(errorMsg) ||
+      /email_exists|user_already_exists/i.test(cuerpo.error_code ?? cuerpo.code ?? "")
+    ) {
       return NextResponse.json({ ok: true, yaTeniasCuenta: true });
     }
-    // Sesión anónima ya no viva server-side ("sesión zombi"): el token parecía
-    // válido localmente pero GoTrue no lo reconoce. Mensaje claro y accionable
-    // en vez del 502 genérico, para que el usuario sepa que debe recargar.
-    if (/session missing|session not found|invalid claim|session/i.test(error.message)) {
-      console.error(`[vincular-cuenta] updateUser falló (sesión inválida): ${error.message}`);
+    // Token de sesión rechazado por GoTrue: mensaje claro y accionable en vez
+    // del 502 genérico, para que el usuario sepa que debe recargar.
+    if (respuesta.status === 401 || /session|invalid claim|jwt/i.test(errorMsg)) {
+      console.error(`[vincular-cuenta] PUT /auth/v1/user falló (sesión inválida): ${errorMsg}`);
       return NextResponse.json(
         { error: "Tu sesión expiró, recarga la página.", codigo: "sesion_expirada" },
         { status: 401 }
       );
     }
-    console.error(`[vincular-cuenta] updateUser falló: ${error.message}`);
+    console.error(`[vincular-cuenta] PUT /auth/v1/user falló (${respuesta.status}): ${errorMsg}`);
     return NextResponse.json({ error: "No pudimos enviar el enlace." }, { status: 502 });
   }
 
