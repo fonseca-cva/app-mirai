@@ -35,7 +35,7 @@ export function Informe({ onVolver, perfil }: Props) {
   const [guardarCorreo, setGuardarCorreo] = useState("");
   const [guardarApodo, setGuardarApodo] = useState("");
   const [guardarEstado, setGuardarEstado] = useState<
-    "idle" | "enviando" | "enviado" | "yaTenias" | "limite" | "error"
+    "idle" | "enviando" | "enviado" | "yaTenias" | "limite" | "error" | "sesionExpirada"
   >("idle");
 
   const sessionId = useExperienciaStore((s) => s.sessionId);
@@ -165,12 +165,6 @@ export function Informe({ onVolver, perfil }: Props) {
     if (!guardarCorreo.trim() || !sessionId) return;
     setGuardarEstado("enviando");
     try {
-      // Guardamos el uid anónimo actual para que /guardar-informe confirme que la
-      // cuenta vinculada es la misma (conversión con preservación, no merge).
-      const { data: sesionActual } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
-      const uidAnonimo = sesionActual.session?.user.id;
-      if (!uidAnonimo) throw new Error("sin sesión");
-      sessionStorage.setItem("mirai_uid_anonimo", uidAnonimo);
       // /guardar-informe usa este id para pedir el correo con el enlace
       // permanente (el token vive en la fila de resultados, RLS por uid).
       sessionStorage.setItem("mirai_sesion_id", sessionId);
@@ -180,8 +174,13 @@ export function Informe({ onVolver, perfil }: Props) {
       const apodoLimpio = sanitizarApodo(guardarApodo);
       if (apodoLimpio) sessionStorage.setItem("mirai_apodo_pendiente", apodoLimpio);
 
+      // obtenerAccessToken() valida la sesión contra el servidor y, si estaba
+      // "zombi", la recrea: por eso leemos el uid DESPUÉS, no antes del fetch.
       const token = await obtenerAccessToken();
       if (!token) throw new Error("sin sesión");
+      const { data: sesionActual } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
+      const uidAnonimo = sesionActual.session?.user.id;
+      if (uidAnonimo) sessionStorage.setItem("mirai_uid_anonimo", uidAnonimo);
 
       const respuesta = await fetch("/api/vincular-cuenta", {
         method: "POST",
@@ -191,6 +190,13 @@ export function Informe({ onVolver, perfil }: Props) {
       if (respuesta.status === 429) {
         setGuardarEstado("limite");
         return;
+      }
+      if (respuesta.status === 401) {
+        const cuerpoError = (await respuesta.json().catch(() => ({}))) as { codigo?: string };
+        if (cuerpoError.codigo === "sesion_expirada") {
+          setGuardarEstado("sesionExpirada");
+          return;
+        }
       }
       if (!respuesta.ok) throw new Error("envío falló");
 
@@ -400,6 +406,7 @@ export function Informe({ onVolver, perfil }: Props) {
         {guardarEstado === "yaTenias" && <p className="mt-2 text-sm text-tinta/70">{informe.guardarYaTenias}</p>}
         {guardarEstado === "limite" && <p className="mt-2 text-sm text-red-500">{informe.guardarLimite}</p>}
         {guardarEstado === "error" && <p className="mt-2 text-sm text-red-500">{informe.guardarError}</p>}
+        {guardarEstado === "sesionExpirada" && <p className="mt-2 text-sm text-red-500">{informe.guardarSesionExpirada}</p>}
       </section>
       )}
 

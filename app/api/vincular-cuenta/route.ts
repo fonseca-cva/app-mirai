@@ -73,6 +73,16 @@ export async function POST(request: NextRequest) {
     if (error.status === 422 || /already|registered|same/i.test(error.message)) {
       return NextResponse.json({ ok: true, yaTeniasCuenta: true });
     }
+    // Sesión anónima ya no viva server-side ("sesión zombi"): el token parecía
+    // válido localmente pero GoTrue no lo reconoce. Mensaje claro y accionable
+    // en vez del 502 genérico, para que el usuario sepa que debe recargar.
+    if (/session missing|session not found|invalid claim|session/i.test(error.message)) {
+      console.error(`[vincular-cuenta] updateUser falló (sesión inválida): ${error.message}`);
+      return NextResponse.json(
+        { error: "Tu sesión expiró, recarga la página.", codigo: "sesion_expirada" },
+        { status: 401 }
+      );
+    }
     console.error(`[vincular-cuenta] updateUser falló: ${error.message}`);
     return NextResponse.json({ error: "No pudimos enviar el enlace." }, { status: 502 });
   }

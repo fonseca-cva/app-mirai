@@ -473,6 +473,7 @@ export const informe = {
   guardarLimite:
     "Enviaste varios enlaces a este correo. Espera una hora y prueba de nuevo.", // PENDIENTE PASADA DE COPY
   guardarError: "No pudimos enviar el enlace. Intenta de nuevo.", // PENDIENTE PASADA DE COPY
+  guardarSesionExpirada: "Tu sesión expiró, recarga la página.", // PENDIENTE PASADA DE COPY
   disclaimer:
     "Este instrumento está en desarrollo. Los resultados son orientativos y no constituyen una recomendación vocacional definitiva.", // PENDIENTE PASADA DE COPY
 };
