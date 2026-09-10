@@ -30,9 +30,8 @@ const RequestSchema = z.object({ sessionId: z.string().uuid() });
 
 async function enviarConResend(to: string, subject: string, html: string, text: string): Promise<boolean> {
   if (!RESEND_API_KEY) {
-    // Sin clave configurada: simular envío para desarrollo (mismo criterio que /api/evaluar).
-    console.log(`[enviar-informe-permanente] Sin RESEND_API_KEY — envío simulado a ${to}`);
-    return true;
+    console.error(`[enviar-informe-permanente] Sin RESEND_API_KEY — correo a ${to} NO se envió (falta configurar la clave en Vercel)`);
+    return false;
   }
 
   try {
