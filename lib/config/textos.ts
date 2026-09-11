@@ -474,6 +474,11 @@ export const informe = {
     "Enviaste varios enlaces a este correo. Espera una hora y prueba de nuevo.", // PENDIENTE PASADA DE COPY
   guardarError: "No pudimos enviar el enlace. Intenta de nuevo.", // PENDIENTE PASADA DE COPY
   guardarSesionExpirada: "Tu sesión expiró, recarga la página.", // PENDIENTE PASADA DE COPY
+  // Modo prueba (C(i), Camilo 2026-09-10): nunca se vincula un correo real
+  // desde una sesión de prueba, para no seguir contaminando auth.users con
+  // cuentas reales de quien está probando.
+  guardarModoPrueba:
+    "Esta es una sesión de prueba: aquí no se guarda el informe ni se vincula un correo real.", // PENDIENTE PASADA DE COPY
   disclaimer:
     "Este instrumento está en desarrollo. Los resultados son orientativos y no constituyen una recomendación vocacional definitiva.", // PENDIENTE PASADA DE COPY
 };

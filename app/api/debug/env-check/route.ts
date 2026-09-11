@@ -16,6 +16,7 @@ const VARIABLES = [
   "AI_PROVIDER_URL_2",
   "AI_MODEL_2",
   "DEBUG_KEY",
+  "RESEND_API_KEY",
 ] as const;
 
 export async function GET() {

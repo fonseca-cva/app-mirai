@@ -39,6 +39,7 @@ export function Informe({ onVolver, perfil }: Props) {
   >("idle");
 
   const sessionId = useExperienciaStore((s) => s.sessionId);
+  const modoPrueba = useExperienciaStore((s) => s.modoPrueba);
   const respuestasGustos = useExperienciaStore((s) => s.respuestasGustos);
   const respuestasActividades = useExperienciaStore((s) => s.respuestasActividades);
   const respuestasAsignaturas = useExperienciaStore((s) => s.respuestasAsignaturas);
@@ -162,7 +163,10 @@ export function Informe({ onVolver, perfil }: Props) {
   // updateUser({ email }) en el route, que mantiene el MISMO auth.uid(), así que
   // todas las filas de respuestas/resultados quedan bajo la cuenta nueva.
   const enviarVincular = async () => {
-    if (!guardarCorreo.trim() || !sessionId) return;
+    // Doble apriete (C(i), Camilo 2026-09-10): además de ocultar el bloque más
+    // abajo, esta función se niega a vincular si por algún motivo se invoca en
+    // modo prueba — nunca un correo real desde una sesión sintética.
+    if (modoPrueba || !guardarCorreo.trim() || !sessionId) return;
     setGuardarEstado("enviando");
     try {
       // /guardar-informe usa este id para pedir el correo con el enlace
@@ -361,8 +365,16 @@ export function Informe({ onVolver, perfil }: Props) {
       </section>
 
       {/* 5. Guardar informe (Tanda A): vincula el correo a la sesión anónima.
-          No se muestra en modo estático: la URL permanente ya es el acceso. */}
-      {!modoEstatico && (
+          No se muestra en modo estático: la URL permanente ya es el acceso.
+          Tampoco en modo prueba (C(i), Camilo 2026-09-10): nunca vincular un
+          correo real desde una sesión sintética. */}
+      {!modoEstatico && modoPrueba && (
+      <section className="mt-8 rounded-[14px] bg-papel-sombra/30 p-5">
+        <h2 className="font-display text-lg font-semibold">{informe.guardarTitulo}</h2>
+        <p className="mt-1 text-sm text-tinta/60">{informe.guardarModoPrueba}</p>
+      </section>
+      )}
+      {!modoEstatico && !modoPrueba && (
       <section className="mt-8 rounded-[14px] bg-papel-sombra/30 p-5">
         <h2 className="font-display text-lg font-semibold">{informe.guardarTitulo}</h2>
         <p className="mt-1 text-sm text-tinta/60">{informe.guardarTexto}</p>
