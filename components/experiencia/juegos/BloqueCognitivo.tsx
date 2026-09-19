@@ -9,6 +9,7 @@ import { BloqueSeries, type ResultadoSeries } from "@/components/experiencia/jue
 import { BloquePliegues, type ResultadoPliegues } from "@/components/experiencia/juegos/BloquePliegues";
 import { BloqueSecuencias, type ResultadoSecuencias } from "@/components/experiencia/juegos/BloqueSecuencias";
 import { useExperienciaStore } from "@/lib/store/experiencia";
+import { bloqueCompleto } from "@/lib/store/checkpoints";
 import { juegosCognitivos } from "@/lib/config/textos";
 
 interface Props {
@@ -20,16 +21,37 @@ type Juego = "matrices" | "series" | "pliegues" | "secuencias";
 
 const NIVEL_POR_DIFICULTAD = { facil: 1, media: 2, dificil: 3 } as const;
 
+
 // Orquesta el Bloque B completo (sección 3 de la spec): Matrices → Series → Pliegues → Secuencias,
 // en orden fijo, despachando cada respuesta al store para su sync posterior con Supabase.
 // Series se inserta justo después de Matrices porque ambos son juegos "de tablero/ítem único"
 // (grilla o serie + 5 alternativas, sin límite de tiempo apretado), antes de los juegos
 // espaciales (Pliegues y Secuencias).
 export function BloqueCognitivo({ onCompletar, onPausar }: Props) {
-  const [juego, setJuego] = useState<Juego>("matrices");
   const sessionId = useExperienciaStore((s) => s.sessionId);
   const agregarRespuestaCognitivo = useExperienciaStore((s) => s.agregarRespuestaCognitivo);
   const sincronizarBloque = useExperienciaStore((s) => s.sincronizarBloque);
+  const marcarCognitivoCompleto = useExperienciaStore((s) => s.marcarCognitivoCompleto);
+  const respuestasCognitivo = useExperienciaStore((s) => s.respuestasCognitivo);
+
+  // Juego de arranque DERIVADO de las respuestas persistidas: al recargar
+  // continúa en el primer juego sin completar en vez de volver siempre a Matrices.
+  //
+  // Matrices, Series y Pliegues tienen catálogo estático, así que "completo" se
+  // evalúa ítem por ítem. Secuencias genera sus ítems en runtime y no expone
+  // catálogo: para él se usa "no tiene ninguna respuesta registrada" como
+  // pendiente. Es conservador: si Secuencias ya se había completado, se rehará
+  // (sus respuestas se reemplazan por clave, no se duplican).
+  const [juego, setJuego] = useState<Juego>(() => {
+    const hechos = respuestasCognitivo.reduce<Record<string, string[]>>((acc, r) => {
+      (acc[r.juego] ??= []).push(r.itemId);
+      return acc;
+    }, {});
+    if (!bloqueCompleto(itemsMatrices, hechos.matrices ?? [])) return "matrices";
+    if (!bloqueCompleto(itemsSeries, hechos.series ?? [])) return "series";
+    if (!bloqueCompleto(itemsPliegues, hechos.pliegues ?? [])) return "pliegues";
+    return "secuencias";
+  });
 
   function registrarMatrices(resultados: ResultadoMatrices[]) {
     resultados.forEach((r) => {
@@ -108,6 +130,10 @@ export function BloqueCognitivo({ onCompletar, onPausar }: Props) {
       ]);
     }
 
+    // MARCADOR EXPLÍCITO de bloque completado: es la señal que usa la
+    // reconstrucción tras una recarga. Se marca aquí, cuando el bloque realmente
+    // terminó los 4 juegos, y no se infiere del número de respuestas.
+    marcarCognitivoCompleto();
     onCompletar();
   }
 

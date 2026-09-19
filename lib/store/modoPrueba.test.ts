@@ -124,3 +124,97 @@ describe("sincronizarBloque — no escribe datos cuando el modo prueba pierde la
     expect(estado.modoPrueba).toBe(true);
   });
 });
+
+// Caso nuevo (fix 2026-09-09, exigencia de Camilo): el modo prueba REAL usa
+// /api/evaluar (persiste) en vez de /api/debug/evaluar, pero el aislamiento de
+// sesiones de prueba debe seguir siendo el mismo — la marca es_prueba SIGUE
+// viniendo solo de construirSesionRow, y si la cookie se pierde a mitad de la
+// sesión, sincronizarBloque debe cortar la escritura Y dejar una marca visible
+// (pruebaRealCortada) para que la UI se detenga, en vez de continuar en silencio
+// hacia una sesión que dejó de estar garantizada como marcada.
+describe("modo prueba REAL — mismo aislamiento que el modo prueba de debug, más fail-stop visible", () => {
+  beforeEach(() => {
+    useExperienciaStore.setState({
+      modoPrueba: true,
+      modoPruebaReal: true,
+      pruebaRealCortada: false,
+      colaSync: [],
+      respuestasGustos: [],
+    });
+    vi.restoreAllMocks();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    useExperienciaStore.setState({ modoPrueba: false, modoPruebaReal: false, pruebaRealCortada: false });
+  });
+
+  it("activar modoPruebaReal NO cambia la marca es_prueba de la sesión: sigue viniendo solo de construirSesionRow", () => {
+    // Independiente de modoPruebaReal — esa bandera solo decide QUÉ RUTA de
+    // evaluación usa BloqueVerbal, nunca cómo se marca la sesión.
+    const fila = construirSesionRow("s5", true, {});
+    expect(fila.es_prueba).toBe(true);
+  });
+
+  it("si la cookie se pierde a mitad de sesión en modo prueba real: corta la escritura, desactiva ambas banderas y deja pruebaRealCortada=true (fail-stop visible)", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 401 }));
+
+    const { sincronizarBloque } = useExperienciaStore.getState();
+    await sincronizarBloque([
+      {
+        id: "s5-sesion",
+        tipo: "sesion",
+        payload: construirSesionRow("s5", true, {}),
+      },
+    ]);
+
+    const estado = useExperienciaStore.getState();
+    // Mismo comportamiento de aislamiento que el modo prueba de debug: nada se
+    // encola ni se escribe.
+    expect(estado.colaSync).toHaveLength(0);
+    expect(estado.modoPrueba).toBe(false);
+    expect(estado.modoPruebaReal).toBe(false);
+    // Diferencia exigida por Camilo respecto al modo debug: queda la marca para
+    // que la UI (app/experiencia/page.tsx) bloquee la pantalla con un mensaje
+    // visible en vez de dejar seguir la experiencia sin que el tester lo note.
+    expect(estado.pruebaRealCortada).toBe(true);
+  });
+
+  it("si la revalidación es OK, modoPruebaReal se mantiene y pruebaRealCortada sigue en false", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => ({ ok: true }) }));
+
+    const { sincronizarBloque } = useExperienciaStore.getState();
+    await sincronizarBloque([
+      {
+        id: "s6-sesion",
+        tipo: "sesion",
+        payload: construirSesionRow("s6", true, {}),
+      },
+    ]);
+
+    const estado = useExperienciaStore.getState();
+    expect(estado.modoPrueba).toBe(true);
+    expect(estado.modoPruebaReal).toBe(true);
+    expect(estado.pruebaRealCortada).toBe(false);
+  });
+
+  it("un corte en modo prueba SIMPLE también marca el fail-stop visible (cualquier prueba debe detenerse)", async () => {
+    // Antes el fail-stop visible era exclusivo del modo prueba REAL: una prueba
+    // simple que perdía la cookie a mitad del flujo veía apagarse el modo en
+    // silencio, y un bloque posterior podía escribirse COMO REAL. Ahora cualquier
+    // pérdida de autorización corta la experiencia de forma visible.
+    useExperienciaStore.setState({ modoPrueba: true, modoPruebaReal: false, pruebaRealCortada: false, colaSync: [] });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 401 }));
+
+    const { sincronizarBloque } = useExperienciaStore.getState();
+    await sincronizarBloque([
+      { id: "s7-sesion", tipo: "sesion", payload: construirSesionRow("s7", true, {}) },
+    ]);
+
+    const estado = useExperienciaStore.getState();
+    expect(estado.modoPrueba).toBe(false);
+    expect(estado.pruebaRealCortada).toBe(true);
+    // Y no se encoló nada: ninguna escritura sin la marca es_prueba.
+    expect(estado.colaSync).toEqual([]);
+  });
+});

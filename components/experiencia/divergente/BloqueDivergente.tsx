@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { siguienteIndicePendiente, estadoBloque } from "@/lib/store/checkpoints";
 import {
   OBJETOS_DIVERGENTE,
   MIN_IDEAS_POR_OBJETO,
@@ -18,21 +19,38 @@ interface Props {
 // EXPLORATORIO — NO REPORTAR: se sincroniza a respuestas_divergente, no alimenta
 // informe ni matching en v1. Por eso no tiene tutorial ni demo: es recolección simple.
 export function BloqueDivergente({ onCompletar, onPausar }: Props) {
-  const [indice, setIndice] = useState(0);
   const [texto, setTexto] = useState("");
   const [guardando, setGuardando] = useState(false);
-  const [hecho, setHecho] = useState(false);
   const sessionId = useExperienciaStore((s) => s.sessionId);
   const agregarRespuestaDivergente = useExperienciaStore((s) => s.agregarRespuestaDivergente);
   const sincronizarBloque = useExperienciaStore((s) => s.sincronizarBloque);
+  const respondidas = useExperienciaStore((s) => s.respuestasDivergente);
 
-  const objeto = OBJETOS_DIVERGENTE[indice];
+  // Índice DERIVADO del estado persistido: al recargar abre en el primer objeto
+  // pendiente. El BORRADOR de texto (useState) NO se persiste: si se recarga a
+  // mitad de un objeto, el alumno reescribe ese objeto. Es una limitación
+  // explícita, no un "exactamente donde quedó" (ver documentación).
+  const [indice, setIndice] = useState(() =>
+    siguienteIndicePendiente(OBJETOS_DIVERGENTE, respondidas.map((r) => r.objeto))
+  );
+
+  // Igual que los otros bloques: sin ítem → pantalla de terminado, nunca un
+  // acceso fuera del catálogo (antes `OBJETOS_DIVERGENTE[indice]` → undefined).
+  const bloque = estadoBloque(OBJETOS_DIVERGENTE, respondidas.map((r) => r.objeto), indice);
+
+  // `hecho` se marca al cerrar el bloque (respuesta del último ítem) o si el
+  // bloque YA estaba completo al reanudar. Se DERIVA en el render en vez de
+  // sincronizarse con un efecto (evita el render en cascada que marca
+  // react-hooks/set-state-in-effect y también el desajuste de hidratación).
+  const [hechoAlResponder, setHecho] = useState(false);
+  const hecho = hechoAlResponder || bloque.estado === "completo";
+  const objeto = bloque.item;
   const ideas = limpiarIdeas(texto);
-  const puedeContinuar = ideas.length >= MIN_IDEAS_POR_OBJETO;
-  const esUltimo = indice + 1 >= OBJETOS_DIVERGENTE.length;
+  const puedeContinuar = ideas.length >= MIN_IDEAS_POR_OBJETO && objeto !== null;
+  const esUltimo = bloque.esUltimo;
 
   const registrarObjeto = useCallback(async () => {
-    if (!puedeContinuar || guardando) return;
+    if (!puedeContinuar || guardando || !objeto) return;
     setGuardando(true);
 
     agregarRespuestaDivergente({
@@ -67,9 +85,24 @@ export function BloqueDivergente({ onCompletar, onPausar }: Props) {
 
     setGuardando(false);
     setHecho(true);
-  }, [puedeContinuar, guardando, esUltimo, indice, ideas, objeto.id, sessionId, agregarRespuestaDivergente, sincronizarBloque]);
+  }, [puedeContinuar, guardando, esUltimo, indice, ideas, objeto, sessionId, agregarRespuestaDivergente, sincronizarBloque]);
 
   if (hecho) {
+    return (
+      <section className="flex min-h-screen flex-col items-center justify-center gap-4 px-4 text-center">
+        <p className="font-display text-xl text-tinta/80">{bloqueDivergente.hecho}</p>
+        <button
+          onClick={onCompletar}
+          className="rounded-[14px] bg-coral px-6 py-3 text-base font-medium text-blanco-papel transition hover:opacity-90"
+        >
+          {juegosCognitivos.seguir}
+        </button>
+      </section>
+    );
+  }
+
+  // Sin ítem: bloque completo → cierre, sin formulario vacío.
+  if (!objeto) {
     return (
       <section className="flex min-h-screen flex-col items-center justify-center gap-4 px-4 text-center">
         <p className="font-display text-xl text-tinta/80">{bloqueDivergente.hecho}</p>

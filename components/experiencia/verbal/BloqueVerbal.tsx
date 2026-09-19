@@ -2,7 +2,8 @@
 
 import { useState, useCallback } from "react";
 import { bloqueVerbal, juegosCognitivos } from "@/lib/config/textos";
-import { TEXTOS_COMPRENSION, DILEMAS_ARGUMENTACION, CONSIGNAS_EXPRESION } from "@/lib/config/rubricas";
+import { indicesEstimuloVerbal, estimuloVerbalDe } from "@/lib/logic/verbal";
+import { siguienteTareaPendiente } from "@/lib/store/checkpoints";
 import { useExperienciaStore, type RespuestaVerbal } from "@/lib/store/experiencia";
 import type { RespuestaVerbalRow } from "@/lib/supabase/types";
 import { obtenerAccessToken } from "@/lib/supabase/client";
@@ -15,12 +16,18 @@ interface Props {
 
 type Tarea = "comprension" | "argumentacion" | "expresion";
 
+// Intento derivado de lo persistido: si la respuesta guardada ya era del 2º
+// intento, se conserva (no se reinicia el contador al recargar, lo que
+// permitiría un tercer envío donde el plan permite máximo dos).
+function intentoDe(respuestas: Array<{ tarea: string; intento?: number }>, tarea: Tarea): number {
+  const r = respuestas.find((x) => x.tarea === tarea);
+  return r?.intento === 2 ? 2 : 1;
+}
+
 export function BloqueVerbal({ onCompletar, onPausar }: Props) {
-  const [tarea, setTarea] = useState<Tarea>("comprension");
   const [texto, setTexto] = useState("");
   const [evaluando, setEvaluando] = useState(false);
   const [error, setError] = useState(false);
-  const [hecho, setHecho] = useState(false);
   // Validez (plan de Camilo): reintento único tras respuesta no pertinente.
   const [avisoPertinencia, setAvisoPertinencia] = useState<string | null>(null);
   // Telemetría de control de calidad (punto 4): evento paste en el textarea.
@@ -31,18 +38,41 @@ export function BloqueVerbal({ onCompletar, onPausar }: Props) {
   const agregarRespuestaVerbal = useExperienciaStore((s) => s.agregarRespuestaVerbal);
   const sincronizarBloque = useExperienciaStore((s) => s.sincronizarBloque);
   const modoPrueba = useExperienciaStore((s) => s.modoPrueba);
+  const modoPruebaReal = useExperienciaStore((s) => s.modoPruebaReal);
 
-  // Índices determinísticos para textos/dilemas/consignas basados en sessionId
-  const indiceTexto = sessionId ? sessionId.charCodeAt(0) % TEXTOS_COMPRENSION.length : 0;
-  const indiceDilema = sessionId ? sessionId.charCodeAt(1) % DILEMAS_ARGUMENTACION.length : 0;
-  const indiceExpresion = sessionId ? sessionId.charCodeAt(2) % CONSIGNAS_EXPRESION.length : 0;
+  const respuestasVerbal = useExperienciaStore((s) => s.respuestasVerbal);
 
-  const textoBase =
-    tarea === "comprension"
-      ? TEXTOS_COMPRENSION[indiceTexto]
-      : tarea === "argumentacion"
-        ? DILEMAS_ARGUMENTACION[indiceDilema]
-        : CONSIGNAS_EXPRESION[indiceExpresion];
+  // ORDEN fijo del bloque (comprensión → argumentación → expresión).
+  const ORDEN_TAREAS: Tarea[] = ["comprension", "argumentacion", "expresion"];
+
+  // Tarea de arranque DERIVADA: al recargar continúa en la primera tarea sin
+  // respuesta en vez de volver siempre a comprensión. Los BORRADORES de texto
+  // (useState) NO se persisten: si se recarga a mitad de una tarea, el alumno
+  // reescribe ese texto. Limitación explícita, documentada.
+  const [tarea, setTarea] = useState<Tarea>(() =>
+    siguienteTareaPendiente(
+      ORDEN_TAREAS,
+      respuestasVerbal.map((r) => ({ tarea: r.tarea, estado: r.estado }))
+    )
+  );
+
+  const [hecho, setHecho] = useState(() => respuestasVerbal.length >= ORDEN_TAREAS.length);
+
+  // Número de intento por tarea: 1 = primer envío; 2 = único reintento tras
+  // respuesta no pertinente. Se DERIVA de lo persistido para no reiniciar el
+  // contador (y permitir un tercer envío) al recargar.
+  const [intentos, setIntentos] = useState<Record<Tarea, number>>(() => ({
+    comprension: intentoDe(respuestasVerbal, "comprension"),
+    argumentacion: intentoDe(respuestasVerbal, "argumentacion"),
+    expresion: intentoDe(respuestasVerbal, "expresion"),
+  }));
+
+
+  // Índices determinísticos para textos/dilemas/consignas basados en sessionId.
+  // MISMA función que usan las dos rutas de evaluación (lib/logic/verbal.ts): lo
+  // que se ve acá y lo que se evalúa en el servidor no pueden volver a divergir.
+  const { indiceTexto, indiceDilema, indiceExpresion } = indicesEstimuloVerbal(sessionId);
+  const textoBase = estimuloVerbalDe(tarea, { indiceTexto, indiceDilema, indiceExpresion });
 
   const config =
     tarea === "comprension"
@@ -51,14 +81,6 @@ export function BloqueVerbal({ onCompletar, onPausar }: Props) {
         ? bloqueVerbal.argumentacion
         : bloqueVerbal.expresion;
   const caracteresMinimos = config.minimoCaracteres;
-
-  // Número de intento por tarea: 1 = primer envío; 2 = único reintento tras
-  // respuesta no pertinente (máximo un reintento, plan de Camilo punto 2).
-  const [intentos, setIntentos] = useState<Record<Tarea, number>>({
-    comprension: 1,
-    argumentacion: 1,
-    expresion: 1,
-  });
 
   // Registro del evento paste (control de calidad únicamente): cuantos
   // caracteres se pegaron en total (el contador acumula por envío).
@@ -138,12 +160,25 @@ export function BloqueVerbal({ onCompletar, onPausar }: Props) {
       // Modo prueba (Entrega 2): pasa por /api/debug/evaluar (misma cadena de
       // lib/logic/evaluacionIA.ts, cookie de /debug en vez de auth de usuario)
       // para no gastar cuota de producción ni requerir sesión autenticada.
+      // Manda los MISMOS índices que la rama real (fix: antes esta rama no los
+      // mandaba y el server evaluaba siempre contra el estímulo [0], desalineado
+      // del estímulo que el alumno ve arriba — bug reportado por Camilo).
+      // Modo prueba REAL (?real=1, ver page.tsx): usa la ruta real que persiste,
+      // igual que producción — cubierto por el "else" de abajo.
       let respuesta: Response;
-      if (modoPrueba) {
+      if (modoPrueba && !modoPruebaReal) {
         respuesta = await fetch("/api/debug/evaluar", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ modo: "cadena", texto: texto.trim(), tarea }),
+          body: JSON.stringify({
+            modo: "cadena",
+            texto: texto.trim(),
+            tarea,
+            sessionId,
+            indiceTexto,
+            indiceDilema,
+            indiceExpresion,
+          }),
         });
       } else {
         const token = await obtenerAccessToken();
@@ -274,7 +309,7 @@ export function BloqueVerbal({ onCompletar, onPausar }: Props) {
     } finally {
       setEvaluando(false);
     }
-  }, [texto, tarea, sessionId, indiceTexto, indiceDilema, indiceExpresion, agregarRespuestaVerbal, avanzarTarea, caracteresMinimos, intentos, pegado, caracteresPegados, evaluando, modoPrueba]);
+  }, [texto, tarea, sessionId, indiceTexto, indiceDilema, indiceExpresion, agregarRespuestaVerbal, avanzarTarea, caracteresMinimos, intentos, pegado, caracteresPegados, evaluando, modoPrueba, modoPruebaReal]);
 
   const omitirTarea = useCallback(() => {
     // Salida sin responder (tras aviso de pertinencia): dimensión sin evaluar.

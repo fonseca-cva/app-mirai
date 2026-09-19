@@ -3,6 +3,8 @@
 // evaluar. Sin efectos: reciben strings, devuelven números/booleanos.
 // Testeada en lib/logic/verbal.test.ts.
 
+import { TEXTOS_COMPRENSION, DILEMAS_ARGUMENTACION, CONSIGNAS_EXPRESION } from "@/lib/config/rubricas";
+
 export const CARACTERES_MINIMOS = 120; // requisito de entrada vigente (cliente y servidor)
 export const UMBRAL_SOLAPAMIENTO = 0.6; // fracción de n-gramas de la respuesta presentes en el estímulo
 
@@ -46,4 +48,36 @@ export function solapamientoLiteral(respuesta: string, estimulo: string): number
 // no pertinente con razón "copia_literal".
 export function esCopiaLiteral(respuesta: string, estimulo: string): boolean {
   return solapamientoLiteral(respuesta, estimulo) >= UMBRAL_SOLAPAMIENTO;
+}
+
+export type TareaVerbal = "comprension" | "argumentacion" | "expresion";
+
+export interface IndicesEstimuloVerbal {
+  indiceTexto: number;
+  indiceDilema: number;
+  indiceExpresion: number;
+}
+
+// Índices deterministas de estímulo (fix 2026-09-09, bug reportado por Camilo): el
+// estímulo que el alumno VE (BloqueVerbal.tsx) y el que el servidor EVALÚA
+// (/api/evaluar y /api/debug/evaluar) DEBEN salir de la MISMA fórmula. El bug fue
+// que /api/debug/evaluar la ignoraba por completo y evaluaba siempre contra el
+// índice [0] mientras el alumno veía otro estímulo — invisible porque nada
+// garantizaba la correspondencia. Centralizada acá: cliente y ambas rutas server
+// llaman a esta misma función, así que no pueden volver a divergir.
+export function indicesEstimuloVerbal(sessionId: string | null | undefined): IndicesEstimuloVerbal {
+  if (!sessionId) return { indiceTexto: 0, indiceDilema: 0, indiceExpresion: 0 };
+  return {
+    indiceTexto: sessionId.charCodeAt(0) % TEXTOS_COMPRENSION.length,
+    indiceDilema: sessionId.charCodeAt(1) % DILEMAS_ARGUMENTACION.length,
+    indiceExpresion: sessionId.charCodeAt(2) % CONSIGNAS_EXPRESION.length,
+  };
+}
+
+// Estímulo correspondiente a la tarea dado un juego de índices (mismo default `?? 0`
+// que ya usaba /api/evaluar, para no romper llamadas que aún no mandan índice).
+export function estimuloVerbalDe(tarea: TareaVerbal, indices: Partial<IndicesEstimuloVerbal>): string {
+  if (tarea === "comprension") return TEXTOS_COMPRENSION[indices.indiceTexto ?? 0];
+  if (tarea === "argumentacion") return DILEMAS_ARGUMENTACION[indices.indiceDilema ?? 0];
+  return CONSIGNAS_EXPRESION[indices.indiceExpresion ?? 0];
 }

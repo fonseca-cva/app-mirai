@@ -8,11 +8,19 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "verificar-esquema": "node scripts/verificar-esquema.mjs",
+    "verificar-esquema:estricto": "node scripts/verificar-esquema.mjs --estricto",
     "verificar-rls": "node --env-file=.env.local scripts/verificar-rls.mjs",
     "verificar-rate-limit": "node --env-file=.env.local scripts/verificar-rate-limit.mjs",
     "verificar-conversion-cuenta": "node --env-file=.env.local scripts/verificar-conversion-cuenta.mjs",
     "verificar-informe-permanente": "node --env-file=.env.local scripts/verificar-informe-permanente.mjs",
-    "verificar-mi-cuenta": "node --env-file=.env.local scripts/verificar-mi-cuenta.mjs"
+    "verificar-mi-cuenta": "node --env-file=.env.local scripts/verificar-mi-cuenta.mjs",
+    "start:e2e": "next build && next start -p 3100",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:mock": "playwright test --project=chromium-mock",
+    "test:e2e:real": "playwright test --project=chromium-real"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.8",
@@ -26,6 +34,7 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4",
     "@types/markdown-it": "^14.1.2",
     "@types/node": "^20",

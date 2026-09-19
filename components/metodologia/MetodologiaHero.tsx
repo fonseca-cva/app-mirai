@@ -49,6 +49,147 @@ const ARBOLES = [
   { x: 300, alto: 29, ancho: 13, tono: '#5DA878', dy: 26 },
 ];
 
+interface ArbolDef {
+  x: number;
+  alto: number;
+  ancho: number;
+  tono: string;
+  dy: number;
+}
+
+// Tipo del objeto que devuelve `cara()`: props de animación de un pliegue.
+// Se declara explícito para no depender de `any` en la propagación.
+interface PropsCara {
+  style: { originX: number; originY: number };
+  initial: { scaleX: number };
+  animate: { scaleX: number };
+  transition: { duration: number; delay: number; ease: 'easeInOut' };
+}
+
+ // Ease compartido por los pliegues (antes dentro del componente).
+const EASE_PLIEGUE = 'easeInOut' as const;
+
+// Pliegue reutilizable: cara izquierda/derecha de un cerro o un árbol.
+// Se extrajo de `cara()` para no crear objetos de props con tipos implícitos.
+function propsCara(lado: 'right' | 'left', delay: number): PropsCara {
+  return {
+    style: { originX: lado === 'right' ? 1 : 0, originY: 0.5 },
+    initial: { scaleX: 0 },
+    animate: { scaleX: 1 },
+    transition: { ...DESDOBLA, delay, ease: EASE_PLIEGUE },
+  };
+}
+
+// Una capa de cerros con su propio parallax horizontal.
+// Componente propio (no inline en el .map() del padre) porque useTransform es un
+// hook: llamarlo dentro de un callback violaba react-hooks/rules-of-hooks. Acá se
+// invoca en el nivel superior del componente, que es donde corresponde.
+function CapaCerro({
+  capa,
+  indice,
+  mouseXSuave,
+  creaseId,
+}: {
+  capa: CapaDef;
+  indice: number;
+  mouseXSuave: ReturnType<typeof useSpring>;
+  creaseId: string;
+}) {
+  const atm = atmosfera[capa.distancia];
+  const luz = mezclarHex(capa.luz, colores.papel, atm.mezclaPapel);
+  const sombra = mezclarHex(capa.sombra, colores.papel, atm.mezclaPapel);
+  const nieveLuz = mezclarHex('#F8F8F4', colores.papel, atm.mezclaPapel * 0.6);
+  const nieveSombra = mezclarHex('#E2E2CE', colores.papel, atm.mezclaPapel * 0.6);
+  const mouseMax = 4 + indice * 2;
+
+  // Nivel superior del componente: hook válido. El tipo de useTransform es
+  // MotionValue<number>, que `style.transform` acepta sin cast.
+  const desplazamiento = useTransform(mouseXSuave, [-1, 1], [-mouseMax, mouseMax]);
+
+  return (
+    <motion.g
+      style={{
+        transform: desplazamiento,
+        filter: `saturate(${atm.saturacion}) ${dropShadowCSS(capa.distancia)}`,
+      }}
+    >
+      {capa.picos.map((p, j) => {
+        const {
+          caraLuz,
+          caraSombra,
+          creaseX,
+          apexY,
+          quillaY,
+          nieveLuz: nL,
+          nieveSombra: nS,
+        } = construirPico(p, BASE_Y + (p.dy ?? 0));
+        const delay = indice * 0.16 + j * 0.12;
+        return (
+          <g key={j}>
+            <line
+              x1={creaseX}
+              y1={apexY}
+              x2={creaseX}
+              y2={quillaY}
+              stroke={`url(#${creaseId})`}
+              strokeWidth={1}
+              opacity={0.25}
+            />
+            <motion.g {...propsCara('right', delay)}>
+              <path d={caraLuz} fill={luz} />
+              {nL && <path d={nL} fill={nieveLuz} />}
+            </motion.g>
+            <motion.g {...propsCara('left', delay + 0.1)}>
+              <path d={caraSombra} fill={sombra} />
+              {nS && <path d={nS} fill={nieveSombra} />}
+            </motion.g>
+          </g>
+        );
+      })}
+    </motion.g>
+  );
+}
+
+// Árboles del primer plano con su propio parallax.
+// Mismo motivo que CapaCerro: useTransform en el nivel superior del componente.
+function ArbolesParallax({ mouseXSuave }: { mouseXSuave: ReturnType<typeof useSpring> }) {
+  const desplazamiento = useTransform(mouseXSuave, [-1, 1], [-10, 10]);
+
+  return (
+    <motion.g style={{ transform: desplazamiento, filter: dropShadowCSS('cercana') }}>
+      {ARBOLES.map((a: ArbolDef, i: number) => {
+        const base = SUELO_Y + a.dy;
+        const apexY = base - a.alto;
+        const delay = 0.9 + i * 0.14;
+        return (
+          <g key={i}>
+            <motion.rect
+              x={a.x - 2}
+              y={base - 2}
+              width={4}
+              height={14}
+              fill="#7A5A3C"
+              initial={{ scaleY: 0, opacity: 0 }}
+              animate={{ scaleY: 1, opacity: 1 }}
+              style={{ originX: 0.5, originY: 0 }}
+              transition={{ duration: 0.5, delay: delay + DESDOBLA.duration + 0.15, ease: 'easeOut' }}
+            />
+            <motion.g {...propsCara('right', delay)}>
+              <polygon points={`${a.x},${apexY} ${a.x - a.ancho},${base} ${a.x},${base}`} fill={a.tono} />
+            </motion.g>
+            <motion.g {...propsCara('left', delay + 0.1)}>
+              <polygon
+                points={`${a.x},${apexY} ${a.x},${base} ${a.x + a.ancho},${base}`}
+                fill={mezclarHex(a.tono, colores.tinta, 0.2)}
+              />
+            </motion.g>
+          </g>
+        );
+      })}
+    </motion.g>
+  );
+}
+
 function construirPico(p: Pico, baseY: number) {
   const { cx, hw, alto } = p;
   const apexY = baseY - alto;
@@ -79,7 +220,6 @@ export function MetodologiaHero() {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const mouseXSuave = useSpring(mouseX, { stiffness: 50, damping: 20 });
-  const mouseYSuave = useSpring(mouseY, { stiffness: 50, damping: 20 });
 
   useEffect(() => {
     if (!window.matchMedia('(pointer: fine)').matches) return;
@@ -90,13 +230,6 @@ export function MetodologiaHero() {
     window.addEventListener('pointermove', manejar);
     return () => window.removeEventListener('pointermove', manejar);
   }, [mouseX, mouseY]);
-
-  const cara = (lado: 'right' | 'left', delay: number) => ({
-    style: { originX: lado === 'right' ? 1 : 0, originY: 0.5 },
-    initial: { scaleX: 0 },
-    animate: { scaleX: 1 },
-    transition: { ...DESDOBLA, delay },
-  });
 
   return (
     <div
@@ -133,77 +266,12 @@ export function MetodologiaHero() {
         <rect x="0" y={SUELO_Y} width="400" height={2.5} fill="#7DC89B" />
 
         {/* Cerros (sin capa "cercana" de frente) */}
-        {CAPAS.map((capa, i) => {
-          const atm = atmosfera[capa.distancia];
-          const luz = mezclarHex(capa.luz, colores.papel, atm.mezclaPapel);
-          const sombra = mezclarHex(capa.sombra, colores.papel, atm.mezclaPapel);
-          const nieveLuz = mezclarHex('#F8F8F4', colores.papel, atm.mezclaPapel * 0.6);
-          const nieveSombra = mezclarHex('#E2E2CE', colores.papel, atm.mezclaPapel * 0.6);
-          const mouseMax = 4 + i * 2;
-
-          return (
-            <motion.g
-              key={i}
-              style={{
-                transform: useTransform(mouseXSuave, [-1, 1], [-mouseMax, mouseMax]) as any,
-                filter: `saturate(${atm.saturacion}) ${dropShadowCSS(capa.distancia)}`,
-              }}
-            >
-              {capa.picos.map((p, j) => {
-                const { caraLuz, caraSombra, creaseX, apexY, quillaY, nieveLuz: nL, nieveSombra: nS } = construirPico(p, BASE_Y + (p.dy ?? 0));
-                const delay = i * 0.16 + j * 0.12;
-                return (
-                  <g key={j}>
-                    <line x1={creaseX} y1={apexY} x2={creaseX} y2={quillaY} stroke={`url(#${creaseId})`} strokeWidth={1} opacity={0.25} />
-                    <motion.g {...cara('right', delay)}>
-                      <path d={caraLuz} fill={luz} />
-                      {nL && <path d={nL} fill={nieveLuz} />}
-                    </motion.g>
-                    <motion.g {...cara('left', delay + 0.1)}>
-                      <path d={caraSombra} fill={sombra} />
-                      {nS && <path d={nS} fill={nieveSombra} />}
-                    </motion.g>
-                  </g>
-                );
-              })}
-            </motion.g>
-          );
-        })}
+        {CAPAS.map((capa, i) => (
+          <CapaCerro key={i} capa={capa} indice={i} mouseXSuave={mouseXSuave} creaseId={creaseId} />
+        ))}
 
         {/* Árboles — subidos, sobre el borde del prado */}
-        <motion.g
-          style={{
-            transform: useTransform(mouseXSuave, [-1, 1], [-10, 10]) as any,
-            filter: dropShadowCSS('cercana'),
-          }}
-        >
-          {ARBOLES.map((a, i) => {
-            const base = SUELO_Y + a.dy;
-            const apexY = base - a.alto;
-            const delay = 0.9 + i * 0.14;
-            return (
-              <g key={i}>
-                <motion.rect
-                  x={a.x - 2}
-                  y={base - 2}
-                  width={4}
-                  height={14}
-                  fill="#7A5A3C"
-                  initial={{ scaleY: 0, opacity: 0 }}
-                  animate={{ scaleY: 1, opacity: 1 }}
-                  style={{ originX: 0.5, originY: 0 }}
-                  transition={{ duration: 0.5, delay: delay + DESDOBLA.duration + 0.15, ease: 'easeOut' }}
-                />
-                <motion.g {...cara('right', delay)}>
-                  <polygon points={`${a.x},${apexY} ${a.x - a.ancho},${base} ${a.x},${base}`} fill={a.tono} />
-                </motion.g>
-                <motion.g {...cara('left', delay + 0.1)}>
-                  <polygon points={`${a.x},${apexY} ${a.x},${base} ${a.x + a.ancho},${base}`} fill={mezclarHex(a.tono, colores.tinta, 0.2)} />
-                </motion.g>
-              </g>
-            );
-          })}
-        </motion.g>
+        <ArbolesParallax mouseXSuave={mouseXSuave} />
       </svg>
 
       {/* Contenido centrado — anclado cerca del final del verde */}

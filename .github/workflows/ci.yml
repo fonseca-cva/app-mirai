@@ -1,0 +1,255 @@
+name: CI
+
+# Estrategia de validación (corrige el agujero del CI anterior):
+#
+#  PROBLEMA ANTERIOR: la verificación de esquema corría SOLO tras push a main, así
+#  que no podía bloquear un merge — cuando se ejecutaba, el código ya estaba en main.
+#
+#  AHORA:
+#   1. `calidad` corre en TODO PR y push. Es el job REQUERIDO para mergear
+#      (branch protection debe exigir "calidad"): typecheck, lint, test y build.
+#      No usa secretos, así que funciona en forks sin exponer nada.
+#   2. `esquema` corre en cada PR que toque rutas relevantes (esquema, sync, tipos,
+#      migraciones) y en push a main. Usa secretos SOLO si el evento es de este repo
+#      (un PR desde un fork nunca los recibe), y FALLA de forma explícita si la
+#      verificación estaba requerida y no pudo ejecutarse.
+#   3. `deploy-gate` es el deployment gate: falla si `esquema` no se ejecutó o no
+#      pasó cuando era requerido. Un despliegue no debe proceder sin esquema verde.
+#
+#  Protección de secretos en forks: GitHub NO entrega secretos a workflows
+#  disparados desde un fork, y `pull_request` de un fork no tiene acceso a ellos.
+#  El job detecta la ausencia y decide según el caso (ver `esquema`).
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+# Cancela ejecuciones antiguas de la misma rama/PR: ahorra minutos y evita que un
+# resultado obsoleto marque verde un commit viejo.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── REQUERIDO PARA MERGE (sin secretos) ──────────────────────────────────
+  calidad:
+    name: calidad (typecheck · lint · test · build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests
+        run: npm test
+
+      - name: Build de producción
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+
+      # E2E con el backend interceptado: NO toca Supabase ni ninguna API real, así
+      # que no necesita secretos y no puede escribir en producción. Cubre los flujos
+      # que los tests de store no alcanzan (render real, recarga por bloque, pantalla
+      # de bloque terminado, modo prueba, PC compartido).
+      - name: Instalar Chromium de Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E (backend interceptado, sin secretos)
+        run: npm run test:e2e:mock
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+
+  # ── Detección de rutas relevantes para el esquema ────────────────────────
+  # El evento `pull_request` no trae la lista de archivos, así que se calcula.
+  rutas:
+    name: rutas relevantes
+    runs-on: ubuntu-latest
+    # NO se salta en push (a diferencia de la versión anterior): si este job queda
+    # `skipped`, cualquier job que lo tenga en `needs` también se salta ANTES de
+    # evaluar su propio `if`, y el deploy gate quedaría abierto en main en silencio.
+    # Al correr siempre, su salida es fiable y `esquema` puede depender de él.
+    outputs:
+      esquema_relevante: ${{ steps.filtro.outputs.esquema_relevante }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filtro
+        with:
+          filters: |
+            esquema_relevante:
+              - 'supabase/**'
+              - 'lib/supabase/**'
+              - 'lib/store/**'
+              - 'scripts/verificar-esquema.mjs'
+              - '.github/workflows/ci.yml'
+
+  # ── Esquema: antes del merge en PRs relevantes, y en push a main ─────────
+  esquema:
+    name: esquema (verificador)
+    runs-on: ubuntu-latest
+    # `needs` incluye `rutas` (que ahora corre siempre). `always()` es necesario
+    # para que el `if` se evalúe aunque un need haya fallado, y así distinguir
+    # "no correspondía" de "falló".
+    needs: [calidad, rutas]
+    # Se ejecuta:
+    #   * en push a main/dev (control permanente de producción), o
+    #   * en PR que toque esquema/sync/tipos/migraciones (donde el riesgo es real).
+    # En un PR que no toca nada de eso se SALTA (skipped legítimo): no aporta y
+    # gasta tiempo. El `if` es imprescindible: sin él, este job corría en TODOS los
+    # PR y el gate perdía la capacidad de distinguir "no correspondía" de "falló".
+    #
+    # `always()` permite evaluar la condición aunque `calidad` haya fallado (y así
+    # el gate puede informar esa causa en vez de quedar en skipped).
+    # `!cancelled()` evita ejecutarlo en runs cancelados.
+    if: >-
+      !cancelled() && always() &&
+      (github.event_name == 'push' || needs.rutas.outputs.esquema_relevante == 'true')
+    outputs:
+      # 'remoto' si se verificó contra Supabase real; 'interno' si solo se pudo
+      # comprobar la consistencia del manifiesto (sin secretos, p.ej. PR de fork).
+      # El gate usa esto para NO presentar una verificación interna como si el
+      # esquema de producción estuviera verificado.
+      modo: ${{ steps.modo.outputs.modo }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      # En PRs desde forks, GitHub no entrega secretos. Se detecta y se decide.
+      - name: ¿Hay credenciales disponibles?
+        id: credenciales
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+        run: |
+          if [ -n "$SUPABASE_URL" ]; then
+            echo "configuradas=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configuradas=false" >> "$GITHUB_OUTPUT"
+            echo "Sin secretos de Supabase (PR desde fork, o secrets sin configurar)."
+          fi
+
+      - name: Fijar el modo de verificación
+        id: modo
+        run: |
+          if [ "${{ steps.credenciales.outputs.configuradas }}" = "true" ]; then
+            echo "modo=remoto" >> "$GITHUB_OUTPUT"
+          else
+            echo "modo=interno" >> "$GITHUB_OUTPUT"
+          fi
+
+      # SIN secretos: se corre el modo SIN RED (consistencia interna del manifiesto
+      # contra el código). Es lo único honesto sin credenciales, y NO se presenta
+      # como "esquema verificado": el gate lee `esquema.outputs.modo`.
+      - name: Verificación interna (sin credenciales)
+        id: verificarInterno
+        if: steps.credenciales.outputs.configuradas == 'false' && github.event_name == 'pull_request'
+        run: node scripts/verificar-esquema.mjs --sin-red
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+
+      # CON secretos: verificación REAL contra producción y estricta.
+      - name: Verificar esquema contra Supabase real (falla si difiere)
+        id: verificar
+        if: steps.credenciales.outputs.configuradas == 'true'
+        run: npm run verificar-esquema:estricto
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+
+      # Push a main SIN secretos (mal configurados): aquí SÍ es un fallo explícito.
+      # En main la verificación es obligatoria; si no puede correr, no se simula éxito.
+      - name: Fallar si en main no se pudo verificar el esquema
+        if: steps.credenciales.outputs.configuradas == 'false' && github.event_name == 'push'
+        run: |
+          echo "::error::La verificación de esquema es obligatoria en main y no hay secretos configurados."
+          echo "Configurar NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY en"
+          echo "Settings → Secrets and variables → Actions."
+          exit 1
+
+  # ── Deployment gate ──────────────────────────────────────────────────────
+  # Un despliegue no debe proceder sin el esquema verificado. Este job NO despliega:
+  # es la puerta que otro workflow (o un entorno protegido de GitHub) exige.
+  # Si `esquema` falló o no llegó a correr cuando correspondía, esta puerta cierra.
+  deploy-gate:
+    name: deploy gate (esquema verde requerido)
+    runs-on: ubuntu-latest
+    needs: [calidad, esquema]
+    # `always()` para poder evaluar también el caso "esquema se saltó": sin él, un
+    # job saltado haría que este ni se ejecute y el gate quedaría abierto en silencio.
+    if: always()
+    steps:
+      - name: Evaluar el resultado del verificador
+        env:
+          RESULTADO_CALIDAD: ${{ needs.calidad.result }}
+          RESULTADO_ESQUEMA: ${{ needs.esquema.result }}
+          MODO: ${{ needs.esquema.outputs.modo }}
+          EVENTO: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+        run: |
+          echo "calidad=$RESULTADO_CALIDAD esquema=$RESULTADO_ESQUEMA modo=$MODO evento=$EVENTO"
+
+          # 1. Calidad (typecheck+lint+test+build) SIEMPRE es obligatoria.
+          if [ "$RESULTADO_CALIDAD" != "success" ]; then
+            echo "::error::El job de calidad no pasó. No se despliega."
+            exit 1
+          fi
+
+          # 2. El esquema se exige SOLO donde corresponde exigirlo:
+          #    * push a main → obligatorio (es lo que protege producción);
+          #    * PR que toca rutas relevantes → obligatorio;
+          #    * PR que NO toca esas rutas → el job se salta a propósito y eso NO
+          #      puede fallar el gate (antes sí lo fallaba).
+          ES_MAIN=false
+          if [ "$EVENTO" = "push" ] && [ "$REF" = "refs/heads/main" ]; then ES_MAIN=true; fi
+
+          if [ "$RESULTADO_ESQUEMA" = "skipped" ]; then
+            if [ "$ES_MAIN" = "true" ]; then
+              echo "::error::El verificador de esquema no se ejecutó en main, donde es obligatorio: puerta cerrada."
+              exit 1
+            fi
+            echo "PR que no toca rutas de esquema: la verificación no aplicaba. Puerta abierta."
+            exit 0
+          fi
+
+          # 3. Si corrió, exige que haya pasado.
+          if [ "$RESULTADO_ESQUEMA" != "success" ]; then
+            echo "::error::El verificador de esquema no pasó (resultado=$RESULTADO_ESQUEMA). Puerta cerrada."
+            exit 1
+          fi
+
+          # 4. Una verificación SOLO INTERNA (sin secretos) no acredita el esquema
+          #    de producción: en main se cierra la puerta, porque presentarla como
+          #    "esquema verificado" sería falso.
+          if [ "$MODO" = "interno" ]; then
+            if [ "$ES_MAIN" = "true" ]; then
+              echo "::error::En main la verificación de esquema debe ser contra producción, y corrió en modo interno (sin secretos). Puerta cerrada."
+              exit 1
+            fi
+            echo "::warning::Verificación de esquema SOLO INTERNA (sin credenciales): el esquema de producción NO se verificó."
+            echo "Puerta abierta para este PR, pero no se acredita el esquema remoto."
+            exit 0
+          fi
+
+          echo "Esquema verificado contra producción (modo=$MODO). Puerta abierta."
+          exit 0

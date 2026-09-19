@@ -8,15 +8,16 @@
 //   { modo: "carga", cargaN?: number } → N cadenas en paralelo (default 30,
 //     prueba de carga anotada por Camilo: detecta 429 del proveedor bajo carga)
 //
-// Cada corrida usa un sessionId aleatorio: no toca el rate limit real.
+// Usa el sessionId real si el cliente lo manda (solo para correlacionar logs; esta
+// ruta no tiene rate limit propio ni lo comparte con /api/evaluar) o uno aleatorio
+// si no viene. En modo "carga" siempre corre en paralelo con el mismo estímulo.
 
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { debugAutenticado } from "@/lib/debug";
 import { ejecutarCadenaVerbal } from "@/lib/logic/evaluacionIA";
-import type { TareaVerbal } from "@/lib/logic/evaluacionIA";
-import { TEXTOS_COMPRENSION, DILEMAS_ARGUMENTACION, CONSIGNAS_EXPRESION } from "@/lib/config/rubricas";
+import { estimuloVerbalDe } from "@/lib/logic/verbal";
 import { sanitizarTextoEstudiante } from "@/lib/anonimizacion";
 
 const Schema = z.object({
@@ -24,16 +25,20 @@ const Schema = z.object({
   texto: z.string().max(3000).optional(),
   tarea: z.enum(["comprension", "argumentacion", "expresion"]).default("comprension"),
   cargaN: z.number().int().min(1).max(60).optional(),
+  // sessionId real del navegador (solo para logs de correlación, igual que /api/evaluar
+  // — ver evaluacionIA.ts:100, jamás entra al prompt ni afecta rate limit).
+  sessionId: z.string().uuid().optional(),
+  // Fix (bug reportado por Camilo): el estímulo mostrado al alumno se deriva de estos
+  // índices (BloqueVerbal.tsx). Antes esta ruta SIEMPRE evaluaba contra el índice [0],
+  // desalineado del estímulo visible → falsos "no habla del texto". Mismo patrón
+  // opcional + `?? 0` que /api/evaluar.
+  indiceTexto: z.number().int().min(0).optional(),
+  indiceDilema: z.number().int().min(0).optional(),
+  indiceExpresion: z.number().int().min(0).optional(),
 });
 
 const DEMO_PII =
   "Hola, soy Juan Pérez. Mi RUT es 12.345.678-9 y mi correo es juan.perez@correo.cl. Mi teléfono es +56 9 1234 5678 y el sitio es www.ejemplo.cl. Creo que el texto muestra que la tecnología cambió la forma de estudiar: antes dependíamos de bibliotecas físicas y hoy el acceso es inmediato, pero también hay que aprender a filtrar información confiable.";
-
-function estimuloDe(tarea: TareaVerbal): string {
-  if (tarea === "comprension") return TEXTOS_COMPRENSION[0];
-  if (tarea === "argumentacion") return DILEMAS_ARGUMENTACION[0];
-  return CONSIGNAS_EXPRESION[0];
-}
 
 export async function POST(request: NextRequest) {
   if (!(await debugAutenticado())) {
@@ -45,16 +50,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Datos inválidos", detalle: parsed.error.issues }, { status: 400 });
   }
 
-  const { modo, tarea, cargaN } = parsed.data;
+  const { modo, tarea, cargaN, sessionId, indiceTexto, indiceDilema, indiceExpresion } = parsed.data;
   const texto = parsed.data.texto ?? DEMO_PII;
-  const estimulo = estimuloDe(tarea);
+  const estimulo = estimuloVerbalDe(tarea, { indiceTexto, indiceDilema, indiceExpresion });
 
   if (modo === "carga") {
     const n = cargaN ?? 30;
     const inicio = Date.now();
     const corridas = Array.from({ length: n }, () =>
       ejecutarCadenaVerbal({
-        sessionId: randomUUID(),
+        sessionId: sessionId ?? randomUUID(),
         tarea,
         estimulo,
         texto,
@@ -104,7 +109,7 @@ export async function POST(request: NextRequest) {
   }
 
   const resultado = await ejecutarCadenaVerbal({
-    sessionId: randomUUID(),
+    sessionId: sessionId ?? randomUUID(),
     tarea,
     estimulo,
     texto,

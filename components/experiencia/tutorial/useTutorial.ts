@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useSyncExternalStore } from "react";
 
 export interface TutorialResult {
   tutorialVisto: boolean;
@@ -155,15 +155,27 @@ export function useTutorial(
 
 /**
  * Hook que detecta prefers-reduced-motion.
+ *
+ * Usa useSyncExternalStore (React 19): matchMedia ES un store externo, así que
+ * se lee con su API en vez de copiarlo a useState dentro de un useEffect. Ese
+ * patrón anterior (setReduced en el cuerpo del efecto) provocaba un render en
+ * cascada — regla react-hooks/set-state-in-effect.
+ * El servidor devuelve false (sin matchMedia): el primer render hidrata igual y
+ * el cliente corrige de inmediato si el usuario pide menos movimiento.
  */
 export function useReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(false);
-  useEffect(() => {
+  const suscribir = useCallback((onChange: () => void) => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduced(mq.matches);
-    const onChange = (e: MediaQueryListEvent) => setReduced(e.matches);
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
   }, []);
-  return reduced;
+
+  const obtenerSnapshot = useCallback(
+    () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    []
+  );
+
+  const obtenerSnapshotServidor = useCallback(() => false, []);
+
+  return useSyncExternalStore(suscribir, obtenerSnapshot, obtenerSnapshotServidor);
 }

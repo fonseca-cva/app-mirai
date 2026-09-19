@@ -147,9 +147,9 @@ export default function PrivacidadPage() {
       </section>
 
       <p className="mt-8 text-xs text-tinta/40">
-        // PENDIENTE REVISIÓN LEGAL — Este texto ha sido redactado por el
+        {/* PENDIENTE REVISIÓN LEGAL — Este texto ha sido redactado por el
         equipo de Mirai y debe ser revisado por un/a abogado/a antes de su uso
-        en producción.
+        en producción. */}
       </p>
     </main>
   );

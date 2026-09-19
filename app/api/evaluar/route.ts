@@ -30,13 +30,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { after } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import {
-  RATE_LIMIT_POR_SESSION,
-  TEXTOS_COMPRENSION,
-  DILEMAS_ARGUMENTACION,
-  CONSIGNAS_EXPRESION,
-} from "@/lib/config/rubricas";
-import { CARACTERES_MINIMOS } from "@/lib/logic/verbal";
+import { RATE_LIMIT_POR_SESSION } from "@/lib/config/rubricas";
+import { CARACTERES_MINIMOS, estimuloVerbalDe } from "@/lib/logic/verbal";
 import { ejecutarCadenaVerbal } from "@/lib/logic/evaluacionIA";
 import type { TareaVerbal } from "@/lib/logic/evaluacionIA";
 import { recalcularPerfilConComunicacion } from "@/lib/logic/perfilServidor";
@@ -245,12 +240,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Estímulo correspondiente a la tarea (para pertinencia y copia literal).
-    const estimulo =
-      tarea === "comprension"
-        ? TEXTOS_COMPRENSION[indiceTexto ?? 0]
-        : tarea === "argumentacion"
-          ? DILEMAS_ARGUMENTACION[indiceDilema ?? 0]
-          : CONSIGNAS_EXPRESION[indiceExpresion ?? 0];
+    // Misma función que /api/debug/evaluar y que BloqueVerbal.tsx usa para elegir
+    // el índice que el alumno ve — cero drift posible entre "lo que se ve" y "lo
+    // que se evalúa" (lib/logic/verbal.ts).
+    const estimulo = estimuloVerbalDe(tarea, { indiceTexto, indiceDilema, indiceExpresion });
 
     // Cadena completa (anonimización → copia literal → pertinencia →
     // evaluador 1 + evaluador 2 en paralelo). Compartida con /debug.

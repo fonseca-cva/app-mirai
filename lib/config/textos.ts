@@ -10,7 +10,7 @@ export const nav = {
     { label: "Respaldo", href: "#respaldo" }, // PENDIENTE PASADA DE COPY
     { label: "Metodología", href: "/metodologia" },
     { label: "Artículos", href: "/articulos" },
-    { label: "Colegios", href: "#colegios" }, // PENDIENTE PASADA DE COPY
+    { label: "Colegios", href: "/colegios" },
   ],
   cta: "Descúbrelo gratis", // PENDIENTE PASADA DE COPY
 };
@@ -88,8 +88,10 @@ export const apoderados = {
 export const paraColegios = {
   titulo: "Tu generación completa, en una hora pedagógica.",
   texto:
-    "Cada estudiante vive la experiencia y recibe su informe. Tu equipo de orientación recibe el mapa de la generación: perfiles, tendencias y datos para trabajar, no impresiones.",
+    "Cada estudiante vive la experiencia y recibe su informe individual. El reporte generacional para tu equipo de orientación todavía no está operativo: es lo que estamos diseñando junto a los colegios fundadores del piloto.",
   cta: "Conversemos", // PENDIENTE PASADA DE COPY
+  // Enlace a la página dedicada del programa (detalle completo).
+  ctaPagina: "Ver el programa de colegios",
   mailto: "mailto:colegios@miraiapp.cl",
 };
 
@@ -653,3 +655,300 @@ export const metodologia = {
     contactoMailto: "mailto:colegios@miraiapp.cl",
   },
 } as const;
+
+// ─────────────────────────────────────────────────────────────────────────
+// PÁGINA /colegios — Programa de Colegios Fundadores
+//
+// REGLAS DE COPY (documento maestro + instrucciones del fundador):
+//   * Cada cifra va SIEMPRE con su fuente y año. Las que aparecen aquí salen de
+//     lib/config/datos-graficos.ts (banco verificado del proyecto) — no se inventa
+//     ninguna.
+//   * NO se afirma que el instrumento esté validado psicométricamente: se declara
+//     que entra a su fase piloto.
+//   * NO se promete reducción de deserción ni ningún % de impacto propio.
+//   * NO se nombran personas del equipo ni se detallan ítems o algoritmos
+//     (prohibidos de la sección 6.5 del documento maestro).
+//   * NO hay testimonios, colegios participantes, precios ni resultados de
+//     validación, porque todavía no existen.
+//   * Español de Chile, tuteo, tono cercano sin ser infantil.
+// ─────────────────────────────────────────────────────────────────────────
+export const colegios = {
+  metadata: {
+    titulo: "Programa de Colegios Fundadores — Mirai",
+    descripcion:
+      "Un diagnóstico vocacional para tu generación completa, en una hora pedagógica. Cada estudiante recibe su informe individual. Buscamos colegios fundadores para el piloto que ayudará a diseñar el futuro reporte generacional.",
+  },
+
+  hero: {
+    etiqueta: "Programa de Colegios Fundadores",
+    titulo: "Tu generación completa, orientada en una hora pedagógica.",
+    bajada:
+      "Mirai es un diagnóstico vocacional que cada estudiante vive dentro de una hora pedagógica. Al terminar, recibe un informe individual. El piloto con colegios fundadores es lo que nos permitirá diseñar el futuro reporte generacional, que todavía no está operativo.",
+    cta: "Conversemos sobre tu colegio",
+    ctaSecundario: "Ver cómo funciona",
+    // Nota de honestidad exigida: el instrumento NO está validado todavía.
+    notaPiloto:
+      "Estamos en fase piloto. No vamos a decirte que somos un instrumento validado, porque todavía no lo somos: eso se gana con datos, y los estamos empezando a recoger.",
+  },
+
+  // Sección 2 — El problema. SOLO cifras ya verificadas en el proyecto.
+  problema: {
+    titulo: "El problema que conocemos de memoria",
+    bajada:
+      "No hace falta convencer a nadie de que orientar a un curso completo es difícil. Lo que sí conviene es mirar el costo de hacerlo a ciegas.",
+    cifras: [
+      {
+        valor: "25%",
+        texto: "de los estudiantes deja su carrera durante el primer año.",
+        fuente: "SIES, cohorte 2021",
+      },
+      {
+        valor: "+112%",
+        texto:
+          "ganan quienes completan educación superior frente a quienes solo terminan la enseñanza media. La decisión vale, y por eso importa cómo se toma.",
+        fuente: "OCDE, Education at a Glance 2024/2025",
+      },
+      {
+        valor: "264",
+        texto:
+          "carreras con datos oficiales de empleabilidad e ingresos publicados para cruzar con cada perfil. Cuando una carrera no tiene datos oficiales, el informe lo declara en vez de estimarlos.",
+        fuente: "mifuturo.cl / SIES",
+      },
+    ],
+    cierre:
+      "Un orientador con 40 estudiantes y una hora a la semana no puede conocer la combinación de intereses, capacidades y mercado de cada uno. No es un problema de dedicación: es un problema de escala.",
+  },
+
+  // Sección 3 — Qué vive cada estudiante.
+  estudiante: {
+    titulo: "Qué vive cada estudiante",
+    bajada: "La experiencia completa, sin registro previo y sin costo para el estudiante.",
+    pasos: [
+      {
+        titulo: "Responde sobre situaciones reales de trabajo",
+        texto:
+          "Un bloque de estímulos audiovisuales: lugares de trabajo chilenos, con su sonido y su contexto. No son preguntas de \"¿te gusta la matemática?\".",
+      },
+      {
+        titulo: "Juega cuatro juegos de capacidades",
+        texto:
+          "Cuatro juegos breves de razonamiento —patrones, series, plegado de papel y secuencias—, no un examen. Miden cómo piensa, no cuánto sabe.",
+      },
+      {
+        titulo: "Responde tres tareas escritas",
+        texto:
+          "Tres tareas breves de comprensión, argumentación y expresión. Miden cómo entiende y cómo argumenta, no su ortografía ni su opinión.",
+      },
+      {
+        titulo: "Recibe su informe individual",
+        texto:
+          "Un perfil con sus intereses priorizados, lo que muestra cada capacidad y una lista de caminos concretos para explorar, cruzada con datos oficiales de empleabilidad e ingresos cuando están disponibles.",
+      },
+    ],
+    nota:
+      "El informe no es un veredicto: entrega caminos por explorar y los datos para decidirlos. Ningún estudiante recibe un \"no sirves para esto\".",
+  },
+
+  // Sección 4 — Qué recibe el colegio.
+  colegio: {
+    titulo: "Qué recibe tu colegio",
+    bajada: "Tres entregables, en el mismo orden en que los vas a usar.",
+    entregables: [
+      {
+        titulo: "Aplicación acompañada",
+        texto:
+          "Definimos juntos la hora pedagógica, te entregamos las instrucciones para los estudiantes y resolvemos dudas antes de empezar. No te dejamos sola con un link.",
+      },
+      {
+        titulo: "Resultados individuales",
+        texto:
+          "Cada estudiante recibe su informe. Tú recibes orientaciones para leerlos en conjunto y detectar a quién conviene acompañar más de cerca.",
+      },
+      {
+        titulo: "Diseño del futuro reporte generacional",
+        texto:
+          "Todavía no está operativo. El piloto con colegios fundadores es lo que nos permitirá diseñarlo: qué mirar de un curso completo, cómo presentarlo y para qué lo usaría tu equipo de orientación. Lo construimos con ustedes, no antes de ustedes.",
+      },
+    ],
+    // Honestidad sobre el estado del reporte agregado.
+    notaAgregado:
+      "Declaramos el estado real: el informe individual del estudiante está operativo; el reporte generacional para el colegio todavía no existe. Los colegios fundadores del piloto son quienes lo van a diseñar con nosotros.",
+  },
+
+  // Sección 5 — Qué significa ser Colegio Fundador.
+  fundador: {
+    titulo: "Qué significa ser Colegio Fundador",
+    bajada:
+      "No es un descuento ni un contrato. Es entrar temprano y ayudar a definir qué construimos.",
+    compromisos: [
+      {
+        titulo: "Participar en el piloto",
+        texto:
+          "Aplicar la experiencia con una o más generaciones durante el período de piloto, con el acompañamiento descrito arriba.",
+      },
+      {
+        titulo: "Aportar retroalimentación",
+        texto:
+          "Contarnos qué funcionó en tu contexto y qué no: la hora pedagógica, las instrucciones, la lectura de los informes, lo que le faltó a tu equipo.",
+      },
+      {
+        titulo: "Ayudar a validar la herramienta",
+        texto:
+          "Permitirnos recoger datos del piloto para el proceso de validación en curso. Ese es el aporte más valioso: sin colegios, no hay normas chilenas.",
+      },
+    ],
+    cierre:
+      "A cambio, tu colegio entra antes que nadie, participa en las decisiones de producto y queda en el grupo que definió el instrumento.",
+  },
+
+  // Sección 6 — Salvaguardas.
+  salvaguardas: {
+    titulo: "Lo que no vas a tener que preguntarnos",
+    bajada: "Seis decisiones que tomamos antes de que las pidas, porque nos parecen lo mínimo.",
+    items: [
+      {
+        titulo: "Independencia de las universidades",
+        texto:
+          "Mirai no pertenece a ninguna universidad ni recibe pago por orientar hacia una institución. Es un requisito del producto, no una promesa de marketing.",
+      },
+      {
+        titulo: "Datos de prueba, identificados",
+        texto:
+          "Las sesiones del modo prueba quedan marcadas con una bandera propia en la base de datos, de modo que pueden excluirse de cualquier análisis. La exclusión es una decisión explícita de cada consulta, no un automatismo: la marca es lo que la hace posible.",
+      },
+      {
+        titulo: "Aislamiento por RLS",
+        texto:
+          "La base de datos aplica aislamiento a nivel de fila: cada sesión solo puede leer y escribir sus propios datos. Un estudiante no puede ver el informe de otro, y nosotros no exponemos datos entre sesiones.",
+      },
+      {
+        titulo: "Lenguaje no determinista",
+        texto:
+          "No decimos \"deberías estudiar esto\". Decimos qué muestra el perfil y qué caminos valen la pena explorar. Una herramienta de orientación que cierra puertas no está orientando.",
+      },
+      {
+        titulo: "Metodología transparente",
+        texto:
+          "El detalle de cómo medimos — qué constructos, con qué tipo de tareas y con qué fuentes — está publicado y a un clic de distancia.",
+        enlace: "/metodologia",
+        enlaceTexto: "Ver la metodología",
+      },
+      {
+        titulo: "Estado declarado del instrumento",
+        texto:
+          "Estamos en fase piloto, no validados. Preferimos decirlo en la primera conversación antes de que lo preguntes en la tercera.",
+      },
+    ],
+  },
+
+  // Sección 7 — Una aplicación piloto en una hora pedagógica.
+  horaPedagogica: {
+    titulo: "Cómo se ve una aplicación piloto en una hora pedagógica",
+    bajada:
+      "El guion tal como lo pensamos. Se ajusta a tu calendario y a cómo se conectan tus estudiantes.",
+    // El itinerario DEBE cerrar dentro de una hora pedagógica (45 min de clase).
+    // Los tres bloques suman exactamente 45 minutos: 5 + 35 + 5.
+    pasos: [
+      {
+        momento: "Antes",
+        titulo: "Preparación",
+        texto:
+          "Definimos fecha y curso con tu equipo. Te entregamos las instrucciones para estudiantes y el texto para avisar a las familias.",
+      },
+      {
+        momento: "0–5 min",
+        titulo: "Contexto y consentimiento",
+        texto:
+          "Leemos en conjunto para qué es, cuánto dura y qué se hace con los datos. Quien no quiera participar, no participa.",
+      },
+      {
+        momento: "5–40 min",
+        titulo: "La experiencia",
+        texto:
+          "Cada estudiante avanza a su ritmo desde su dispositivo. El instrumento es el mismo para todos, así que la comparación tiene sentido.",
+      },
+      {
+        momento: "40–45 min",
+        titulo: "Cierre y explicación del informe",
+        texto:
+          "Quien terminó explora su informe; el grupo cierra con una lectura breve de cómo se lee un perfil y qué hacer con él. No alcanza para comentar caso por caso: eso queda para la hora de orientación.",
+      },
+      {
+        momento: "Después",
+        titulo: "Devolución al colegio",
+        texto:
+          "Nos cuentas cómo funcionó en tu contexto y acordamos el siguiente curso o generación. Ese intercambio es parte del programa.",
+      },
+    ],
+    nota:
+      "El itinerario cierra dentro de los 45 minutos de la clase. En el piloto hay un estudiante que avanza lento, una conexión que se cae y un timbre que suena antes: lo conversamos con tu equipo y lo dejamos listo.",
+  },
+
+  // Sección 8 — Preguntas frecuentes.
+  faq: [
+    {
+      pregunta: "¿A qué cursos se puede aplicar?",
+      respuesta:
+        "A estudiantes de enseñanza media, y con más sentido en 3° y 4° medio, que es cuando la decisión está encima. La experiencia está escrita para 16 a 18 años.",
+    },
+    {
+      pregunta: "¿Cuánto dura y qué necesita un estudiante para hacerla?",
+      respuesta:
+        "La experiencia completa cabe dentro de una hora pedagógica: aproximadamente 30 a 35 minutos de trabajo del estudiante, más el contexto inicial y el cierre. Necesita un dispositivo con navegador, y audífonos si quiere escuchar los ambientes. Funciona en computador, tablet y celular, aunque recomendamos pantallas grandes para los juegos de capacidades.",
+    },
+    {
+      pregunta: "¿Pide datos personales a los estudiantes?",
+      respuesta:
+        "No pide nombre, RUT ni correo para funcionar. La sesión se identifica con un código anónimo. Si el estudiante quiere guardar su informe para después, puede dejar un correo de forma voluntaria y siempre puede no hacerlo.",
+    },
+    {
+      pregunta: "¿Los resultados se pueden usar para selección o admisión?",
+      respuesta:
+        "No. Mirai es una herramienta de orientación, no un instrumento de selección. Sus resultados describen preferencias y desempeño en tareas, no aptitudes certificadas, y no están diseñados para decidir quién entra a un programa.",
+    },
+    {
+      pregunta: "¿El instrumento está validado psicométricamente?",
+      respuesta:
+        "Todavía no, y preferimos que lo sepas antes de cualquier conversación comercial. La arquitectura se construyó sobre marcos con respaldo científico internacional, y estamos entrando a la fase piloto para validarla con estudiantes chilenos y construir normas locales. Antes de venderlo como validado, preferimos que un colegio lo conozca por dentro.",
+    },
+    {
+      pregunta: "¿Qué obtiene el colegio a cambio de participar?",
+      respuesta:
+        "Acceso temprano al programa, acompañamiento en la aplicación e influencia directa sobre qué construimos después. Buscamos colegios que quieran moldear la herramienta, no solo aplicarla.",
+    },
+    {
+      pregunta: "¿Qué pasa con los datos de los estudiantes?",
+      respuesta:
+        "Cada sesión solo puede leer y escribir sus propios datos por aislamiento a nivel de fila, y los informes se entregan de forma individual. No vendemos información ni la compartimos con universidades. El detalle está en la política de privacidad.",
+      enlace: "/privacidad",
+      enlaceTexto: "Ver política de privacidad",
+    },
+    {
+      pregunta: "¿Con quién hablo para coordinar una aplicación?",
+      respuesta:
+        "Escríbenos a colegios@miraiapp.cl con el nombre del colegio, los cursos que te interesan y el rango de fechas. Respondemos con una propuesta concreta para tu calendario.",
+    },
+  ],
+
+  // Sección 9 — CTA principal.
+  cta: {
+    titulo: "Conversemos sobre tu colegio",
+    bajada:
+      "Cuéntanos qué curso tienes en mente, cuántos estudiantes son y en qué fechas podrías aplicar. Te respondemos con una propuesta para tu calendario.",
+    boton: "Escribir a colegios@miraiapp.cl",
+    email: "colegios@miraiapp.cl",
+    // Asunto y cuerpo prellenados: el mailto transporta el contexto mínimo.
+    asunto: "Colegio Fundador — consulta",
+    cuerpo:
+      "Hola, equipo de Mirai:\n\nLes escribo desde el colegio [nombre del colegio].\n\nCurso(s) de interés: [3° / 4° medio]\nCantidad aproximada de estudiantes: [N]\nFechas posibles para aplicar: [rango]\n\nMe gustaría saber más del Programa de Colegios Fundadores.\n\nSaludos,",
+    alternativa:
+      "Si prefieres, escríbenos directamente y te contamos el estado real del proyecto antes de agendar nada.",
+  },
+} as const;
+
+/** mailto con asunto y cuerpo prellenados para el CTA de /colegios. */
+export function mailtoColegios(): string {
+  const asunto = encodeURIComponent(colegios.cta.asunto);
+  const cuerpo = encodeURIComponent(colegios.cta.cuerpo);
+  return `mailto:${colegios.cta.email}?subject=${asunto}&body=${cuerpo}`;
+}
