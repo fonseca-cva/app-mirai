@@ -11,6 +11,7 @@ import { carreraPorId, type Carrera } from "@/lib/data/carreras";
 import { GruaOrigami } from "@/components/origami/GruaOrigami";
 import { obtenerAccessToken, supabase } from "@/lib/supabase/client";
 import { sanitizarApodo } from "@/lib/logic/cuenta";
+import { guardarVinculacionPendiente } from "@/lib/logic/vinculacionPendiente";
 import type { PerfilResultado } from "@/lib/supabase/types";
 
 // --- Helper para convertir puntaje numérico a etiqueta de capacidad ---
@@ -171,12 +172,9 @@ export function Informe({ onVolver, perfil }: Props) {
     try {
       // /guardar-informe usa este id para pedir el correo con el enlace
       // permanente (el token vive en la fila de resultados, RLS por uid).
-      sessionStorage.setItem("mirai_sesion_id", sessionId);
-
       // El apodo no viaja por la red ni a logs: se aplica en /guardar-informe
       // vía updateUser({ data: { apodo } }).
       const apodoLimpio = sanitizarApodo(guardarApodo);
-      if (apodoLimpio) sessionStorage.setItem("mirai_apodo_pendiente", apodoLimpio);
 
       // obtenerAccessToken() valida la sesión contra el servidor y, si estaba
       // "zombi", la recrea: por eso leemos el uid DESPUÉS, no antes del fetch.
@@ -184,7 +182,8 @@ export function Informe({ onVolver, perfil }: Props) {
       if (!token) throw new Error("sin sesión");
       const { data: sesionActual } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
       const uidAnonimo = sesionActual.session?.user.id;
-      if (uidAnonimo) sessionStorage.setItem("mirai_uid_anonimo", uidAnonimo);
+      // localStorage (no sessionStorage): el enlace del correo abre otra pestaña.
+      if (uidAnonimo) guardarVinculacionPendiente({ uid: uidAnonimo, sesionId: sessionId, apodo: apodoLimpio || null });
 
       const respuesta = await fetch("/api/vincular-cuenta", {
         method: "POST",

@@ -1,4 +1,4 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { createClient, isAuthApiError, isAuthSessionMissingError, type SupabaseClient } from "@supabase/supabase-js";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -38,6 +38,16 @@ export function asegurarSesionAnonima(): Promise<boolean> {
 // updateUser() con "Auth session missing!". Por eso aquí NO confiamos en el
 // token de getSession(): lo validamos contra el servidor con getUser(); si el
 // servidor lo rechaza, descartamos la sesión vieja y creamos una anónima nueva.
+/** true solo si GoTrue rechazó la sesión (no ante fallas de red ni 5xx). */
+export function sesionMuerta(error: unknown): boolean {
+  if (!error) return true; // getUser sin error pero sin usuario: sesión inexistente
+  if (isAuthSessionMissingError(error)) return true;
+  if (isAuthApiError(error)) {
+    return error.status === 401 || error.status === 403 || error.code === "session_not_found" || error.code === "user_not_found" || error.code === "bad_jwt";
+  }
+  return false;
+}
+
 export async function obtenerAccessToken(): Promise<string | null> {
   if (!supabase) return null;
   const cliente = supabase;
@@ -55,6 +65,12 @@ export async function obtenerAccessToken(): Promise<string | null> {
   if (!errorVerificacion && verificado.user) {
     return sesion.access_token;
   }
+
+  // Solo se descarta la sesión si el SERVIDOR confirma que está muerta (401/403 o
+  // sesión inexistente). Un error de red o un 5xx NO es una sesión zombi: recrearla
+  // ahí cambiaba el uid y dejaba el informe huérfano (el correo quedaba en una
+  // cuenta vacía). En ese caso se devuelve null y el llamador muestra "reintenta".
+  if (!sesionMuerta(errorVerificacion)) return null;
 
   // Sesión zombi: limpiar el storage local y crear una sesión anónima nueva.
   // El uid puede cambiar; los llamadores deben operar con el uid de la sesión

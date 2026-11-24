@@ -504,8 +504,10 @@ export const guardarCuenta = {
     "Este dispositivo ya estaba asociado a otra cuenta Mirai con ese correo.", // PENDIENTE PASADA DE COPY
   cuentaExistenteDetalle:
     "Por seguridad no unimos informes entre cuentas distintas en esta versión. Tu informe de esta sesión sigue disponible en pantalla.", // PENDIENTE PASADA DE COPY
-  invalido: "Este enlace ya no es válido o expiró.", // PENDIENTE PASADA DE COPY
-  invalidoDetalle: "Vuelve a tu informe y pide un enlace nuevo.", // PENDIENTE PASADA DE COPY
+  invalido: "No pudimos terminar de guardar tu informe en este navegador.", // PENDIENTE PASADA DE COPY
+  invalidoDetalle:
+    "Abre el enlace en el mismo navegador donde hiciste la experiencia. Si ya confirmaste tu correo, entra a Mi cuenta con ese correo para ver tus informes.", // PENDIENTE PASADA DE COPY
+  invalidoEntrar: "Entrar a Mi cuenta", // PENDIENTE PASADA DE COPY
   irAExperiencia: "Ir a la experiencia", // PENDIENTE PASADA DE COPY
 };
 

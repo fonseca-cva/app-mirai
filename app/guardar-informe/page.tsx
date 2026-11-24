@@ -16,10 +16,7 @@ import { useEffect, useState } from "react";
 import { obtenerAccessToken, supabase } from "@/lib/supabase/client";
 import { guardarCuenta, miCuenta } from "@/lib/config/textos";
 import { sanitizarApodo } from "@/lib/logic/cuenta";
-
-const UID_ANONIMO_KEY = "mirai_uid_anonimo";
-const APODO_PENDIENTE_KEY = "mirai_apodo_pendiente";
-const SESION_ID_KEY = "mirai_sesion_id";
+import { leerVinculacionPendiente, limpiarVinculacionPendiente } from "@/lib/logic/vinculacionPendiente";
 
 type Estado =
   | { fase: "cargando" }
@@ -48,46 +45,65 @@ export default function GuardarInformePage() {
         return;
       }
 
-      const uidAnonimo = sessionStorage.getItem(UID_ANONIMO_KEY);
-      const apodoPendiente = sessionStorage.getItem(APODO_PENDIENTE_KEY);
+      // La vinculación pendiente vive en localStorage: el enlace del correo abre una
+      // pestaña NUEVA, y antes (sessionStorage) aquí nunca se encontraba el dato.
+      const pendiente = leerVinculacionPendiente();
+      const uidActual = sesion.user.id;
 
-      if (uidAnonimo && sesion.user.id === uidAnonimo) {
-        // Misma cuenta (el uid no cambió): conversión exitosa, los datos quedan.
-        const apodoLimpio = apodoPendiente ? sanitizarApodo(apodoPendiente) : null;
-        if (apodoLimpio) {
-          await supabase.auth.updateUser({ data: { apodo: apodoLimpio } });
-        }
-        sessionStorage.removeItem(UID_ANONIMO_KEY);
-        sessionStorage.removeItem(APODO_PENDIENTE_KEY);
-
-        // Tanda B: envío del correo con el enlace permanente (/informe/[token]).
-        // Solo si conocemos la sesión que generó este informe (mismo navegador).
-        // Si falla, la cuenta quedó vinculada igual: el informe no se pierde.
-        const sesionId = sessionStorage.getItem(SESION_ID_KEY);
-        sessionStorage.removeItem(SESION_ID_KEY);
-        if (activo) setEstado({ fase: "vinculado", apodo: apodoLimpio, enlace: sesionId ? "enviando" : null });
-
-        if (sesionId) {
-          try {
-            const token = await obtenerAccessToken();
-            if (!token) throw new Error("sin sesión");
-            const respuesta = await fetch("/api/enviar-informe-permanente", {
-              method: "POST",
-              headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-              body: JSON.stringify({ sessionId: sesionId }),
-            });
-            if (activo) {
-              setEstado({ fase: "vinculado", apodo: apodoLimpio, enlace: respuesta.ok ? "enviado" : "error" });
-            }
-          } catch {
-            if (activo) setEstado({ fase: "vinculado", apodo: apodoLimpio, enlace: "error" });
-          }
-        }
+      // La sesión sigue anónima: el correo NO se confirmó en este navegador (otro
+      // navegador/dispositivo, enlace vencido o aún no abierto). Nunca decir "guardado".
+      if (sesion.user.is_anonymous) {
+        if (activo) setEstado({ fase: "invalido" });
         return;
       }
 
-      // Sesión activa pero de otra cuenta: no fusionamos uids en esta versión.
-      if (activo) setEstado({ fase: "cuentaExistente" });
+      // Sesión activa de OTRA cuenta (el uid cambió): no fusionamos uids en esta versión.
+      if (pendiente && pendiente.uid !== uidActual) {
+        if (activo) setEstado({ fase: "cuentaExistente" });
+        return;
+      }
+
+      // Misma cuenta (o cuenta ya confirmada sin dato local): la cuenta está vinculada.
+      const apodoLimpio = pendiente?.apodo ? sanitizarApodo(pendiente.apodo) : null;
+      if (apodoLimpio) {
+        await supabase.auth.updateUser({ data: { apodo: apodoLimpio } });
+      }
+
+      // Sesión del informe a enviar: la guardada, o como respaldo el informe más
+      // reciente de esta cuenta (RLS: solo filas del uid actual).
+      // Sin vinculación pendiente (p. ej. recargar esta página después del éxito) no se
+      // reenvía nada: así una recarga no dispara correos repetidos.
+      let sesionId = pendiente?.sesionId ?? null;
+      if (!sesionId && pendiente) {
+        const { data: ultimo } = await supabase
+          .from("resultados")
+          .select("session_id")
+          .order("generado_en", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        sesionId = (ultimo as { session_id?: string } | null)?.session_id ?? null;
+      }
+      limpiarVinculacionPendiente();
+      if (activo) setEstado({ fase: "vinculado", apodo: apodoLimpio, enlace: sesionId ? "enviando" : null });
+
+      // Tanda B: envío del correo con el enlace permanente (/informe/[token]).
+      // Si falla, la cuenta quedó vinculada igual: el informe no se pierde.
+      if (sesionId) {
+        try {
+          const token = await obtenerAccessToken();
+          if (!token) throw new Error("sin sesión");
+          const respuesta = await fetch("/api/enviar-informe-permanente", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ sessionId: sesionId }),
+          });
+          if (activo) {
+            setEstado({ fase: "vinculado", apodo: apodoLimpio, enlace: respuesta.ok ? "enviado" : "error" });
+          }
+        } catch {
+          if (activo) setEstado({ fase: "vinculado", apodo: apodoLimpio, enlace: "error" });
+        }
+      }
     })();
 
     return () => {
@@ -130,6 +146,12 @@ export default function GuardarInformePage() {
         <>
           <h1 className="font-display text-2xl font-semibold">{guardarCuenta.invalido}</h1>
           <p className="text-base text-tinta/60">{guardarCuenta.invalidoDetalle}</p>
+          <a
+            href="/mi-cuenta"
+            className="mt-1 text-sm font-medium text-coral underline transition hover:opacity-80"
+          >
+            {guardarCuenta.invalidoEntrar}
+          </a>
         </>
       )}
       <a

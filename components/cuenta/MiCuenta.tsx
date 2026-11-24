@@ -25,13 +25,11 @@ import type { Session } from "@supabase/supabase-js";
 import { miCuenta } from "@/lib/config/textos";
 import { supabase, obtenerAccessToken } from "@/lib/supabase/client";
 import { correoSchema, sanitizarApodo } from "@/lib/logic/cuenta";
+import { guardarVinculacionPendiente, limpiarVinculacionPendiente } from "@/lib/logic/vinculacionPendiente";
 import { carreraPorId } from "@/lib/data/carreras";
 import { formatearFecha, tituloInforme } from "@/lib/logic/informe";
 import type { PerfilResultado } from "@/lib/supabase/types";
 
-const UID_ANONIMO_KEY = "mirai_uid_anonimo";
-const APODO_PENDIENTE_KEY = "mirai_apodo_pendiente";
-const SESION_ID_KEY = "mirai_sesion_id";
 
 interface InformeLista {
   token: string;
@@ -160,20 +158,18 @@ export function MiCuenta() {
     setVincularEstado("enviando");
     try {
       if (!supabase) throw new Error("sin supabase");
+      // Primero validar la sesión (puede recrearse) y DESPUÉS leer el uid.
+      const token = await obtenerAccessToken();
+      if (!token) throw new Error("sin sesión");
       const { data } = await supabase.auth.getSession();
       const uidAnonimo = data.session?.user.id;
       if (!uidAnonimo) throw new Error("sin sesión");
 
-      // Keys de Tanda A: /guardar-informe usa el uid para confirmar que la
-      // conversión preservó la cuenta y aplica el apodo pendiente.
-      sessionStorage.setItem(UID_ANONIMO_KEY, uidAnonimo);
+      // /guardar-informe usa el uid para confirmar que la conversión preservó la
+      // cuenta y aplica el apodo. localStorage: el enlace del correo abre otra pestaña.
+      // Sin sesionId: /guardar-informe usa el informe más reciente de la cuenta.
       const apodoLimpio = sanitizarApodo(vincularApodo);
-      if (apodoLimpio) sessionStorage.setItem(APODO_PENDIENTE_KEY, apodoLimpio);
-      // No guardamos mirai_sesion_id: el listado no expone session_id (D1), y
-      // tras vincular el informe sigue accesible desde esta misma página.
-
-      const token = await obtenerAccessToken();
-      if (!token) throw new Error("sin sesión");
+      guardarVinculacionPendiente({ uid: uidAnonimo, sesionId: null, apodo: apodoLimpio || null });
 
       const respuesta = await fetch("/api/vincular-cuenta", {
         method: "POST",
@@ -211,9 +207,7 @@ export function MiCuenta() {
     if (!supabase) return;
     await supabase.auth.signOut();
     // El cierre de sesión NO borra datos: solo limpia lo local de este navegador.
-    sessionStorage.removeItem(UID_ANONIMO_KEY);
-    sessionStorage.removeItem(APODO_PENDIENTE_KEY);
-    sessionStorage.removeItem(SESION_ID_KEY);
+    limpiarVinculacionPendiente();
     setConfirmandoDesvincular(false);
   };
 
