@@ -9,6 +9,8 @@ export function construirCorreoInformePermanente(enlace: string): {
   text: string;
 } {
   const subject = "Tu informe de Mirai está acá";
+  // Mi cuenta en el mismo dominio del enlace (www o no, según desde dónde se pidió).
+  const miCuenta = `${new URL(enlace).origin}/mi-cuenta`;
 
   const text = [
     "Hola,",
@@ -18,6 +20,9 @@ export function construirCorreoInformePermanente(enlace: string): {
     "",
     "Guárdalo y míralo cuando quieras. Compártelo solo con quien tú quieras.",
     "",
+    "Tus informes también quedan en tu cuenta: entra cuando quieras con este correo en",
+    miCuenta,
+    "",
     "Mirai — orientación vocacional con datos, no un veredicto.",
   ].join("\n");
 
@@ -26,6 +31,7 @@ export function construirCorreoInformePermanente(enlace: string): {
       <p>Hola,</p>
       <p>Tu informe de Mirai está acá:</p>
       <p><a href="${enlace}" style="color: #e05252; text-decoration: underline;">Ver mi informe</a></p>
+      <p>Tus informes también quedan en tu cuenta: entra cuando quieras con este correo en <a href="${miCuenta}" style="color: #e05252; text-decoration: underline;">Mi cuenta</a>. No necesitas contraseña.</p>
       <p style="font-size: 12px; color: #666;">Guárdalo y míralo cuando quieras. Compártelo solo con quien tú quieras.</p>
     </div>
   `.trim();

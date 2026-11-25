@@ -11,6 +11,7 @@ export const nav = {
     { label: "Metodología", href: "/metodologia" },
     { label: "Artículos", href: "/articulos" },
     { label: "Colegios", href: "/colegios" },
+    { label: "Mi cuenta", href: "/mi-cuenta" }, // PENDIENTE PASADA DE COPY
   ],
   cta: "Descúbrelo gratis", // PENDIENTE PASADA DE COPY
 };
