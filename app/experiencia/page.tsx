@@ -33,6 +33,7 @@ import {
   type FaseAutorizacion,
 } from "@/lib/store/modoPruebaMaquina";
 import { construirSesionRow } from "@/lib/supabase/sync";
+import { cerrarSesionConCorreo } from "@/lib/supabase/client";
 
 // window.location.search no emite eventos: solo importa al montar la página, así
 // que un no-op como suscriptor es lo correcto. Permite derivar `urlPidePrueba`
@@ -240,6 +241,9 @@ export default function ExperienciaPage() {
 
   const empezarNueva = useCallback(async () => {
     descartarExperiencia();
+    // Computador compartido: el test nuevo parte con sesión anónima limpia, nunca
+    // dentro de la cuenta con correo de quien lo usó antes.
+    await cerrarSesionConCorreo();
     // Dentro de una URL de prueba, "Empezar de nuevo" NO puede degradar la
     // experiencia a flujo normal: se reautoriza antes de continuar.
     await reautorizarPrueba();

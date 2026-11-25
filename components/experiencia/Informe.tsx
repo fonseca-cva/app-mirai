@@ -9,7 +9,7 @@ import { recomendarCarreras } from "@/lib/logic/matching";
 import { contextos } from "@/lib/data/contextos";
 import { carreraPorId, type Carrera } from "@/lib/data/carreras";
 import { GruaOrigami } from "@/components/origami/GruaOrigami";
-import { obtenerAccessToken, supabase } from "@/lib/supabase/client";
+import { cerrarSesionConCorreo, obtenerAccessToken, supabase } from "@/lib/supabase/client";
 import { sanitizarApodo } from "@/lib/logic/cuenta";
 import { guardarVinculacionPendiente } from "@/lib/logic/vinculacionPendiente";
 import type { PerfilResultado } from "@/lib/supabase/types";
@@ -28,6 +28,12 @@ interface Props {
   // (/informe/[token]) en vez de calcularlo desde el store. No muestra el
   // bloque de guardar: la URL permanente ya es el acceso al informe.
   perfil?: PerfilResultado | null;
+}
+
+/** "mariaeugenia@cva.cl" → "m•••@cva.cl": suficiente para reconocer la cuenta sin exponerla. */
+function enmascararCorreo(correo: string): string {
+  const [local, dominio] = correo.split("@");
+  return `${local.slice(0, 1)}•••@${dominio ?? ""}`;
 }
 
 export function Informe({ onVolver, perfil }: Props) {
@@ -49,6 +55,49 @@ export function Informe({ onVolver, perfil }: Props) {
   const respuestasVerbal = useExperienciaStore((s) => s.respuestasVerbal);
   const sincronizarBloque = useExperienciaStore((s) => s.sincronizarBloque);
   const resultadoSincronizado = useRef(false);
+
+  // Sesión que YA tiene cuenta con correo (volvió a hacer el test con la sesión
+  // iniciada): no se ofrece "guardar con correo" — sería un cambio de correo de esa
+  // cuenta. Se muestra a qué cuenta quedó asociado, enmascarado.
+  const [cuentaCorreo, setCuentaCorreo] = useState<string | null>(null);
+  const [envioCuenta, setEnvioCuenta] = useState<"idle" | "enviando" | "enviado" | "error">("idle");
+  useEffect(() => {
+    if (modoEstatico || !supabase) return;
+    let activo = true;
+    void supabase.auth.getSession().then(({ data }) => {
+      const usuario = data.session?.user;
+      if (activo && usuario && !usuario.is_anonymous && usuario.email) {
+        setCuentaCorreo(enmascararCorreo(usuario.email));
+      }
+    });
+    return () => {
+      activo = false;
+    };
+  }, [modoEstatico]);
+
+  const enviarEnlaceCuenta = async () => {
+    if (!sessionId || modoPrueba) return;
+    setEnvioCuenta("enviando");
+    try {
+      const token = await obtenerAccessToken();
+      if (!token) throw new Error("sin sesión");
+      const respuesta = await fetch("/api/enviar-informe-permanente", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ sessionId }),
+      });
+      setEnvioCuenta(respuesta.ok ? "enviado" : "error");
+    } catch {
+      setEnvioCuenta("error");
+    }
+  };
+
+  // "¿No es tu cuenta?": se cierra la sesión ajena y el test parte de nuevo con una
+  // sesión anónima (las respuestas quedaron bajo esa cuenta y no se pueden mover).
+  const noEsMiCuenta = async () => {
+    await cerrarSesionConCorreo();
+    window.location.href = "/experiencia";
+  };
 
   // Bloque Integración: el perfil de intereses del informe usa el puntaje
   // integrado (45% contextos + 40% actividades/asignaturas + 15% aspiración).
@@ -373,7 +422,31 @@ export function Informe({ onVolver, perfil }: Props) {
         <p className="mt-1 text-sm text-tinta/60">{informe.guardarModoPrueba}</p>
       </section>
       )}
-      {!modoEstatico && !modoPrueba && (
+      {!modoEstatico && !modoPrueba && cuentaCorreo && (
+        <section className="mt-8 rounded-[14px] bg-papel-sombra/30 p-5">
+          <h2 className="font-display text-lg font-semibold">{informe.cuentaTitulo}</h2>
+          <p className="mt-1 text-sm text-tinta/60">{informe.cuentaTexto(cuentaCorreo)}</p>
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+            <button
+              onClick={enviarEnlaceCuenta}
+              disabled={envioCuenta === "enviando" || envioCuenta === "enviado"}
+              className="rounded-[14px] bg-coral px-4 py-2 text-sm font-medium text-blanco-papel transition enabled:hover:opacity-90 disabled:opacity-40"
+            >
+              {envioCuenta === "enviado" ? informe.guardarEnviado : informe.cuentaEnviarBoton}
+            </button>
+            <button
+              onClick={noEsMiCuenta}
+              className="text-sm text-tinta/60 underline transition hover:text-tinta/80"
+            >
+              {informe.cuentaNoEsMia}
+            </button>
+          </div>
+          {envioCuenta === "enviado" && <p className="mt-2 text-sm text-salvia">{informe.cuentaEnviado}</p>}
+          {envioCuenta === "error" && <p className="mt-2 text-sm text-red-500">{informe.guardarError}</p>}
+        </section>
+      )}
+
+      {!modoEstatico && !modoPrueba && !cuentaCorreo && (
       <section className="mt-8 rounded-[14px] bg-papel-sombra/30 p-5">
         <h2 className="font-display text-lg font-semibold">{informe.guardarTitulo}</h2>
         <p className="mt-1 text-sm text-tinta/60">{informe.guardarTexto}</p>

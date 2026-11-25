@@ -43,6 +43,23 @@ export async function POST(request: NextRequest) {
     global: { headers: { Authorization: authHeader } },
   });
 
+  // 0) Solo sesiones ANÓNIMAS se convierten. Si la sesión ya tiene correo, un
+  // PUT /auth/v1/user con otro correo sería un CAMBIO de correo de esa cuenta
+  // (en un computador compartido: la cuenta de otro alumno). Nunca se pide.
+  const { data: usuarioActual, error: usuarioError } = await cliente.auth.getUser();
+  if (usuarioError || !usuarioActual.user) {
+    return NextResponse.json(
+      { error: "Tu sesión expiró, recarga la página.", codigo: "sesion_expirada" },
+      { status: 401 }
+    );
+  }
+  if (!usuarioActual.user.is_anonymous || usuarioActual.user.email) {
+    return NextResponse.json(
+      { error: "Esta sesión ya tiene una cuenta con correo.", codigo: "cuenta_con_correo" },
+      { status: 409 }
+    );
+  }
+
   // 1) Rate limit: máx 5 enlaces por correo por hora (RPC SECURITY DEFINER, 00012).
   const { data: permitido, error: rpcError } = await cliente.rpc("permitir_envio_otp", {
     p_email: correo,

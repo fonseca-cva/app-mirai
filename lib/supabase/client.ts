@@ -37,6 +37,21 @@ export function asegurarSesionAnonima(): Promise<boolean> {
   return sesionAnonimaLista;
 }
 
+// "Empezar de nuevo" en un computador compartido: si en este navegador quedó una
+// cuenta CON correo (otro alumno entró a Mi cuenta, o una prueba anterior), el test
+// nuevo no puede heredarla — guardaría el informe en una cuenta ajena o, peor,
+// pediría cambiarle el correo. Se cierra esa sesión (solo en este navegador) y el
+// próximo asegurarSesionAnonima() crea una anónima limpia. Devuelve true si cerró.
+export async function cerrarSesionConCorreo(): Promise<boolean> {
+  if (!supabase) return false;
+  const { data } = await supabase.auth.getSession();
+  const usuario = data.session?.user;
+  if (!usuario || usuario.is_anonymous || !usuario.email) return false;
+  await supabase.auth.signOut({ scope: "local" });
+  sesionAnonimaLista = null;
+  return true;
+}
+
 // Access token de la sesión anónima, para autenticar llamadas a route handlers
 // del servidor (ej. POST /api/vincular-cuenta) que necesitan operar como este
 // usuario y quedar sujetas a las mismas policies RLS (auth.uid() = user_id).

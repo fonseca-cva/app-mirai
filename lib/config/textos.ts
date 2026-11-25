@@ -476,6 +476,13 @@ export const informe = {
     "Enviaste varios enlaces a este correo. Espera una hora y prueba de nuevo.", // PENDIENTE PASADA DE COPY
   guardarError: "No pudimos enviar el enlace. Intenta de nuevo.", // PENDIENTE PASADA DE COPY
   guardarSesionExpirada: "Tu sesión expiró, recarga la página.", // PENDIENTE PASADA DE COPY
+  // Sesión que ya tiene cuenta con correo: no se ofrece vincular otro correo.
+  cuentaTitulo: "Tu informe quedó guardado en tu cuenta", // PENDIENTE PASADA DE COPY
+  cuentaTexto: (correo: string) =>
+    `Estás con la sesión iniciada como ${correo}. Puedes verlo cuando quieras en Mi cuenta.`, // PENDIENTE PASADA DE COPY
+  cuentaEnviarBoton: "Enviarme el enlace por correo", // PENDIENTE PASADA DE COPY
+  cuentaEnviado: "Te enviamos el enlace de este informe a tu correo.", // PENDIENTE PASADA DE COPY
+  cuentaNoEsMia: "¿No es tu cuenta? Cerrar sesión y empezar de nuevo", // PENDIENTE PASADA DE COPY
   // Modo prueba (C(i), Camilo 2026-09-10): nunca se vincula un correo real
   // desde una sesión de prueba, para no seguir contaminando auth.users con
   // cuentas reales de quien está probando.
