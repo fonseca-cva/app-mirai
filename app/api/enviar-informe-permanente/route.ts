@@ -26,7 +26,13 @@ const RESEND_API_KEY = process.env.RESEND_API_KEY ?? "";
 // 'send' y en el selector DKIM, ver 00017 o el plan de DNS del equipo).
 const EMAIL_FROM = process.env.EMAIL_FROM ?? "Mirai <informe@miraiapp.cl>";
 
-const RequestSchema = z.object({ sessionId: z.string().uuid() });
+// sessionId: desde /guardar-informe (mismo navegador del test).
+// token: desde Mi cuenta (otro dispositivo), que lista informes por token y nunca
+// expone session_id. En ambos casos RLS limita la búsqueda a filas propias.
+const RequestSchema = z.union([
+  z.object({ sessionId: z.string().uuid() }),
+  z.object({ token: z.string().min(8).max(200) }),
+]);
 
 // Resultado detallado del intento: se persiste íntegro en envios_informe_permanente
 // (migración 00019) porque los logs de Vercel no sirven de auditoría — retienen
@@ -83,7 +89,6 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
   }
-  const { sessionId } = parsed.data;
 
   // Cliente "as-user": las queries corren con el JWT del usuario, RLS aplica normal.
   const cliente = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -91,10 +96,13 @@ export async function POST(request: NextRequest) {
   });
 
   // 1) Token del informe de ESTA sesión (RLS: solo filas del uid actual).
+  const filtro = "sessionId" in parsed.data
+    ? { columna: "session_id", valor: parsed.data.sessionId }
+    : { columna: "token", valor: parsed.data.token };
   const { data: resultado } = await cliente
     .from("resultados")
-    .select("token")
-    .eq("session_id", sessionId)
+    .select("token, session_id")
+    .eq(filtro.columna, filtro.valor)
     .maybeSingle();
 
   if (!resultado?.token) {
@@ -110,7 +118,7 @@ export async function POST(request: NextRequest) {
   const { data: sesion } = await cliente
     .from("sesiones")
     .select("es_prueba")
-    .eq("id", sessionId)
+    .eq("id", resultado.session_id)
     .maybeSingle();
 
   if (sesion?.es_prueba) {

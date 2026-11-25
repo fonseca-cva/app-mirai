@@ -4,6 +4,9 @@ import {
   guardarVinculacionPendiente,
   leerVinculacionPendiente,
   limpiarVinculacionPendiente,
+  marcarEnvioAlEntrar,
+  hayEnvioAlEntrar,
+  limpiarEnvioAlEntrar,
 } from "@/lib/logic/vinculacionPendiente";
 
 let nav: NavegadorFalso;
@@ -41,5 +44,20 @@ describe("vinculación pendiente (sobrevive a la pestaña nueva del correo)", ()
   it("un dato corrupto se ignora sin romper", () => {
     nav.localStorage.set("mirai_vinculacion_pendiente", "{no es json");
     expect(leerVinculacionPendiente()).toBeNull();
+  });
+});
+
+describe("envío pendiente al entrar a Mi cuenta (enlace abierto en otro dispositivo)", () => {
+  it("sin marca no hay envío pendiente", () => {
+    expect(hayEnvioAlEntrar()).toBe(false);
+  });
+
+  it("la marca dura 48 horas y se puede limpiar", () => {
+    const ahora = Date.now();
+    marcarEnvioAlEntrar(ahora);
+    expect(hayEnvioAlEntrar(ahora + 47 * 3600_000)).toBe(true);
+    expect(hayEnvioAlEntrar(ahora + 49 * 3600_000)).toBe(false);
+    limpiarEnvioAlEntrar();
+    expect(hayEnvioAlEntrar(ahora)).toBe(false);
   });
 });

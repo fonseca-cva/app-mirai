@@ -16,13 +16,27 @@ import { useEffect, useState } from "react";
 import { obtenerAccessToken, supabase } from "@/lib/supabase/client";
 import { guardarCuenta, miCuenta } from "@/lib/config/textos";
 import { sanitizarApodo } from "@/lib/logic/cuenta";
-import { leerVinculacionPendiente, limpiarVinculacionPendiente } from "@/lib/logic/vinculacionPendiente";
+import {
+  leerVinculacionPendiente,
+  limpiarVinculacionPendiente,
+  marcarEnvioAlEntrar,
+} from "@/lib/logic/vinculacionPendiente";
 
 type Estado =
   | { fase: "cargando" }
   | { fase: "vinculado"; apodo: string | null; enlace: "enviando" | "enviado" | "error" | null }
   | { fase: "cuentaExistente" }
+  | { fase: "otroDispositivo" }
+  | { fase: "vencido" }
   | { fase: "invalido" };
+
+/** GoTrue redirige con #error=… / ?error=… cuando el enlace venció o ya se usó. */
+function errorEnUrl(): boolean {
+  if (typeof window === "undefined") return false;
+  const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  const query = new URLSearchParams(window.location.search);
+  return hash.has("error") || hash.has("error_code") || query.has("error") || query.has("error_code");
+}
 
 export default function GuardarInformePage() {
   const [estado, setEstado] = useState<Estado>({ fase: "cargando" });
@@ -36,14 +50,28 @@ export default function GuardarInformePage() {
         return;
       }
 
-      const { data } = await supabase.auth.getSession();
-      const sesion = data.session;
-
-      if (!sesion) {
-        // Sin sesión: enlace abierto en otro navegador, sesión expirada o ya cerrada.
-        if (activo) setEstado({ fase: "invalido" });
+      if (errorEnUrl()) {
+        // El enlace venció o ya se había usado: GoTrue no confirmó nada.
+        if (activo) setEstado({ fase: "vencido" });
         return;
       }
+
+      const { data } = await supabase.auth.getSession();
+      let sesion = data.session;
+
+      if (!sesion) {
+        // Sin sesión y sin error: el correo se confirmó, pero el enlace se abrió en
+        // OTRO dispositivo/navegador (p. ej. el celular). Aquí no sabemos qué informe
+        // mandar: se deja la marca para que Mi cuenta lo envíe al entrar con el correo.
+        marcarEnvioAlEntrar();
+        if (activo) setEstado({ fase: "otroDispositivo" });
+        return;
+      }
+
+      // La sesión guardada localmente es anterior a la confirmación: su JWT todavía
+      // dice is_anonymous = true. Se refresca para leer el estado real de la cuenta.
+      const { data: refrescada } = await supabase.auth.refreshSession();
+      if (refrescada.session) sesion = refrescada.session;
 
       // La vinculación pendiente vive en localStorage: el enlace del correo abre una
       // pestaña NUEVA, y antes (sessionStorage) aquí nunca se encontraba el dato.
@@ -140,6 +168,30 @@ export default function GuardarInformePage() {
         <>
           <h1 className="font-display text-2xl font-semibold">{guardarCuenta.cuentaExistente}</h1>
           <p className="text-base text-tinta/60">{guardarCuenta.cuentaExistenteDetalle}</p>
+        </>
+      )}
+      {estado.fase === "otroDispositivo" && (
+        <>
+          <h1 className="font-display text-2xl font-semibold">{guardarCuenta.otroDispositivo}</h1>
+          <p className="text-base text-tinta/60">{guardarCuenta.otroDispositivoDetalle}</p>
+          <a
+            href="/mi-cuenta"
+            className="mt-1 rounded-[14px] bg-coral px-6 py-3 text-base font-medium text-blanco-papel transition hover:opacity-90"
+          >
+            {guardarCuenta.invalidoEntrar}
+          </a>
+        </>
+      )}
+      {estado.fase === "vencido" && (
+        <>
+          <h1 className="font-display text-2xl font-semibold">{guardarCuenta.vencido}</h1>
+          <p className="text-base text-tinta/60">{guardarCuenta.vencidoDetalle}</p>
+          <a
+            href="/mi-cuenta"
+            className="mt-1 text-sm font-medium text-coral underline transition hover:opacity-80"
+          >
+            {guardarCuenta.invalidoEntrar}
+          </a>
         </>
       )}
       {estado.fase === "invalido" && (

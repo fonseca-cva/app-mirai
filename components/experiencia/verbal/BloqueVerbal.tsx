@@ -389,7 +389,10 @@ export function BloqueVerbal({ onCompletar, onPausar }: Props) {
 
       <div className="flex items-center justify-between">
         <span className={`text-sm ${texto.length < caracteresMinimos ? "text-tinta/40" : "text-tinta/60"}`}>
-          {texto.length}/{caracteresMinimos} {config.minimoCaracteres ? bloqueVerbal.comprension.contadorCaracteres : ""}
+          {/* Bajo el mínimo: "45/120" (cuánto falta). Al cumplirlo: solo el total,
+              para que "429/120" no parezca que se pasó de un límite. */}
+          {texto.length < caracteresMinimos ? `${texto.length}/${caracteresMinimos}` : texto.length}{" "}
+          {config.minimoCaracteres ? bloqueVerbal.comprension.contadorCaracteres : ""}
         </span>
 
         <div className="flex items-center gap-3">

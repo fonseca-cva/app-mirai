@@ -86,3 +86,38 @@ export function limpiarVinculacionPendiente() {
     // ignorar
   }
 }
+
+// ── Envío pendiente al entrar a Mi cuenta ─────────────────────────────
+// Caso "otro dispositivo": la persona hizo el test en el computador y abrió el
+// enlace de confirmación en el celular. Ahí no hay sesión, así que /guardar-informe
+// no puede saber qué informe mandar. Deja esta marca y la manda a Mi cuenta: al
+// entrar con su correo (en ese mismo dispositivo), Mi cuenta envía el enlace de su
+// informe más reciente una sola vez.
+const CLAVE_ENVIO = "mirai_enviar_informe_al_entrar";
+
+export function marcarEnvioAlEntrar(ahora = Date.now()) {
+  try {
+    almacen()?.setItem(CLAVE_ENVIO, String(ahora));
+  } catch {
+    // ignorar
+  }
+}
+
+export function hayEnvioAlEntrar(ahora = Date.now()): boolean {
+  try {
+    const crudo = almacen()?.getItem(CLAVE_ENVIO);
+    if (!crudo) return false;
+    const desde = Number(crudo);
+    return Number.isFinite(desde) && ahora - desde <= VIGENCIA_MS;
+  } catch {
+    return false;
+  }
+}
+
+export function limpiarEnvioAlEntrar() {
+  try {
+    almacen()?.removeItem(CLAVE_ENVIO);
+  } catch {
+    // ignorar
+  }
+}

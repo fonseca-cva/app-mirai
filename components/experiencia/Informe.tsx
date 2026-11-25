@@ -377,7 +377,17 @@ export function Informe({ onVolver, perfil }: Props) {
       <section className="mt-8 rounded-[14px] bg-papel-sombra/30 p-5">
         <h2 className="font-display text-lg font-semibold">{informe.guardarTitulo}</h2>
         <p className="mt-1 text-sm text-tinta/60">{informe.guardarTexto}</p>
-        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+        {/* El apodo (opcional) va ANTES del botón: debajo, se escribía después de enviar. */}
+        <input
+          type="text"
+          value={guardarApodo}
+          onChange={(e) => setGuardarApodo(e.target.value)}
+          maxLength={20}
+          placeholder={informe.guardarApodoPlaceholder}
+          className="mt-3 w-full rounded-[14px] border border-tinta/10 bg-blanco-papel px-4 py-2 text-sm text-tinta outline-none transition focus:border-coral/50 sm:w-1/2"
+          aria-label={informe.guardarApodoPlaceholder}
+        />
+        <div className="mt-2 flex flex-col gap-2 sm:flex-row">
           <input
             type="email"
             value={guardarCorreo}
@@ -394,15 +404,6 @@ export function Informe({ onVolver, perfil }: Props) {
             {guardarEstado === "enviado" ? informe.guardarEnviado : informe.guardarBoton}
           </button>
         </div>
-        <input
-          type="text"
-          value={guardarApodo}
-          onChange={(e) => setGuardarApodo(e.target.value)}
-          maxLength={20}
-          placeholder={informe.guardarApodoPlaceholder}
-          className="mt-2 w-full rounded-[14px] border border-tinta/10 bg-blanco-papel px-4 py-2 text-sm text-tinta outline-none transition focus:border-coral/50 sm:w-1/2"
-          aria-label={informe.guardarApodoPlaceholder}
-        />
         {guardarEstado === "enviado" && (
           <>
             <p className="mt-2 text-sm text-salvia">{informe.guardarExito}</p>

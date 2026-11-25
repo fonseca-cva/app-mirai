@@ -56,10 +56,6 @@ export function ResultadoParcial({ top3, onContinuar }: ResultadoParcialProps) {
       >
         {resultadoParcial.continuarCta}
       </button>
-
-      <a href={resultadoParcial.mailto} className="text-sm text-tinta/60 underline">
-        {resultadoParcial.cta}
-      </a>
     </section>
   );
 }

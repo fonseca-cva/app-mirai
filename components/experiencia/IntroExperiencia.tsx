@@ -1,4 +1,5 @@
 import { experienciaAudioAmbiente, experienciaIntro } from "@/lib/config/textos";
+import { contextos } from "@/lib/data/contextos";
 
 interface IntroExperienciaProps {
   // Mejora Bloque A: la pregunta de audio ambiente reemplaza el CTA único — el
@@ -15,7 +16,7 @@ interface IntroExperienciaProps {
 export function IntroExperiencia({ onEmpezar, creando = false, error = null }: IntroExperienciaProps) {
   return (
     <section className="flex min-h-screen flex-col items-center justify-center gap-6 px-4 text-center sm:px-8">
-      <h1 className="max-w-lg font-display text-3xl font-semibold sm:text-4xl">{experienciaIntro.titulo}</h1>
+      <h1 className="max-w-lg font-display text-3xl font-semibold sm:text-4xl">{experienciaIntro.titulo(contextos.length)}</h1>
       <p className="max-w-md text-lg text-tinta/80">{experienciaIntro.texto}</p>
       <p className="max-w-md text-tinta/80">{experienciaAudioAmbiente.pregunta}</p>
       {error && (

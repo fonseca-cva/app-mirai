@@ -18,10 +18,20 @@ export function asegurarSesionAnonima(): Promise<boolean> {
   if (!supabase) return Promise.resolve(false);
   if (!sesionAnonimaLista) {
     const cliente = supabase;
-    sesionAnonimaLista = cliente.auth.getSession().then(async ({ data }) => {
-      if (data.session) return true;
-      const { error } = await cliente.auth.signInAnonymously();
-      return !error;
+    const intento = cliente.auth
+      .getSession()
+      .then(async ({ data }) => {
+        if (data.session) return true;
+        const { error } = await cliente.auth.signInAnonymously();
+        return !error;
+      })
+      .catch(() => false);
+    sesionAnonimaLista = intento;
+    // Un fallo NO se cachea: si Supabase estaba caído (o sin red), el siguiente
+    // intento ("inténtalo de nuevo") debe volver a llamar a Supabase en vez de
+    // reutilizar para siempre la promesa fallida de esta carga de página.
+    void intento.then((ok) => {
+      if (!ok && sesionAnonimaLista === intento) sesionAnonimaLista = null;
     });
   }
   return sesionAnonimaLista;

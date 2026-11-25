@@ -25,7 +25,13 @@ import type { Session } from "@supabase/supabase-js";
 import { miCuenta } from "@/lib/config/textos";
 import { supabase, obtenerAccessToken } from "@/lib/supabase/client";
 import { correoSchema, sanitizarApodo } from "@/lib/logic/cuenta";
-import { guardarVinculacionPendiente, limpiarVinculacionPendiente } from "@/lib/logic/vinculacionPendiente";
+import {
+  guardarVinculacionPendiente,
+  hayEnvioAlEntrar,
+  leerVinculacionPendiente,
+  limpiarEnvioAlEntrar,
+  limpiarVinculacionPendiente,
+} from "@/lib/logic/vinculacionPendiente";
 import { carreraPorId } from "@/lib/data/carreras";
 import { formatearFecha, tituloInforme } from "@/lib/logic/informe";
 import type { PerfilResultado } from "@/lib/supabase/types";
@@ -108,6 +114,39 @@ export function MiCuenta() {
       activo = false;
     };
   }, [cargarInformes]);
+
+  // Envío pendiente del enlace del informe. Cubre dos casos en que /guardar-informe
+  // no pudo enviarlo: (1) el enlace de confirmación se abrió en OTRO dispositivo
+  // (marca "enviar al entrar" en este dispositivo), y (2) se confirmó en otro lado y
+  // la persona vuelve al navegador del test (vinculación pendiente aún guardada).
+  // Solo con cuenta con correo, una vez por carga, y la marca se borra antes de
+  // enviar para que una recarga no repita el correo.
+  const [envioPendiente, setEnvioPendiente] = useState<"enviando" | "enviado" | "error" | null>(null);
+  const envioIntentado = useRef(false);
+  const correoCuenta = sesion && sesion !== "cargando" ? sesion.user.email ?? null : null;
+  const tokenMasReciente = informes[0]?.token ?? null;
+  useEffect(() => {
+    if (!correoCuenta || !tokenMasReciente || envioIntentado.current) return;
+    if (!hayEnvioAlEntrar() && !leerVinculacionPendiente()) return;
+    envioIntentado.current = true;
+    limpiarEnvioAlEntrar();
+    limpiarVinculacionPendiente();
+    void (async () => {
+      setEnvioPendiente("enviando");
+      try {
+        const accessToken = await obtenerAccessToken();
+        if (!accessToken) throw new Error("sin sesión");
+        const respuesta = await fetch("/api/enviar-informe-permanente", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+          body: JSON.stringify({ token: tokenMasReciente }),
+        });
+        setEnvioPendiente(respuesta.ok ? "enviado" : "error");
+      } catch {
+        setEnvioPendiente("error");
+      }
+    })();
+  }, [correoCuenta, tokenMasReciente]);
 
   // Re-inicializa el input de apodo SOLO cuando cambia el uid de la sesión
   // (entrada a la página, conversión o cambio de cuenta). Un updateUser no
@@ -379,6 +418,15 @@ export function MiCuenta() {
           {/* ── Lista de informes (RLS: solo los propios) ── */}
           <section>
             <h2 className="font-display text-lg font-semibold">{miCuenta.vinculada.listaTitulo}</h2>
+            {envioPendiente === "enviando" && (
+              <p className="mt-2 text-sm text-tinta/60">{miCuenta.vinculada.envioEnviando}</p>
+            )}
+            {envioPendiente === "enviado" && (
+              <p className="mt-2 text-sm text-salvia">{miCuenta.vinculada.envioEnviado}</p>
+            )}
+            {envioPendiente === "error" && (
+              <p className="mt-2 text-sm text-tinta/70">{miCuenta.vinculada.envioError}</p>
+            )}
             {informes.length === 0 ? (
               <p className="mt-2 text-sm text-tinta/60">{miCuenta.vinculada.sinInformes}</p>
             ) : (

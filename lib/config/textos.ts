@@ -130,7 +130,7 @@ export const paginaEnConstruccion = {
 
 // Corrección D14: este bloque es UNA PARTE de la experiencia completa (~6 min de los ~25 min totales).
 export const experienciaIntro = {
-  titulo: "Vas a ver 24 lugares de trabajo reales.", // PENDIENTE PASADA DE COPY
+  titulo: (cantidad: number) => `Vas a ver ${cantidad} lugares de trabajo reales.`, // PENDIENTE PASADA DE COPY (cantidad viene de contextos.length)
   texto:
     "Imagina que es tu lunes a las 9 AM. Responde rápido, con la guata. Sin respuestas correctas. Sin venderte nada.",
   nota: "Este primer bloque toma unos 6 minutos · puedes pausar", // PENDIENTE PASADA DE COPY
@@ -163,7 +163,7 @@ export const experienciaTarjeta = {
 export const resultadoParcial = {
   titulo: "Primer pliegue listo", // PENDIENTE PASADA DE COPY
   subtitulo: "Tus tres dimensiones más marcadas hasta ahora:", // PENDIENTE PASADA DE COPY
-  cierre: "Esto es tu primer pliegue, no tu horóscopo. Los mini-juegos y tu informe completo con datos reales: muy pronto.",
+  cierre: "Esto es tu primer pliegue, no tu horóscopo. Sigue lo que mide cómo piensas (cuatro mini-juegos y tres textos breves). Al final recibes tu informe con datos reales.",
   continuarCta: "Ahora, a jugar", // PENDIENTE PASADA DE COPY
   cta: "Avísame cuando esté listo", // PENDIENTE PASADA DE COPY
   mailto: "mailto:hola@miraiapp.cl?subject=Avísenme%20cuando%20esté%20listo",
@@ -508,6 +508,12 @@ export const guardarCuenta = {
   invalidoDetalle:
     "Abre el enlace en el mismo navegador donde hiciste la experiencia. Si ya confirmaste tu correo, entra a Mi cuenta con ese correo para ver tus informes.", // PENDIENTE PASADA DE COPY
   invalidoEntrar: "Entrar a Mi cuenta", // PENDIENTE PASADA DE COPY
+  otroDispositivo: "¡Listo! Tu correo quedó confirmado.", // PENDIENTE PASADA DE COPY
+  otroDispositivoDetalle:
+    "Abriste el enlace en un dispositivo distinto al del test. Entra a Mi cuenta con ese mismo correo: ahí verás tu informe y te mandaremos su enlace por correo.", // PENDIENTE PASADA DE COPY
+  vencido: "Este enlace ya no sirve.", // PENDIENTE PASADA DE COPY
+  vencidoDetalle:
+    "Puede que haya vencido o que ya lo hayas usado. Si ya confirmaste tu correo, entra a Mi cuenta para ver tus informes.", // PENDIENTE PASADA DE COPY
   irAExperiencia: "Ir a la experiencia", // PENDIENTE PASADA DE COPY
 };
 
@@ -550,6 +556,9 @@ export const miCuenta = {
     listaTitulo: "Tus informes", // PENDIENTE PASADA DE COPY
     sinInformes: "Todavía no tienes informes guardados.", // PENDIENTE PASADA DE COPY
     abrirInforme: "Ver informe", // PENDIENTE PASADA DE COPY
+    envioEnviando: "Enviando el enlace de tu informe a tu correo…", // PENDIENTE PASADA DE COPY
+    envioEnviado: "Te enviamos el enlace de tu informe a tu correo.", // PENDIENTE PASADA DE COPY
+    envioError: "No pudimos enviar el correo ahora, pero tu informe está aquí abajo.", // PENDIENTE PASADA DE COPY
     desvincularDetalle:
       "Cerrarás la sesión en este navegador. Tus informes no se borran: puedes volver a entrar con tu correo.", // PENDIENTE PASADA DE COPY
     desvincularBoton: "Desvincular esta sesión", // PENDIENTE PASADA DE COPY
