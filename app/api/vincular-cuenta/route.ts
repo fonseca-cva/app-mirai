@@ -85,14 +85,17 @@ export async function POST(request: NextRequest) {
   // hasCustomAuthorizationHeader, a diferencia de getUser(). Se llama directo al
   // endpoint REST oficial PUT /auth/v1/user, que sí acepta el Bearer del header.
   const emailRedirectTo = `${new URL(request.url).origin}/guardar-informe`;
-  const respuesta = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+  // GoTrue lee la URL de retorno del query string (?redirect_to=), igual que hace
+  // el SDK oficial en updateUser({ emailRedirectTo }). En el cuerpo se ignora y el
+  // enlace del correo caía en el Site URL (la portada), sin pasar por /guardar-informe.
+  const respuesta = await fetch(`${SUPABASE_URL}/auth/v1/user?redirect_to=${encodeURIComponent(emailRedirectTo)}`, {
     method: "PUT",
     headers: {
       Authorization: authHeader,
       apikey: SUPABASE_ANON_KEY,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ email: correo, email_redirect_to: emailRedirectTo }),
+    body: JSON.stringify({ email: correo }),
   });
   const cuerpo = (await respuesta.json().catch(() => ({}))) as {
     msg?: string;
