@@ -44,9 +44,13 @@ export function asegurarSesionAnonima(): Promise<boolean> {
 // próximo asegurarSesionAnonima() crea una anónima limpia. Devuelve true si cerró.
 export async function cerrarSesionConCorreo(): Promise<boolean> {
   if (!supabase) return false;
-  const { data } = await supabase.auth.getSession();
-  const usuario = data.session?.user;
-  if (!usuario || usuario.is_anonymous || !usuario.email) return false;
+  const { data: local } = await supabase.auth.getSession();
+  if (!local.session) return false;
+  // getUser() pregunta al servidor: el usuario guardado en el navegador puede ser
+  // anterior a la confirmación del correo y seguir diciendo is_anonymous = true.
+  const { data } = await supabase.auth.getUser();
+  const usuario = data.user ?? local.session.user;
+  if (usuario.is_anonymous || !usuario.email) return false;
   await supabase.auth.signOut({ scope: "local" });
   sesionAnonimaLista = null;
   return true;

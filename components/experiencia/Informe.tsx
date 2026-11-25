@@ -64,8 +64,10 @@ export function Informe({ onVolver, perfil }: Props) {
   useEffect(() => {
     if (modoEstatico || !supabase) return;
     let activo = true;
-    void supabase.auth.getSession().then(({ data }) => {
-      const usuario = data.session?.user;
+    // getUser() (servidor), no getSession(): la copia local puede seguir diciendo
+    // "anónima" aunque la cuenta ya tenga correo confirmado.
+    void supabase.auth.getUser().then(({ data }) => {
+      const usuario = data.user;
       if (activo && usuario && !usuario.is_anonymous && usuario.email) {
         setCuentaCorreo(enmascararCorreo(usuario.email));
       }
@@ -242,6 +244,15 @@ export function Informe({ onVolver, perfil }: Props) {
       if (respuesta.status === 429) {
         setGuardarEstado("limite");
         return;
+      }
+      if (respuesta.status === 409) {
+        // La sesión ya tiene cuenta con correo: se muestra la tarjeta de la cuenta.
+        const { data: actual } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
+        if (actual.user?.email) {
+          setCuentaCorreo(enmascararCorreo(actual.user.email));
+          setGuardarEstado("idle");
+          return;
+        }
       }
       if (respuesta.status === 401) {
         const cuerpoError = (await respuesta.json().catch(() => ({}))) as { codigo?: string };
